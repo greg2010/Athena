@@ -23,7 +23,7 @@ import scala.language.postfixOps
  * Note that the implementation is not ideal and it WILL break if conditions are right - the number of worker threads is high,
  * and the ratelimit window and request counts are low
  */
-class AtomicRateLimitHandler(timeError: Duration) extends RateLimitHandler with LazyLogging {
+class AtomicRateLimitHandler(threads: Int) extends RateLimitHandler with LazyLogging {
 
   private case class RateLimitKey(platform: Platform, window: Duration)
   private val limitList: collection.concurrent.TrieMap[RateLimitKey, Long] = collection.concurrent.TrieMap[RateLimitKey, Long]()
@@ -106,7 +106,7 @@ class AtomicRateLimitHandler(timeError: Duration) extends RateLimitHandler with 
         case None =>
           val key = RateLimitKey(platform, limit._2.seconds)
           logger.debug(s"Adding new limiter platform=$platform limit=${limit._2.seconds}")
-          addOneMapSync(limitList, key, (limit._1.seconds + timeError).toSeconds)
+          addOneMapSync(limitList, key, Math.max(limit._1 - threads, 1).toLong)
           key
         case Some((key, limit._1)) => key // Limit already in memory, noop
         case Some((key, oldLimit)) =>

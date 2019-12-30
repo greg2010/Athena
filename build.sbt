@@ -5,8 +5,23 @@ version := "0.1"
 
 scalaVersion := "2.13.1"
 
-
 resolvers += "jitpack" at "https://jitpack.io"
+/*
+guardrailTasks in Compile := List(
+  ScalaClient(file("swaggerspec-2.0.yml"), pkg="org.red.lolassistant.riotclient", framework = "http4s")
+)
+*/
+
+enablePlugins(OpenAPIGeneratorPlugin)
+openapiGeneratorName := "java"
+openapiLibrary := Some("native")
+openapiInputSpec := file("openapi-3.0.0.yml")
+openapiGroupId := Some("org.red.lolassistant")
+openapiArtifactId := Some("riotclient")
+//openapiPackageName := Some("org.red.lolassistant.riotclient2")
+openapiOutputDir := file("./riotclient")
+
+
 
 val http4sVersion = "0.21.0-M6"
 val circeVersion = "0.12.2"
@@ -14,6 +29,9 @@ val enumeratumVersion = "1.5.13"
 val sttpVersion = "1.7.2"
 val doobieVersion = "0.8.7"
 libraryDependencies ++= Seq(
+  "org.typelevel" %% "cats-core" % "2.0.0",
+  "org.typelevel" %% "cats-effect" % "2.0.0",
+  "com.github.pathikrit" %% "better-files" % "3.8.0",
   "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.0",
   "com.typesafe" % "config" % "1.4.0",
   "ch.qos.logback" % "logback-classic" % "1.2.3",

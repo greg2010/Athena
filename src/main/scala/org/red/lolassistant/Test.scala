@@ -1,27 +1,54 @@
 package org.red.lolassistant
 
+import java.time.Duration
 import java.util.logging.Level
 
 import cats.effect.{ContextShift, IO}
+import com.softwaremill.sttp.SttpBackend
+import com.softwaremill.sttp.asynchttpclient.cats.AsyncHttpClientCatsBackend
+import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import net.rithms.riot.api.ApiConfig
-import net.rithms.riot.api.RiotApi
 import net.rithms.riot.api.endpoints.`match`.dto.{Match, MatchList, Participant}
 import net.rithms.riot.api.endpoints.spectator.dto.CurrentGameInfo
 import net.rithms.riot.api.endpoints.summoner.dto.Summoner
 import net.rithms.riot.api.request.ratelimit.BufferedRateLimitHandler
-import net.rithms.riot.constant.Platform
-import org.red.lolassistant.util.AtomicRateLimitHandler
+import org.red.lolassistant.api.{Platform, RiotApi}
+import org.red.lolassistant.util.{AtomicRateLimitHandler, RatelimitedSttpBackend}
 
-import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
 import scala.concurrent.{Await, Future, Promise, TimeoutException}
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.red.lolassistant.util.FutureConverters._
 
-import scala.concurrent.duration.Duration
+
 
 object Test extends App {
 
+  val config = RateLimiterConfig.custom()
+    .timeoutDuration(Duration.ofMillis(100))
+    .limitRefreshPeriod(Duration.ofSeconds(1))
+    .limitForPeriod(20)
+    .build();
+
+  import io.github.resilience4j.ratelimiter.RateLimiter
+
+  val rateLimiter = RateLimiter.of("sttpBackend", config)
+
+  implicit val cs = IO.contextShift(global)
+  import com.softwaremill.sttp.impl.cats.AsyncMonadAsyncError
+  implicit val ratelimitedSttpBackend: RatelimitedSttpBackend[IO, Nothing] = new RatelimitedSttpBackend[IO, Nothing](rateLimiter, AsyncHttpClientCatsBackend[cats.effect.IO]())(new AsyncMonadAsyncError[IO]())
+
+  val riotApi = new RiotApi("RGAPI-2d1746f0-4c91-4658-838b-b7c2bba857b0")
+  //implicit val sttpBackend: SttpBackend[IO, Nothing] = AsyncHttpClientCatsBackend[cats.effect.IO]()
+
+  val riotApiClient = new RiotApiClient
+  val pc = new PremadeController(riotApiClient)
+  val premadeTask = pc.getPremades(Platform.NA, "dd god", 5)
+  val resp = premadeTask.unsafeRunSync()
+
+  println(resp)
+
+  /*
   implicit val cs = IO.contextShift(global)
   val riotApiClient = new RiotApiClient
   val pc = new PremadeController(riotApiClient)
@@ -31,7 +58,7 @@ object Test extends App {
   Await.ready(resp, Duration.Inf)
 
   println(resp)
-  /*
+
   val resp = for {
     fiber <- premadeTask.fork
     resp <- fiber.await

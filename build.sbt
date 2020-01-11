@@ -6,22 +6,8 @@ version := "0.1"
 scalaVersion := "2.13.1"
 
 resolvers += "jitpack" at "https://jitpack.io"
-/*
-guardrailTasks in Compile := List(
-  ScalaClient(file("swaggerspec-2.0.yml"), pkg="org.red.lolassistant.riotclient", framework = "http4s")
-)
-*/
 
-enablePlugins(OpenAPIGeneratorPlugin)
-openapiGeneratorName := "java"
-openapiLibrary := Some("native")
-openapiInputSpec := file("openapi-3.0.0.yml")
-openapiGroupId := Some("org.red.lolassistant")
-openapiArtifactId := Some("riotclient")
-//openapiPackageName := Some("org.red.lolassistant.riotclient2")
-openapiOutputDir := file("./riotclient")
-
-
+javaOptions in Compile ++= Seq("-J-Xss8M")
 
 val http4sVersion = "0.21.0-M6"
 val circeVersion = "0.12.2"
@@ -48,8 +34,9 @@ libraryDependencies ++= Seq(
   "com.beachape" %% "enumeratum-circe" % "1.5.22",
   "com.softwaremill.sttp" %% "core" % sttpVersion,
   "com.softwaremill.sttp" %% "circe" % sttpVersion,
-  "com.softwaremill.sttp" %% "async-http-client-backend-future" % sttpVersion,
+  "com.softwaremill.sttp" %% "async-http-client-backend-cats" % sttpVersion,
   "org.tpolecat" %% "doobie-core" % doobieVersion,
   "org.tpolecat" %% "doobie-postgres" % doobieVersion,
-  "com.github.taycaldwell" % "riot-api-java" % "4.3.0"
+  "com.github.taycaldwell" % "riot-api-java" % "4.3.0",
+  "io.github.resilience4j" % "resilience4j-ratelimiter" % "1.2.0"
 )

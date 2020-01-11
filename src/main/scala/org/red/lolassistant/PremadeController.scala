@@ -3,15 +3,13 @@ package org.red.lolassistant
 import java.util.logging.Level
 
 import com.typesafe.scalalogging.LazyLogging
-import net.rithms.riot.api.{RiotApi, RiotApiAsync}
-import net.rithms.riot.api.endpoints.`match`.dto.{Match, MatchList}
-import net.rithms.riot.api.endpoints.spectator.dto.CurrentGameInfo
-import net.rithms.riot.api.endpoints.summoner.dto.Summoner
-import net.rithms.riot.constant.Platform
 import org.red.lolassistant.util.AtomicRateLimitHandler
 import org.red.lolassistant.util.FutureConverters.{requestToIOTask, requestToScalaFuture}
 import cats.effect.{ContextShift, IO}
 import cats.implicits._
+import org.red.lolassistant.api.Platform
+import org.red.lolassistant.api.dto.`match`.Match
+import org.red.lolassistant.api.dto.currentgameinfo.CurrentGameInfo
 import org.red.lolassistant.data.SummonerMatchHistory
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -27,8 +25,8 @@ class PremadeController(riotApiClient: RiotApiClient)(implicit ec: ExecutionCont
   // groups summoner data in the current game into friendlies and enemies
   def determineTeamState(summonerPerspectiveId: String,
                          gameInfo: CurrentGameInfo,
-                         gameMatchHistory: Map[Int, List[SummonerMatchHistory]]): Either[Throwable, GameStateHistory] = {
-    val opt = Option(gameInfo.getParticipantByParticipantId(summonerPerspectiveId)).map(_.getTeamId)
+                         gameMatchHistory: Map[Long, List[SummonerMatchHistory]]): Either[Throwable, GameStateHistory] = {
+    val opt = gameInfo.participants.find(_.summonerId == summonerPerspectiveId).map(_.teamId)
     Either.cond(opt.isDefined, opt.get, new Exception("No such summoner"))
       .map { teamId =>
         val friendlyTeam = gameMatchHistory.getOrElse(teamId, List())
@@ -39,14 +37,9 @@ class PremadeController(riotApiClient: RiotApiClient)(implicit ec: ExecutionCont
 
   // Converts match into a list of summoner ids on the team of summonerPerspectiveId
   def participatingFriendlySummonerIds(summonerPerspectiveId: String, m: Match): Either[Throwable, List[String]] = {
-    val teamIdOpt = Option(m.getParticipantBySummonerId(summonerPerspectiveId).getTeamId)
+    val teamIdOpt = m.participantsFused.find(_.player.summonerId == summonerPerspectiveId).map(_.teamId)
     Either.cond(teamIdOpt.isDefined, teamIdOpt.get, new Exception("No such summoner")).map { teamId =>
-      val partList = m.getParticipants.asScala.map(e => (e.getParticipantId, e)).toMap
-      val partIdentList = m.getParticipantIdentities.asScala.map(e => (e.getParticipantId, e.getPlayer)).toMap
-      partList
-        .map(kv => (kv._1, (kv._2, partIdentList(kv._1))))
-        .filter(_._2._1.getTeamId == teamId).values.map(_._2.getSummonerId)
-        .toList
+      m.participantsFused.filter(_.teamId == teamId).map(_.player.summonerId).toList
     }
   }
 
@@ -56,7 +49,33 @@ class PremadeController(riotApiClient: RiotApiClient)(implicit ec: ExecutionCont
     // Transform List of List of matches into List of sets of summoner ids, preserving game uniqueness
     val gameList = team.flatMap { game =>
       game.history.map { g =>
-        (GameIdentifier(g.getGameId, g.getParticipantBySummonerId(game.summonerId).getTeamId),
+       g.participantsFused.find(_.player.summonerId == game.summonerId) match {
+          case Some(partFused) => (GameIdentifier(g.gameId, partFused.teamId),  participatingFriendlySummonerIds(game.summonerId, g))
+          case None => throw new RuntimeException("No summoner found")
+        }
+      }.filter(_._2.isRight).map(i => (i._1, i._2.toOption.get))
+    }.distinctBy(_._1).map(_._2)
+
+    // Fold list of games to generate groups of existing players
+    gameList.foldRight(List[LobbyRecord]())((curGame, acc) => {
+      val intersectPlayers = curGame.intersect(curTeam)
+      acc.find(_.players == intersectPlayers.toSet) match {
+        case Some(lobby) =>
+          val index = acc.indexWhere(_ == lobby)
+          acc.updated(index, lobby.copy(gamesPlayed = lobby.gamesPlayed + 1))
+        case None =>
+          acc :+ LobbyRecord(players = intersectPlayers.toSet, gamesPlayed = 1)
+      }
+    })
+  }
+  /*
+    def findPremadesInMatchHistory(team: List[SummonerMatchHistory]): List[LobbyRecord] = {
+    // First, extract summoner ids
+    val curTeam = team.map(_.summonerId)
+    // Transform List of List of matches into List of sets of summoner ids, preserving game uniqueness
+    val gameList = team.flatMap { game =>
+      game.history.map { g =>
+        (GameIdentifier(g.gameId, g.participantsFused.filter(_.player.summonerId == game.summonerId).getTeamId),
           participatingFriendlySummonerIds(game.summonerId, g))
       }.filter(_._2.isRight).map(i => (i._1, i._2.toOption.get))
     }.distinctBy(_._1).map(_._2)
@@ -73,17 +92,18 @@ class PremadeController(riotApiClient: RiotApiClient)(implicit ec: ExecutionCont
       }
     })
   }
+   */
 
 
-  def getPremades(platform: Platform, name: String, gamesQueryCount: Int = 10): Future[PremadeList] = {
+  def getPremades(platform: Platform, name: String, gamesQueryCount: Int = 10): IO[PremadeList] = {
     implicit val p: Platform = platform
     for {
       summoner <- riotApiClient.summonerByName(name)
-      game <- riotApiClient.currentGameBySummonerId(summoner.getId)
+      game <- riotApiClient.currentGameBySummonerId(summoner.id)
       participantHistory <- riotApiClient.matchHistoryByCurrentGameInfo(game, gamesQueryCount)
-      state <- Future.fromTry(determineTeamState(summoner.getId, game, participantHistory).toTry)
-      friendlyPremades <- Future.successful(findPremadesInMatchHistory(state.friendlyTeamHistory))
-      enemyPremades <- Future.successful(findPremadesInMatchHistory(state.enemyTeamHistory))
+      state <- IO.fromTry(determineTeamState(summoner.id, game, participantHistory).toTry)
+      friendlyPremades <- IO.pure(findPremadesInMatchHistory(state.friendlyTeamHistory))
+      enemyPremades <- IO.pure(findPremadesInMatchHistory(state.enemyTeamHistory))
     } yield PremadeList(friendlyPremades, enemyPremades)
   }
 }

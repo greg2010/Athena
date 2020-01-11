@@ -1,6 +1,6 @@
 package org.red.lolassistant.data
 
-import net.rithms.riot.api.endpoints.`match`.dto.Match
+import org.red.lolassistant.api.dto.`match`.Match
 
 
 case class SummonerMatchHistory(summonerId: String, history: List[Match])

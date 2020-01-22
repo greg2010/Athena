@@ -1,5 +1,7 @@
 package org.kys.lolassistant.api.dto.`match`
 
+import org.kys.lolassistant.api.dto.summoner.Summoner
+
 case class Player(currentPlatformId: String,
                   summonerName: String,
                   matchHistoryUri: String,
@@ -7,4 +9,12 @@ case class Player(currentPlatformId: String,
                   currentAccountId: String,
                   profileIcon: Int,
                   summonerId: String,
-                  accountId: String)
+                  accountId: String) {
+  def ==(other: Player): Boolean = {
+    this.summonerId == other.summonerId
+  }
+
+  def ==(other: Summoner): Boolean = {
+    this.summonerId == other.id
+  }
+}

@@ -31,14 +31,19 @@ object ErrorHandler extends LazyLogging {
           ex.toHttpResponse[F](req.httpVersion)
         // All other exceptions
         case Left(ex: BadRequestException) =>
+          logger.info(s"Generated 400, reason=${ex.reason}")
           BadRequest(ErrorResponse(0, "Bad Request"))
         case Left(ex: NotFoundException) =>
+          logger.info(s"Generated 404, reason=${ex.reason}")
           NotFound(ErrorResponse(0, "Not found"))
         case Left(ex: InconsistentAPIException) =>
+          logger.error(s"Caught inconsistent API, dtoName=${ex.dtoName} errorDesc=${ex.errorDesc}")
           BadGateway("Riot API Problems")
         case Left(ex: RiotException) =>
+          logger.error(s"Caught RiotException, statusCode=${ex.statusCode} errorMessage=${ex.errorMessage}")
           BadGateway("Riot API Problems")
         case Left(ex) =>
+          logger.error("Caught unknown exception", ex)
           InternalServerError("Error occurred")
       }.map { resp: Response[F] =>
         Some(resp)

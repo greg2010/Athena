@@ -1,5 +1,5 @@
 name := "LolAssistant"
-organization := "org.red"
+organization := "org.kys"
 
 version := "0.1"
 
@@ -9,7 +9,8 @@ resolvers += "jitpack" at "https://jitpack.io"
 
 javaOptions in Compile ++= Seq("-J-Xss8M")
 
-val http4sVersion = "0.21.0-M6"
+val http4sVersion = "0.21.0-M5"
+val rhoVersion = "0.20.0-M1"
 val circeVersion = "0.12.2"
 val enumeratumVersion = "1.5.13"
 val sttpVersion = "1.7.2"
@@ -20,12 +21,14 @@ libraryDependencies ++= Seq(
   "com.github.pathikrit" %% "better-files" % "3.8.0",
   "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.0",
   "com.typesafe" % "config" % "1.4.0",
+  "com.github.pureconfig" %% "pureconfig" % "0.12.2",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
   "org.http4s" %% "http4s-dsl" % http4sVersion,
   "org.http4s" %% "http4s-blaze-server" % http4sVersion,
   "org.http4s" %% "http4s-blaze-client" % http4sVersion,
   "org.http4s" %% "http4s-circe" % http4sVersion,
+  "org.http4s" %% "rho-swagger" % rhoVersion,
   "io.circe" %% "circe-generic" % circeVersion,
   "io.circe" %% "circe-generic-extras" % circeVersion,
   "io.circe" %% "circe-parser" % circeVersion,

@@ -4,11 +4,9 @@ import cats.effect.IO
 import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
 import org.kys.lolassistant.api.Platform
-import org.kys.lolassistant.api.dto.`match`.Match
-import org.kys.lolassistant.api.dto.currentgameinfo.{CurrentGameInfo, CurrentGameParticipant}
+import org.kys.lolassistant.api.dto.currentgameinfo.CurrentGameInfo
 import org.kys.lolassistant.api.dto.summoner.Summoner
-import org.kys.lolassistant.data.SummonerMatchHistory
-import org.kys.lolassistant.http.models.{InGameSummoner, PlayerGroup, PremadeResponse, TeamState}
+import org.kys.lolassistant.http.models.{InGameSummoner, PlayerGroup, PremadeResponse, SummonerMatchHistory, TeamState}
 import org.kys.lolassistant.util.exceptions.InconsistentAPIException
 
 class PremadeController(riotApiClient: RiotApiClient) extends LazyLogging {
@@ -47,12 +45,6 @@ class PremadeController(riotApiClient: RiotApiClient) extends LazyLogging {
     def determinePremadesImpl(searchSet: Set[SummonerMatchHistory]): Set[PlayerGroup] = {
       val curTeam = searchSet.map(_.inGameSummoner)
 
-      def generateLobby(cursorGameParticipants: Seq[String]): Set[InGameSummoner] = {
-        curTeam.filter {
-          curPlayer => cursorGameParticipants.contains(curPlayer.summoner.id)
-        }
-      }
-
       // Split participants into separate teams
       val uniqueGames = searchSet.flatMap(_.history).flatMap(_.participantsFused.groupBy(_.teamId).values)
 
@@ -77,33 +69,6 @@ class PremadeController(riotApiClient: RiotApiClient) extends LazyLogging {
 
     PremadeResponse(friendlySummoners, friendlyPremades, enemySummoners, enemyPremades)
   }
-
-
-  /*
-    def findPremadesInMatchHistory(team: List[SummonerMatchHistory]): List[LobbyRecord] = {
-    // First, extract summoner ids
-    val curTeam = team.map(_.summonerId)
-    // Transform List of List of matches into List of sets of summoner ids, preserving game uniqueness
-    val gameList = team.flatMap { game =>
-      game.history.map { g =>
-        (GameIdentifier(g.gameId, g.participantsFused.filter(_.player.summonerId == game.summonerId).getTeamId),
-          participatingFriendlySummonerIds(game.summonerId, g))
-      }.filter(_._2.isRight).map(i => (i._1, i._2.toOption.get))
-    }.distinctBy(_._1).map(_._2)
-
-    // Fold list of games to generate groups of existing players
-    gameList.foldRight(List[LobbyRecord]())((curGame, acc) => {
-      val intersectPlayers = curGame.intersect(curTeam)
-      acc.find(_.players == intersectPlayers.toSet) match {
-        case Some(lobby) =>
-          val index = acc.indexWhere(_ == lobby)
-          acc.updated(index, lobby.copy(gamesPlayed = lobby.gamesPlayed + 1))
-        case None =>
-          acc :+ LobbyRecord(players = intersectPlayers.toSet, gamesPlayed = 1)
-      }
-    })
-  }
-   */
 
 
   def getPremades(platform: Platform, name: String, queryFriendlyPremades: Boolean, gamesQueryCount: Int = 5): IO[PremadeResponse] = {

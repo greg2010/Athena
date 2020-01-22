@@ -16,8 +16,7 @@ import org.kys.lolassistant.api.dto.`match`.Match
 import org.kys.lolassistant.api.dto.currentgameinfo.CurrentGameInfo
 import org.kys.lolassistant.api.dto.summoner.Summoner
 import org.kys.lolassistant.api.{Platform, RiotApi}
-import org.kys.lolassistant.data.SummonerMatchHistory
-import org.kys.lolassistant.http.models.InGameSummoner
+import org.kys.lolassistant.http.models.{InGameSummoner, SummonerMatchHistory}
 import org.kys.lolassistant.util.{AtomicRateLimitHandler, RatelimitedSttpBackend}
 import org.kys.lolassistant.util.FutureConverters.requestToScalaFuture
 import org.kys.lolassistant.util.exceptions.{NotFoundException, RiotException}

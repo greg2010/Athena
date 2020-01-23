@@ -2,6 +2,7 @@ package org.kys.athena.api.dto.`match`
 
 import cats.implicits._
 
+
 final case class Match(seasonId: Int,
                        queueId: Int,
                        gameId: Long,
@@ -28,7 +29,7 @@ final case class Match(seasonId: Int,
             p.spell2Id,
             p.teamId,
             pId.player
-          )
+            )
         } // Sequencing short circuit logic
       }
       .traverse(identity)

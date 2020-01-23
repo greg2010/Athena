@@ -4,6 +4,7 @@ import cats.effect.IO
 import org.http4s.HttpRoutes
 import org.kys.athena.PremadeController
 
+
 object Base {
 
   def apply(premadeController: PremadeController): HttpRoutes[IO] = {

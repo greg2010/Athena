@@ -18,6 +18,7 @@ import org.kys.athena.util.RiotRateLimiters
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
+
 /** This is the main entrypoint to the application.
   * Extending object StreamApp makes it runnable,
   * and .serve blocks the main thread until the JVM is shutdown.
@@ -28,7 +29,10 @@ object Server extends IOApp {
   // Setup HTTP client
   val blockingEC: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
   implicit val cs: ContextShift[IO] = IO.contextShift(blockingEC)
+
+
   import com.softwaremill.sttp.impl.cats.AsyncMonadAsyncError
+
 
   implicit val ratelimitedSttpBackend: RatelimitedSttpBackend[Nothing] =
     new RatelimitedSttpBackend[Nothing](
@@ -38,16 +42,16 @@ object Server extends IOApp {
       LAConfig.cacheRiotRequestsMaxCount)(new AsyncMonadAsyncError[IO]())
 
   // Setup Riot API
-  val riotApi = new RiotApi(LAConfig.riotApiKey)
+  val riotApi       = new RiotApi(LAConfig.riotApiKey)
   val riotApiClient = new RiotApiClient(riotApi)
 
   // Setup business logic
   val pc = new PremadeController(riotApiClient)
 
   // Setup HTTP server
-  val baseRoutes: HttpRoutes[IO] = Base(pc)
-  val httpApp: HttpRoutes[IO] = Router(LAConfig.http.prefix -> baseRoutes)
-  val svc: Kleisli[IO, Request[IO], Response[IO]] = ApacheLogging(ErrorHandler(httpApp)).orNotFound;
+  val baseRoutes: HttpRoutes[IO]                         = Base(pc)
+  val httpApp   : HttpRoutes[IO]                         = Router(LAConfig.http.prefix -> baseRoutes)
+  val svc       : Kleisli[IO, Request[IO], Response[IO]] = ApacheLogging(ErrorHandler(httpApp)).orNotFound;
 
   def run(args: List[String]): IO[ExitCode] = {
     BlazeServerBuilder[IO]

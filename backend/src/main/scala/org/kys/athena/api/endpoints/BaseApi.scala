@@ -4,6 +4,7 @@ import com.softwaremill.sttp._
 import org.kys.athena.api.Platform
 import org.kys.athena.api.Platform
 
+
 abstract class BaseApi(apiKey: String) {
   val pathPrefix: String
 

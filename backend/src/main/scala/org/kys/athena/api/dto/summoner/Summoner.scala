@@ -2,6 +2,7 @@ package org.kys.athena.api.dto.summoner
 
 import org.kys.athena.api.dto.`match`.Player
 
+
 final case class Summoner(profileIconId: Int,
                           name: String,
                           puuid: String,

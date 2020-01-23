@@ -16,29 +16,35 @@ import org.kys.athena.util.RatelimitedSttpBackend
 import org.kys.athena.http.models.extensions._
 import org.kys.athena.util.exceptions.{NotFoundException, RiotException}
 
+
 class RiotApiClient(riotApi: RiotApi)(implicit ratelimitedSttpBackend: RatelimitedSttpBackend[Nothing])
-    extends LazyLogging {
+  extends LazyLogging {
 
   private def liftDoubleEither[T](r: Response[Either[DeserializationError[io.circe.Error], T]]): IO[T] = {
     r.body match {
-      case Left(str) =>
+      case Left(str) => {
         r.code match {
-          case 404 =>
+          case 404 => {
             logger.debug(s"Riot api responded with 404")
             IO.raiseError(NotFoundException("Riot API responded: Not Found"))
-          case code =>
+          }
+          case code => {
             val maybeReason: Option[String] =
               parse(str).flatMap(_.hcursor.downField("status").get[String]("message")).toOption
             logger.warn(s"Got non-200/404 from Riot API: code=$code maybeReason=$maybeReason")
             IO.raiseError(
               RiotException(code, parse(str).flatMap(_.hcursor.downField("status").get[String]("message")).toOption))
+          }
         }
-      case Right(Left(parseError)) =>
+      }
+      case Right(Left(parseError)) => {
         logger.error(s"Got parse error while parsing Riot API response. error=${parseError.message}", parseError.error)
         IO.raiseError(parseError.error)
-      case Right(Right(resp)) =>
+      }
+      case Right(Right(resp)) => {
         logger.debug(s"Got a successful response from Riot API, bodyType=${resp.getClass.toString}")
         IO.pure(resp)
+      }
     }
   }
 
@@ -66,29 +72,30 @@ class RiotApiClient(riotApi: RiotApi)(implicit ratelimitedSttpBackend: Ratelimit
       .flatMap(liftDoubleEither)
   }
 
-  def matchHistoryBySummonerId(summonerId: String, gamesQueryCount: Int)(
-      implicit platform: Platform): IO[List[Match]] = {
-    logger.debug(
-      s"Querying match history by summonerId=$summonerId gamesQueryCount=$gamesQueryCount platform=$platform")
+  def matchHistoryBySummonerId(summonerId: String, gamesQueryCount: Int)
+                              (implicit platform: Platform): IO[List[Match]] = {
+    logger.debug(s"Querying match history by " +
+                 s"summonerId=$summonerId " +
+                 s"gamesQueryCount=$gamesQueryCount " +
+                 s"platform=$platform")
     summonerBySummonerId(summonerId).flatMap { summoner =>
       ratelimitedSttpBackend
         .sendCachedRateLimited(riotApi.`match`.matchlistByAccountId(platform, summoner.accountId))
         .flatMap(liftDoubleEither)
-        .flatMap { ml =>
-          {
-            ml.matches.take(gamesQueryCount).map { reference =>
-              matchByMatchId(reference.gameId)
-            }
+        .flatMap { ml => {
+          ml.matches.take(gamesQueryCount).map { reference =>
+            matchByMatchId(reference.gameId)
+          }
           }.sequence
         }
     }
   }
 
   // Returns hydrated match history for each summoner (last `gamesQueryCount` games)
-  def matchHistoryByInGameSummonerSet(inGameSummonerSet: Set[InGameSummoner], gamesQueryCount: Int)(
-      implicit platform: Platform
-  ): IO[Set[SummonerMatchHistory]] = {
-    inGameSummonerSet.toList
+  def matchHistoryByInGameSummonerSet(inGameSummonerSet: Set[InGameSummoner], gamesQueryCount: Int)
+                                     (implicit platform: Platform): IO[Set[SummonerMatchHistory]] = {
+    inGameSummonerSet
+      .toList
       .map { inGameSummoner =>
         matchHistoryBySummonerId(inGameSummoner.summonerId, gamesQueryCount).map { history =>
           data.SummonerMatchHistory(inGameSummoner, history)
@@ -99,8 +106,8 @@ class RiotApiClient(riotApi: RiotApi)(implicit ratelimitedSttpBackend: Ratelimit
   }
 
   // Groups `Summoner` and `CurrentGameParticipant`
-  def inGameSummonerByParticipant(participant: CurrentGameParticipant)(
-      implicit platform: Platform): IO[InGameSummoner] = {
+  def inGameSummonerByParticipant(participant: CurrentGameParticipant)
+                                 (implicit platform: Platform): IO[InGameSummoner] = {
     this.summonerBySummonerId(participant.summonerId).map { summoner =>
       InGameSummoner(summoner, participant)
     }

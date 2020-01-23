@@ -5,6 +5,7 @@ import java.time.Duration
 import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.github.resilience4j.ratelimiter.RateLimiter
 
+
 object RiotRateLimiters {
 
   private val confOneSec = RateLimiterConfig

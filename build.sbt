@@ -1,4 +1,4 @@
-name := "LolAssistant"
+name := "Athena"
 organization := "org.kys"
 
 version := "0.1"

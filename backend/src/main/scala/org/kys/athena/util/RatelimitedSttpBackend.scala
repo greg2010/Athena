@@ -25,15 +25,15 @@ class RatelimitedSttpBackend[S](rateLimiterList: List[RateLimiter],
     new String(bytes, StandardCharsets.US_ASCII)
   }
 
-  private val cache: Cache[String, Response[_]] =
-    Scaffeine()
-      .recordStats()
-      .expireAfterWrite(cacheFor)
-      .maximumSize(cacheMaxCount)
-      .build[String, Response[_]]()
+  private val cache: Cache[String, Response[_]] = Scaffeine().recordStats()
+    .expireAfterWrite(cacheFor)
+    .maximumSize(cacheMaxCount)
+    .build[String, Response[_]]()
 
-  private val rateLimitersByRegion: Map[Platform, List[RateLimiter]] =
-    Platform.values.map(p => (p, RiotRateLimiters.rateLimiters)).toMap
+  private val rateLimitersByRegion: Map[Platform, List[RateLimiter]] = Platform
+    .values
+    .map(p => (p, RiotRateLimiters.rateLimiters))
+    .toMap
 
   override def send[T](request: Request[T, S]): IO[Response[T]] = delegate.send(request)
 
@@ -41,8 +41,10 @@ class RatelimitedSttpBackend[S](rateLimiterList: List[RateLimiter],
     RatelimitedSttpBackend.decorateF(rateLimitersByRegion(platform), this.send(request))
   }
 
-  @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
-  def sendCachedRateLimited[T](request: Request[T, S])(implicit platform: Platform): IO[Response[T]] = {
+  @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf")) def sendCachedRateLimited[T](request: Request[T, S])
+                                                                                             (implicit
+                                                                                              platform: Platform)
+  : IO[Response[T]] = {
     cache.getIfPresent(generateUrlId(request)) match {
       case Some(resp) => {
         logger.debug(s"Hit cache for request '${request.method.m} ${request.uri.toString()}'")
@@ -50,12 +52,9 @@ class RatelimitedSttpBackend[S](rateLimiterList: List[RateLimiter],
         IO.pure(resp.asInstanceOf[Response[T]])
       }
       case None => {
-        this.sendRatelimited(request).map {
-
-          case r if r.is200 =>
-            cache.put(generateUrlId(request), r)
-            r
-          case r => r
+        this.sendRatelimited(request).map { case r if r.is200 => cache.put(generateUrlId(request), r)
+          r
+        case r => r
         }
       }
     }
@@ -74,23 +73,18 @@ object RatelimitedSttpBackend extends LazyLogging {
       try {
         rateLimiterList.foreach { rateLimiter =>
           rateLimiter.getEventPublisher.onSuccess { event =>
-            logger.trace("Got permit at " +
-                         s"eventCreationTime=${event.getCreationTime} " +
-                         s"rateLimiterName=${event.getRateLimiterName} " +
-                         s"permitCount=${event.getNumberOfPermits}")
+            logger.trace("Got permit at " + s"eventCreationTime=${event.getCreationTime} " +
+                         s"rateLimiterName=${event.getRateLimiterName} " + s"permitCount=${event.getNumberOfPermits}")
           }
           rateLimiter.getEventPublisher.onFailure { event =>
-            logger.warn(s"Failed to obtain rate limit permit at " +
-                        s"eventCreationTime=${event.getCreationTime} " +
-                        s"rateLimiterName=${event.getRateLimiterName} " +
-                        s"permitCount=${event.getNumberOfPermits}")
+            logger.warn(s"Failed to obtain rate limit permit at " + s"eventCreationTime=${event.getCreationTime} " +
+                        s"rateLimiterName=${event.getRateLimiterName} " + s"permitCount=${event.getNumberOfPermits}")
           }
           RateLimiter.waitForPermission(rateLimiter)
         }
         service
       } catch {
-        case t: Throwable =>
-          monadError.error(t)
+        case t: Throwable => monadError.error(t)
       }
     }
   }

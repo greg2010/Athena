@@ -1,103 +1,64 @@
 lazy val projectCodename = "Athena"
 
-name := projectCodename
-organization in ThisBuild := "org.kys"
-version in ThisBuild := "0.1"
+name := projectCodename organization in ThisBuild := "org.kys" version in ThisBuild := "0.1"
 scalaVersion in ThisBuild := "2.13.1"
 
 // Projects
-lazy val global = project
-  .in(file("."))
-  .settings(settings)
-  .disablePlugins(AssemblyPlugin)
-  .aggregate(common, backend)
+lazy val global = project.in(file(".")).settings(settings).disablePlugins(AssemblyPlugin).aggregate(common, backend)
 
-lazy val common = project
-  .settings(
-    name := "common",
-    settings
-    )
-  .disablePlugins(AssemblyPlugin)
+lazy val common = project.settings(name := "common", settings).disablePlugins(AssemblyPlugin)
 
-lazy val backend = project
-  .settings(
-    name := "backend",
-    settings,
-    assemblySettings,
-    libraryDependencies ++= Seq(
-      dependencies.catsCore,
-      dependencies.catsEffect,
-      dependencies.typesafeConfig,
-      dependencies.pureconfig,
-      dependencies.logbackClassic,
-      dependencies.scalaLogging,
-      dependencies.http4sDsl,
-      dependencies.http4sBlazeServer,
-      dependencies.http4sBlazeClient,
-      dependencies.http4sCirce,
-      dependencies.rhoSwagger,
-      dependencies.circeGeneric,
-      dependencies.circeGenericExtras,
-      dependencies.circeParser,
-      dependencies.circeLiteral,
-      dependencies.enumeratum,
-      dependencies.enumeratumCirce,
-      dependencies.sttpCore,
-      dependencies.sttpCirce,
-      dependencies.sttpCats,
-      dependencies.resilience4j,
-      dependencies.scaffeine
-      )
-    )
+lazy val backend = project.settings(name := "backend", settings, assemblySettings, libraryDependencies ++=
+                                                                                   Seq(dependencies.catsCore,
+                                                                                       dependencies.catsEffect,
+                                                                                       dependencies.typesafeConfig,
+                                                                                       dependencies.pureconfig,
+                                                                                       dependencies.logbackClassic,
+                                                                                       dependencies.scalaLogging,
+                                                                                       dependencies.http4sDsl,
+                                                                                       dependencies.http4sBlazeServer,
+                                                                                       dependencies.http4sBlazeClient,
+                                                                                       dependencies.http4sCirce,
+                                                                                       dependencies.rhoSwagger,
+                                                                                       dependencies.circeGeneric,
+                                                                                       dependencies.circeGenericExtras,
+                                                                                       dependencies.circeParser,
+                                                                                       dependencies.circeLiteral,
+                                                                                       dependencies.enumeratum,
+                                                                                       dependencies.enumeratumCirce,
+                                                                                       dependencies.sttpCore,
+                                                                                       dependencies.sttpCirce,
+                                                                                       dependencies.sttpCats,
+                                                                                       dependencies.resilience4j,
+                                                                                       dependencies.scaffeine))
   .dependsOn(common)
 
-lazy val frontend = project
-  .settings(name := "frontend", settings, assemblySettings)
+lazy val frontend = project.settings(name := "frontend", settings, assemblySettings)
   .enablePlugins(ScalaJSPlugin)
   .dependsOn(common)
 
 // Settings
+lazy val compilerOptions = Seq("-unchecked", "-feature", "-deprecation", "-Wunused:imports", "-encoding", "utf8")
 
-lazy val compilerOptions = Seq(
-  "-unchecked",
-  "-feature",
-  "-deprecation",
-  "-Wunused:imports",
-  "-encoding",
-  "utf8"
-  )
+lazy val commonSettings = Seq(scalacOptions ++= compilerOptions, resolvers += "jitpack" at "https://jitpack.io",
+                              javaOptions in Compile ++= Seq("-J-Xss8M"))
 
-lazy val commonSettings = Seq(
-  scalacOptions ++= compilerOptions,
-  resolvers += "jitpack" at "https://jitpack.io",
-  javaOptions in Compile ++= Seq("-J-Xss8M")
-  )
+lazy val wartremoverSettings = Seq(wartremoverWarnings in(Compile, compile) ++= Warts.unsafe.filterNot { w =>
+  w == Wart.Any || w == Wart.Nothing || w == Wart.DefaultArguments || w == Wart.StringPlusAny ||
+  w == Wart.NonUnitStatements
+})
 
-lazy val wartremoverSettings = Seq(
-  wartremoverWarnings in(Compile, compile) ++= Warts.unsafe.filterNot { w =>
-    w == Wart.Any ||
-    w == Wart.Nothing ||
-    w == Wart.DefaultArguments ||
-    w == Wart.StringPlusAny ||
-    w == Wart.NonUnitStatements
-  }
-  )
-
-lazy val assemblySettings = Seq(
-  assemblyJarName in assembly := projectCodename + "-" + name.value + ".jar",
-  assemblyMergeStrategy in assembly := {
-    case PathList("META-INF", xs@_*) => MergeStrategy.discard
-    case "application.conf" => MergeStrategy.concat
-    case x =>
-      val oldStrategy = (assemblyMergeStrategy in assembly).value
-      oldStrategy(x)
-  }
-  )
+lazy val assemblySettings = Seq(assemblyJarName in assembly := projectCodename + "-" + name.value + ".jar",
+                                assemblyMergeStrategy in assembly :=
+                                { case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+                                case "application.conf" => MergeStrategy.concat
+                                case x => val oldStrategy = (assemblyMergeStrategy in assembly).value
+                                  oldStrategy(x)
+                                })
 
 lazy val settings = commonSettings ++ wartremoverSettings
 
 // Dependencies repository
-
 lazy val dependencies = new {
   val catsVersion       = "2.0.0"
   val http4sVersion     = "0.21.0-M5"

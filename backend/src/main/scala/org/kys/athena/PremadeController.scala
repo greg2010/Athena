@@ -12,13 +12,11 @@ import org.kys.athena.util.exceptions.InconsistentAPIException
 
 
 class PremadeController(riotApiClient: RiotApiClient) extends LazyLogging {
-
   case class TeamState(teamFriendly: Set[InGameSummoner], teamEnemy: Set[InGameSummoner])
-
   case class TeamStateWithHistory(teamFriendly: Option[Set[SummonerMatchHistory]], teamEnemy: Set[SummonerMatchHistory])
 
-  def splitGameParticipants(currentGameInfo: CurrentGameInfo, summonerPerspective: Summoner)(
-    implicit platform: Platform): IO[TeamState] = {
+  def splitGameParticipants(currentGameInfo: CurrentGameInfo, summonerPerspective: Summoner)
+                           (implicit platform: Platform): IO[TeamState] = {
     for {
       friendlyTeamId <- currentGameInfo.participants.find(_.summonerId == summonerPerspective.id) match {
         case Some(participant) => IO.pure(participant.teamId)
@@ -26,13 +24,11 @@ class PremadeController(riotApiClient: RiotApiClient) extends LazyLogging {
           IO.raiseError(InconsistentAPIException("CurrentGameInfo", "perspective summoner isn't in the game"))
         }
       }
-
       friendlyTeam <- currentGameInfo
         .participants
         .filter(_.teamId == friendlyTeamId)
         .map(riotApiClient.inGameSummonerByParticipant(_))
         .sequence
-
       hostileTeam <- currentGameInfo
         .participants
         .filterNot(_.teamId == friendlyTeamId)
@@ -55,7 +51,8 @@ class PremadeController(riotApiClient: RiotApiClient) extends LazyLogging {
 
   def determinePremades(teamStateWithHistory: TeamStateWithHistory): PremadeResponse = {
     def determinePremadesImpl(searchSet: Set[SummonerMatchHistory]): Set[PlayerGroup] = {
-      val curTeam          = searchSet.map(_.inGameSummoner)
+      val curTeam = searchSet.map(_.inGameSummoner)
+
       val gameParticipants = searchSet.flatMap(_.history).map(_.participantsFused)
 
       // Log bad API response
@@ -77,6 +74,7 @@ class PremadeController(riotApiClient: RiotApiClient) extends LazyLogging {
         val cursorGamePlayersFromCurrentGame = curTeam.filter { curPlayer =>
           cursorGameParticipantSummonerIds.contains(curPlayer.summonerId)
         }
+
         acc.find(_.summoners == cursorGamePlayersFromCurrentGame) match {
           case Some(lobby) => acc.excl(lobby).incl(lobby.copy(gamesPlayed = lobby.gamesPlayed + 1))
           case None if cursorGamePlayersFromCurrentGame.size > 1 => {

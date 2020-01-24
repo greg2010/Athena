@@ -29,8 +29,9 @@ class RiotApiClient(riotApi: RiotApi)(implicit ratelimitedSttpBackend: Ratelimit
             IO.raiseError(NotFoundException("Riot API responded: Not Found"))
           }
           case code => {
-            val maybeReason: Option[String] =
-              parse(str).flatMap(_.hcursor.downField("status").get[String]("message")).toOption
+            val maybeReason: Option[String] = parse(str)
+              .flatMap(_.hcursor.downField("status").get[String]("message"))
+              .toOption
             logger.warn(s"Got non-200/404 from Riot API: code=$code maybeReason=$maybeReason")
             IO.raiseError(
               RiotException(code, parse(str).flatMap(_.hcursor.downField("status").get[String]("message")).toOption))
@@ -60,27 +61,22 @@ class RiotApiClient(riotApi: RiotApi)(implicit ratelimitedSttpBackend: Ratelimit
 
   def currentGameBySummonerId(summonerId: String)(implicit platform: Platform): IO[CurrentGameInfo] = {
     logger.debug(s"Querying current game by summonerId=$summonerId platform=$platform")
-    ratelimitedSttpBackend
-      .sendRatelimited(riotApi.spectator.activeGameBySummoner(platform, summonerId))
+    ratelimitedSttpBackend.sendRatelimited(riotApi.spectator.activeGameBySummoner(platform, summonerId))
       .flatMap(liftDoubleEither)
   }
 
   def matchByMatchId(matchId: Long)(implicit platform: Platform): IO[Match] = {
     logger.debug(s"Querying match by matchId=$matchId platform=$platform")
-    ratelimitedSttpBackend
-      .sendCachedRateLimited(riotApi.`match`.matchByMatchId(platform, matchId))
+    ratelimitedSttpBackend.sendCachedRateLimited(riotApi.`match`.matchByMatchId(platform, matchId))
       .flatMap(liftDoubleEither)
   }
 
   def matchHistoryBySummonerId(summonerId: String, gamesQueryCount: Int)
                               (implicit platform: Platform): IO[List[Match]] = {
-    logger.debug(s"Querying match history by " +
-                 s"summonerId=$summonerId " +
-                 s"gamesQueryCount=$gamesQueryCount " +
+    logger.debug(s"Querying match history by " + s"summonerId=$summonerId " + s"gamesQueryCount=$gamesQueryCount " +
                  s"platform=$platform")
     summonerBySummonerId(summonerId).flatMap { summoner =>
-      ratelimitedSttpBackend
-        .sendCachedRateLimited(riotApi.`match`.matchlistByAccountId(platform, summoner.accountId))
+      ratelimitedSttpBackend.sendCachedRateLimited(riotApi.`match`.matchlistByAccountId(platform, summoner.accountId))
         .flatMap(liftDoubleEither)
         .flatMap { ml => {
           ml.matches.take(gamesQueryCount).map { reference =>
@@ -94,15 +90,11 @@ class RiotApiClient(riotApi: RiotApi)(implicit ratelimitedSttpBackend: Ratelimit
   // Returns hydrated match history for each summoner (last `gamesQueryCount` games)
   def matchHistoryByInGameSummonerSet(inGameSummonerSet: Set[InGameSummoner], gamesQueryCount: Int)
                                      (implicit platform: Platform): IO[Set[SummonerMatchHistory]] = {
-    inGameSummonerSet
-      .toList
-      .map { inGameSummoner =>
-        matchHistoryBySummonerId(inGameSummoner.summonerId, gamesQueryCount).map { history =>
-          data.SummonerMatchHistory(inGameSummoner, history)
-        }
+    inGameSummonerSet.toList.map { inGameSummoner =>
+      matchHistoryBySummonerId(inGameSummoner.summonerId, gamesQueryCount).map { history =>
+        data.SummonerMatchHistory(inGameSummoner, history)
       }
-      .sequence
-      .map(_.toSet)
+    }.sequence.map(_.toSet)
   }
 
   // Groups `Summoner` and `CurrentGameParticipant`

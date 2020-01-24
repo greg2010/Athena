@@ -18,7 +18,8 @@ class Match(apiKey: String) extends BaseApi(apiKey) {
   }
 
   def matchlistByAccountId(platform: Platform,
-                           accountId: String): Request[Either[DeserializationError[io.circe.Error], Matchlist], Nothing] = {
+                           accountId: String): Request[Either[DeserializationError[io.circe.Error], Matchlist],
+    Nothing] = {
     val url = getBaseUri(platform).path(getBaseUri(platform).path ++ Seq("matchlists", "by-account", accountId))
     baseRequest.get(url).response(asJson[Matchlist])
   }

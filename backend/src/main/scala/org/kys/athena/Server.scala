@@ -22,8 +22,7 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 /** This is the main entrypoint to the application.
   * Extending object StreamApp makes it runnable,
   * and .serve blocks the main thread until the JVM is shutdown.
-  * Example is taken from [[https://http4s.org/v0.20/service/ HTTP4s documentation]]
-  */
+  * Example is taken from [[https://http4s.org/v0.20/service/ HTTP4s documentation]] */
 object Server extends IOApp {
 
   // Setup HTTP client
@@ -34,12 +33,9 @@ object Server extends IOApp {
   import com.softwaremill.sttp.impl.cats.AsyncMonadAsyncError
 
 
-  implicit val ratelimitedSttpBackend: RatelimitedSttpBackend[Nothing] =
-    new RatelimitedSttpBackend[Nothing](
-      RiotRateLimiters.rateLimiters,
-      AsyncHttpClientCatsBackend[cats.effect.IO](),
-      LAConfig.cacheRiotRequestsFor.seconds,
-      LAConfig.cacheRiotRequestsMaxCount)(new AsyncMonadAsyncError[IO]())
+  implicit val ratelimitedSttpBackend: RatelimitedSttpBackend[Nothing] = new RatelimitedSttpBackend[Nothing](
+    RiotRateLimiters.rateLimiters, AsyncHttpClientCatsBackend[cats.effect.IO](), LAConfig.cacheRiotRequestsFor.seconds,
+    LAConfig.cacheRiotRequestsMaxCount)(new AsyncMonadAsyncError[IO]())
 
   // Setup Riot API
   val riotApi       = new RiotApi(LAConfig.riotApiKey)
@@ -54,8 +50,7 @@ object Server extends IOApp {
   val svc       : Kleisli[IO, Request[IO], Response[IO]] = ApacheLogging(ErrorHandler(httpApp)).orNotFound;
 
   def run(args: List[String]): IO[ExitCode] = {
-    BlazeServerBuilder[IO]
-      .bindHttp(port = LAConfig.http.port, host = LAConfig.http.host)
+    BlazeServerBuilder[IO].bindHttp(port = LAConfig.http.port, host = LAConfig.http.host)
       .withIdleTimeout(5.minutes)
       .withResponseHeaderTimeout(5.minutes)
       .withHttpApp(svc)

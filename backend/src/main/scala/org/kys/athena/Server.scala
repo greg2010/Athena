@@ -1,14 +1,16 @@
 package org.kys.athena
 
 import java.util.concurrent.Executors
+
 import cats.data.Kleisli
 import cats.effect.{ContextShift, ExitCode, IO, IOApp}
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.{HttpRoutes, Request, Response}
 import cats.implicits._
-import com.softwaremill.sttp.asynchttpclient.cats.AsyncHttpClientCatsBackend
+import sttp.client.asynchttpclient.cats.AsyncHttpClientCatsBackend
 import org.http4s.implicits._
 import org.http4s.server.Router
+import org.http4s.server.middleware.CORS
 import org.kys.athena.api.RiotApi
 import org.kys.athena.http.middleware.{ApacheLogging, ErrorHandler}
 import org.kys.athena.http.routes.Base
@@ -30,12 +32,14 @@ object Server extends IOApp {
   implicit val cs: ContextShift[IO] = IO.contextShift(blockingEC)
 
 
-  import com.softwaremill.sttp.impl.cats.AsyncMonadAsyncError
+  import sttp.client.impl.cats.CatsMonadAsyncError
 
+
+  val sttpBackend = AsyncHttpClientCatsBackend[cats.effect.IO]()
 
   implicit val ratelimitedSttpBackend: RatelimitedSttpBackend[Nothing] = new RatelimitedSttpBackend[Nothing](
     RiotRateLimiters.rateLimiters, AsyncHttpClientCatsBackend[cats.effect.IO](), LAConfig.cacheRiotRequestsFor.seconds,
-    LAConfig.cacheRiotRequestsMaxCount)(new AsyncMonadAsyncError[IO]())
+    LAConfig.cacheRiotRequestsMaxCount)(new CatsMonadAsyncError[IO]())
 
   // Setup Riot API
   val riotApi       = new RiotApi(LAConfig.riotApiKey)
@@ -47,7 +51,7 @@ object Server extends IOApp {
   // Setup HTTP server
   val baseRoutes: HttpRoutes[IO]                         = Base(pc)
   val httpApp   : HttpRoutes[IO]                         = Router(LAConfig.http.prefix -> baseRoutes)
-  val svc       : Kleisli[IO, Request[IO], Response[IO]] = ApacheLogging(ErrorHandler(httpApp)).orNotFound;
+  val svc       : Kleisli[IO, Request[IO], Response[IO]] = ApacheLogging(CORS(ErrorHandler(httpApp))).orNotFound;
 
   def run(args: List[String]): IO[ExitCode] = {
     BlazeServerBuilder[IO].bindHttp(port = LAConfig.http.port, host = LAConfig.http.host)

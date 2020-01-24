@@ -1,8 +1,8 @@
 package org.kys.athena.api.endpoints
 
-import com.softwaremill.sttp._
+import sttp.client._
 import org.kys.athena.api.Platform
-import org.kys.athena.api.Platform
+import sttp.model.Uri
 
 
 abstract class BaseApi(apiKey: String) {
@@ -13,5 +13,5 @@ abstract class BaseApi(apiKey: String) {
     uri"$s"
   }
 
-  val baseRequest = emptyRequest.header("X-Riot-Token", apiKey)
+  val baseRequest = basicRequest.header("X-Riot-Token", apiKey)
 }

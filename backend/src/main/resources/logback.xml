@@ -7,7 +7,7 @@
     <logger name="slick" level="WARN"/>
     <logger name="com.zaxxer.hikari" level="WARN"/>
     <logger name="io.netty" level="WARN"/>
-    <logger name="org.http4s" level="INFO"/>
+    <logger name="org.http4s" level="DEBUG"/>
     <logger name="org.asynchttpclient.netty" level="INFO"/>
 
     <root level="debug">

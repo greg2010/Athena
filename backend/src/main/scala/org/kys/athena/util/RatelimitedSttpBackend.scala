@@ -5,22 +5,23 @@ import java.nio.charset.StandardCharsets
 import cats.effect.IO
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import io.github.resilience4j.ratelimiter.RateLimiter
-import com.softwaremill.sttp.MonadError
-import com.softwaremill.sttp.{Request, Response, SttpBackend}
+import sttp.client.monad.MonadError
+import sttp.client.{NothingT, Request, Response, SttpBackend}
 import com.typesafe.scalalogging.LazyLogging
 import org.kys.athena.api.Platform
+import sttp.client.ws.WebSocketResponse
 
 import scala.concurrent.duration._
 
 
 class RatelimitedSttpBackend[S](rateLimiterList: List[RateLimiter],
-                                delegate: SttpBackend[IO, S],
+                                delegate: IO[SttpBackend[IO, S, NothingT]],
                                 cacheFor: Duration,
                                 cacheMaxCount: Long)(implicit monadError: MonadError[IO])
-  extends SttpBackend[IO, S] with LazyLogging {
+  extends SttpBackend[IO, S, NothingT] with LazyLogging {
 
   private def generateUrlId[T](r: Request[T, S]): String = {
-    val text  = r.uri.toString() + r.method.m
+    val text  = r.uri.toString() + r.method.method
     val bytes = java.util.Base64.getEncoder.encode(text.getBytes())
     new String(bytes, StandardCharsets.US_ASCII)
   }
@@ -35,7 +36,11 @@ class RatelimitedSttpBackend[S](rateLimiterList: List[RateLimiter],
     .map(p => (p, RiotRateLimiters.rateLimiters))
     .toMap
 
-  override def send[T](request: Request[T, S]): IO[Response[T]] = delegate.send(request)
+  override def send[T](request: Request[T, S]): IO[Response[T]] = {
+    delegate.flatMap { d =>
+      d.send(request)
+    }
+  }
 
   def sendRatelimited[T](request: Request[T, S])(implicit platform: Platform): IO[Response[T]] = {
     RatelimitedSttpBackend.decorateF(rateLimitersByRegion(platform), this.send(request))
@@ -47,7 +52,7 @@ class RatelimitedSttpBackend[S](rateLimiterList: List[RateLimiter],
   : IO[Response[T]] = {
     cache.getIfPresent(generateUrlId(request)) match {
       case Some(resp) => {
-        logger.debug(s"Hit cache for request '${request.method.m} ${request.uri.toString()}'")
+        logger.debug(s"Hit cache for request '${request.method.method} ${request.uri.toString()}'")
 
         IO.pure(resp.asInstanceOf[Response[T]])
       }
@@ -60,9 +65,14 @@ class RatelimitedSttpBackend[S](rateLimiterList: List[RateLimiter],
     }
   }
 
-  override def close(): Unit = delegate.close()
+  override def close(): IO[Unit] = delegate.map(_.close())
 
-  override def responseMonad: MonadError[IO] = delegate.responseMonad
+  override def responseMonad: MonadError[IO] = monadError
+
+  override def openWebsocket[T, WS_RESULT](request: Request[T, S],
+                                           handler: NothingT[WS_RESULT]): IO[WebSocketResponse[WS_RESULT]] = {
+    ???
+  }
 }
 
 object RatelimitedSttpBackend extends LazyLogging {

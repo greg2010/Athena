@@ -1,6 +1,7 @@
 package org.kys.athena.http.models
 
 import org.kys.athena.api.dto.currentgameinfo.CurrentGameParticipant
+import org.kys.athena.api.dto.league.League
 import org.kys.athena.api.dto.summoner.Summoner
 
 
@@ -8,7 +9,9 @@ package object extensions {
 
   implicit class RichInGameSummoner(val inGameSummoner: InGameSummoner.type) extends AnyVal {
 
-    def apply(summoner: Summoner, currentGameParticipant: CurrentGameParticipant): InGameSummoner = {
+    def apply(summoner: Summoner,
+              currentGameParticipant: CurrentGameParticipant,
+              rankedLeagues: List[League]): InGameSummoner = {
       val runes          = RunesSelected(primaryPathId = currentGameParticipant.perks.perkStyle,
                                          secondaryPathId = currentGameParticipant.perks.perkSubStyle,
                                          runeIds = currentGameParticipant.perks.perkIds)
@@ -16,7 +19,8 @@ package object extensions {
                                           spell2Id = currentGameParticipant.spell2Id)
       InGameSummoner(name = currentGameParticipant.summonerName, summonerId = summoner.id,
                      summonerLevel = summoner.summonerLevel, championId = currentGameParticipant.championId,
-                     runes = runes, summonerSpells = summonerSpells, teamId = currentGameParticipant.teamId)
+                     runes = runes, summonerSpells = summonerSpells, teamId = currentGameParticipant.teamId,
+                     rankedLeagues = rankedLeagues.map(l => RankedLeague(l)))
     }
   }
 

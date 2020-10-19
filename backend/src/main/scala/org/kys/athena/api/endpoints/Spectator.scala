@@ -13,7 +13,7 @@ class Spectator(apiKey: String) extends BaseApi(apiKey) {
 
   def activeGameBySummoner(platform: Platform,
                            summonerId: String)
-  : RequestT[Identity, Either[ResponseError[circe.Error], CurrentGameInfo], Nothing] = {
+  : RequestT[Identity, Either[ResponseException[String, circe.Error], CurrentGameInfo], Any] = {
     val url = getBaseUri(platform).path(getBaseUri(platform).path ++ Seq("active-games", "by-summoner", summonerId))
     baseRequest.get(url).response(asJson[CurrentGameInfo])
   }

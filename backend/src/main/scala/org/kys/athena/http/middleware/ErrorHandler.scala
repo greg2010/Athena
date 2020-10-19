@@ -27,7 +27,7 @@ object ErrorHandler extends LazyLogging {
           // Case request is valid and response is generated
           case Right(Some(resp)) => F.pure(resp) // Case no response is generated (404)
           case Right(None) => Response.notFoundFor(req) // Case non-200 response is generated (parsing exception, etc)
-          case Left(ex: MessageFailure) => ex.toHttpResponse[F](req.httpVersion) // All other exceptions
+          case Left(ex: MessageFailure) => F.pure(ex.toHttpResponse[F](req.httpVersion)) // All other exceptions
           case Left(ex: BadRequestException) => logger.info(s"Generated 400, reason=${ex.reason}")
             BadRequest(ErrorResponse(0, "Bad Request"))
           case Left(ex: NotFoundException) => logger.info(s"Generated 404, reason=${ex.reason}")

@@ -6,4 +6,5 @@ final case class InGameSummoner(name: String,
                                 championId: Long,
                                 runes: RunesSelected,
                                 summonerSpells: SummonerSpells,
-                                teamId: Long)
+                                teamId: Long,
+                                rankedLeagues: List[RankedLeague])

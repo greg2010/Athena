@@ -45,8 +45,9 @@ object ApacheLogging extends LazyLogging {
     * @param F       Auxiliary implicit used by [[cats]] library
     * @tparam F [[cats.effect.IO]]
     * @return [[HttpService]] that contains original service with the logger wrapped around it */
-  @SuppressWarnings(Array("org.wartremover.warts.Throw")) def apply[F[_]](service: HttpRoutes[F])
-                                                                         (implicit F: Effect[F]): HttpRoutes[F] = {
+  @SuppressWarnings(Array("org.wartremover.warts.Throw"))
+  def apply[F[_]](service: HttpRoutes[F])
+                 (implicit F: Effect[F]): HttpRoutes[F] = {
     Kleisli { req: Request[F] =>
       val t0 = System.currentTimeMillis()
       OptionT {
@@ -55,7 +56,7 @@ object ApacheLogging extends LazyLogging {
           case Right(Some(resp)) => F.pure(resp) // Case no response is generated (404)
           case Right(None) => Response.notFoundFor(req) // Case non-200 response is generated (parsing exception, etc)
           case Left(ex: MessageFailure) => exceptionLogging(ex)
-            ex.toHttpResponse[F](req.httpVersion) // Case unknown exception is generated (500)
+            F.pure(ex.toHttpResponse[F](req.httpVersion)) // Case unknown exception is generated (500)
           case Left(ex) => exceptionLogging(ex)
             F.raiseError(ex)
             throw ex

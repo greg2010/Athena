@@ -13,16 +13,20 @@ class Match(apiKey: String) extends BaseApi(apiKey) {
   override val pathPrefix: String = "match/v4"
 
   def matchByMatchId(platform: Platform,
-                     matchId: Long): RequestT[Identity, Either[ResponseError[circe.Error], DTOMatch], Nothing] = {
+                     matchId: Long
+                    ): RequestT[Identity, Either[ResponseException[String, circe.Error], DTOMatch], Any] = {
     val url = getBaseUri(platform).path(getBaseUri(platform).path ++ Seq("matches", matchId.toString))
     baseRequest.get(url)
       .response(asJson[DTOMatch])
   }
 
   def matchlistByAccountId(platform: Platform,
-                           accountId: String)
-  : RequestT[Identity, Either[ResponseError[circe.Error], Matchlist], Nothing] = {
+                           accountId: String,
+                           queues: Set[Int] = Set())
+  : RequestT[Identity, Either[ResponseException[String, circe.Error], Matchlist], Any] = {
+    val ps  = queues.map(id => ("queue", id.toString)).toList
     val url = getBaseUri(platform).path(getBaseUri(platform).path ++ Seq("matchlists", "by-account", accountId))
+      .params(ps: _*)
     baseRequest.get(url).response(asJson[Matchlist])
   }
 }

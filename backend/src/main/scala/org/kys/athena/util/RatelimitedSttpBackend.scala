@@ -5,22 +5,24 @@ import java.nio.charset.StandardCharsets
 import cats.effect.IO
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import io.github.resilience4j.ratelimiter.RateLimiter
-import sttp.client.monad.MonadError
-import sttp.client.{NothingT, Request, Response, SttpBackend}
+import sttp.client.{Request, Response, SttpBackend}
 import com.typesafe.scalalogging.LazyLogging
 import org.kys.athena.api.Platform
-import sttp.client.ws.WebSocketResponse
+import sttp.capabilities.Effect
+import sttp.client.impl.cats.implicits._
+import sttp.monad.MonadError
 
 import scala.concurrent.duration._
 
 
-class RatelimitedSttpBackend[S](rateLimiterList: List[RateLimiter],
-                                delegate: IO[SttpBackend[IO, S, NothingT]],
-                                cacheFor: Duration,
-                                cacheMaxCount: Long)(implicit monadError: MonadError[IO])
-  extends SttpBackend[IO, S, NothingT] with LazyLogging {
+class RatelimitedSttpBackend[P](rateLimiterList: List[RateLimiter],
+                                delegate: IO[SttpBackend[IO, P]],
+                                cacheFor: FiniteDuration,
+                                cacheMaxCount: Long)
+                               (implicit monadError: MonadError[IO])
+  extends SttpBackend[IO, P] with LazyLogging {
 
-  private def generateUrlId[T](r: Request[T, S]): String = {
+  private def generateUrlId[T, R >: P with Effect[IO]](r: Request[T, R]): String = {
     val text  = r.uri.toString() + r.method.method
     val bytes = java.util.Base64.getEncoder.encode(text.getBytes())
     new String(bytes, StandardCharsets.US_ASCII)
@@ -36,19 +38,19 @@ class RatelimitedSttpBackend[S](rateLimiterList: List[RateLimiter],
     .map(p => (p, RiotRateLimiters.rateLimiters))
     .toMap
 
-  override def send[T](request: Request[T, S]): IO[Response[T]] = {
+  override def send[T, R >: P with Effect[IO]](request: Request[T, R]): IO[Response[T]] = {
     delegate.flatMap { d =>
       d.send(request)
     }
   }
 
-  def sendRatelimited[T](request: Request[T, S])(implicit platform: Platform): IO[Response[T]] = {
+  def sendRatelimited[T, R >: P with Effect[IO]](request: Request[T, R])
+                                                (implicit platform: Platform): IO[Response[T]] = {
     RatelimitedSttpBackend.decorateF(rateLimitersByRegion(platform), this.send(request))
   }
 
-  @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf")) def sendCachedRateLimited[T](request: Request[T, S])
-                                                                                             (implicit
-                                                                                              platform: Platform)
+  @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
+  def sendCachedRateLimited[T, R >: P with Effect[IO]](request: Request[T, R])(implicit platform: Platform)
   : IO[Response[T]] = {
     cache.getIfPresent(generateUrlId(request)) match {
       case Some(resp) => {
@@ -68,11 +70,6 @@ class RatelimitedSttpBackend[S](rateLimiterList: List[RateLimiter],
   override def close(): IO[Unit] = delegate.map(_.close())
 
   override def responseMonad: MonadError[IO] = monadError
-
-  override def openWebsocket[T, WS_RESULT](request: Request[T, S],
-                                           handler: NothingT[WS_RESULT]): IO[WebSocketResponse[WS_RESULT]] = {
-    ???
-  }
 }
 
 object RatelimitedSttpBackend extends LazyLogging {

@@ -3,18 +3,14 @@ lazy val projectCodename = "Athena"
 name := projectCodename
 organization in ThisBuild := "org.kys"
 version in ThisBuild := "0.1"
-scalaVersion in ThisBuild := "2.13.1"
+scalaVersion in ThisBuild := "2.13.3"
 
 // Projects
 lazy val global = project
   .in(file("."))
   .settings(settings)
   .disablePlugins(AssemblyPlugin)
-  .aggregate(common, backend)
-
-lazy val common = project
-  .settings(name := "common", settings)
-  .disablePlugins(AssemblyPlugin)
+  .aggregate(backend)
 
 lazy val backend = project
   .settings(name := "backend",
@@ -44,25 +40,6 @@ lazy val backend = project
                 dependencies.resilience4j,
                 dependencies.scaffeine),
             javaOptions in Compile ++= Seq("-J-Xss8M"))
-  .dependsOn(common)
-
-lazy val frontend = project
-  .settings(name := "frontend",
-            settings,
-            assemblySettings,
-            libraryDependencies ++= Seq(dependencies.scalaJsLogging,
-                                        dependencies.scalaJsDom,
-                                        dependencies.scalaJsBindingHtml,
-                                        dependencies.scalaJsBindingFuture,
-                                        dependencies.scalaJsSttpClient,
-                                        //dependencies.scalaJsSttpCirce,
-                                        dependencies.scalaJscirceGeneric,
-                                        dependencies.scalaJscirceGenericExtras,
-                                        dependencies.scalaJscirceParser,
-                                        dependencies.scalaJscirceLiteral),
-            scalaJSUseMainModuleInitializer := true)
-  .enablePlugins(ScalaJSPlugin)
-  .dependsOn(common)
 
 // Settings
 lazy val compilerOptions = Seq("-unchecked", "-feature", "-deprecation", "-Wunused:imports", "-Ymacro-annotations",
@@ -87,19 +64,19 @@ lazy val settings = commonSettings ++ wartremoverSettings
 
 // Dependencies repository
 lazy val dependencies = new {
-  val catsVersion       = "2.0.0"
-  val http4sVersion     = "0.21.0-M5"
-  val rhoVersion        = "0.20.0-M1"
-  val circeVersion      = "0.12.1"
-  val enumeratumVersion = "1.5.13"
-  val sttpVersion       = "2.0.0-RC6"
+  val catsVersion       = "2.2.0"
+  val http4sVersion     = "0.21.8"
+  val rhoVersion        = "0.21.0-RC1"
+  val circeVersion      = "0.13.0"
+  val enumeratumVersion = "1.6.1"
+  val sttpVersion       = "3.0.0-RC3"
   val doobieVersion     = "0.8.7"
 
   val catsCore   = "org.typelevel" %% "cats-core" % catsVersion
   val catsEffect = "org.typelevel" %% "cats-effect" % catsVersion
 
   val typesafeConfig = "com.typesafe" % "config" % "1.4.0"
-  val pureconfig     = "com.github.pureconfig" %% "pureconfig" % "0.12.2"
+  val pureconfig     = "com.github.pureconfig" %% "pureconfig" % "0.14.0"
 
   val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
   val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
@@ -122,22 +99,7 @@ lazy val dependencies = new {
   val sttpCirce = "com.softwaremill.sttp.client" %% "circe" % sttpVersion
   val sttpCats  = "com.softwaremill.sttp.client" %% "async-http-client-backend-cats" % sttpVersion
 
-  val resilience4j = "io.github.resilience4j" % "resilience4j-ratelimiter" % "1.2.0"
+  val resilience4j = "io.github.resilience4j" % "resilience4j-ratelimiter" % "1.6.1"
 
-  val scaffeine = "com.github.blemale" %% "scaffeine" % "3.1.0"
-
-  val scalaJsLogging = "org.scala-js" %%%! "scalajs-java-logging" % "0.1.6"
-
-  val scalaJsDom           = "org.scala-js" %%%! "scalajs-dom" % "0.9.7"
-  val scalaJsBindingHtml   = "org.lrng.binding" %%%! "html" % "1.0.2+97-13b1908e"
-  val scalaJsBindingFuture = "com.thoughtworks.binding" %%%! "futurebinding" % "12.0.0-M0"
-
-  val scalaJsSttpClient = "com.softwaremill.sttp.client" %%%! "core" % sttpVersion
-  //val scalaJsSttpCirce  = "com.softwaremill.sttp.client" %%%! "circe_sjs" % sttpVersion
-
-  val scalaJscirceGeneric       = "io.circe" %%%! "circe-generic" % circeVersion
-  val scalaJscirceGenericExtras = "io.circe" %%%! "circe-generic-extras" % circeVersion
-  val scalaJscirceParser        = "io.circe" %%%! "circe-parser" % circeVersion
-  val scalaJscirceLiteral       = "io.circe" %%%! "circe-literal" % circeVersion
-
+  val scaffeine = "com.github.blemale" %% "scaffeine" % "4.0.2"
 }

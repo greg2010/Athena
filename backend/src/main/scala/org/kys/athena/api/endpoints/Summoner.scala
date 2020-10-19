@@ -12,7 +12,7 @@ class Summoner(apiKey: String) extends BaseApi(apiKey) {
   override val pathPrefix: String = "summoner/v4/summoners"
 
   def byName(platform: Platform,
-             name: String): RequestT[Identity, Either[ResponseError[circe.Error], DTOSummoner], Nothing] = {
+             name: String): RequestT[Identity, Either[ResponseException[String, circe.Error], DTOSummoner], Any] = {
     val methodName: String = "by-name"
 
     val url = getBaseUri(platform).path(getBaseUri(platform).path ++ Seq(methodName, name))
@@ -20,7 +20,8 @@ class Summoner(apiKey: String) extends BaseApi(apiKey) {
   }
 
   def bySummonerId(platform: Platform,
-                   summonerId: String): RequestT[Identity, Either[ResponseError[circe.Error], DTOSummoner], Nothing] = {
+                   summonerId: String): RequestT[Identity, Either[ResponseException[String, circe.Error],
+    DTOSummoner], Any] = {
     val url = getBaseUri(platform).path(getBaseUri(platform).path ++ Seq(summonerId))
     baseRequest.get(url).response(asJson[DTOSummoner])
   }

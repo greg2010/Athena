@@ -58,7 +58,7 @@ object Server extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
     BlazeServerBuilder[IO](executionContext = scala.concurrent.ExecutionContext.Implicits.global)
       .bindHttp(port = LAConfig.http.port, host = LAConfig.http.host)
-      .withIdleTimeout(5.minutes)
+      .withIdleTimeout(6.minutes)
       .withResponseHeaderTimeout(5.minutes)
       .withHttpApp(svc)
       .serve

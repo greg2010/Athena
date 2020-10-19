@@ -59,9 +59,10 @@ class RatelimitedSttpBackend[P](rateLimiterList: List[RateLimiter],
         IO.pure(resp.asInstanceOf[Response[T]])
       }
       case None => {
-        this.sendRatelimited(request).map { case r if r.is200 => cache.put(generateUrlId(request), r)
-          r
-        case r => r
+        this.sendRatelimited(request).map {
+          case r if r.is200 => cache.put(generateUrlId(request), r)
+            r
+          case r => r
         }
       }
     }

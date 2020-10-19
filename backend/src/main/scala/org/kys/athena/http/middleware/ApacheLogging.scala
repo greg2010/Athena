@@ -8,6 +8,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.http4s.headers.`User-Agent`
 import org.http4s._
 import cats.implicits._
+import fs2.RaiseThrowable
 
 
 /**
@@ -26,7 +27,7 @@ object ApacheLogging extends LazyLogging {
     * @tparam F [[cats.effect.IO]] */
   private def apacheLoggingImpl[F[_]](req: Request[F], resp: Response[F], time: Long)
                                      (implicit F: Effect[F]): F[Unit] = {
-    resp.bodyAsText(resp.charset.getOrElse(Charset.`UTF-8`)).map { body =>
+    resp.bodyText(RaiseThrowable.fromApplicativeError, resp.charset.getOrElse(Charset.`UTF-8`)).map { body =>
       logger.info(s"${req.remoteAddr.getOrElse("")} " + s"${Calendar.getInstance().getTime} " +
                   s"${req.method} ${req.pathInfo} ${req.httpVersion} " + s"${resp.status.code} " + s"${body.length} " +
                   s"${req.headers.find(_.name == "referer").getOrElse("-")} " +

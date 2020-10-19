@@ -1,7 +1,6 @@
 package org.kys.athena
 
 import cats.effect.IO
-import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
 import org.kys.athena.api.Platform
 import org.kys.athena.data.{OngoingGameInfo, SummonerMatchHistory}

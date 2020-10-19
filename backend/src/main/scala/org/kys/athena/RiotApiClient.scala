@@ -3,7 +3,7 @@ package org.kys.athena
 import io.circe.parser.parse
 import cats.effect.IO
 import cats.implicits._
-import sttp.client.{DeserializationException, HttpError, Identity, RequestT, Response, ResponseException}
+import sttp.client.{DeserializationException, HttpError, Response, ResponseException}
 import com.typesafe.scalalogging.LazyLogging
 import io.circe
 import org.kys.athena.api.dto.currentgameinfo.CurrentGameParticipant
@@ -78,7 +78,7 @@ class RiotApiClient(riotApi: RiotApi)(implicit ratelimitedSttpBackend: Ratelimit
   def matchHistoryBySummonerId(summonerId: String, gamesQueryCount: Int, queues: Set[Int] = Set())
                               (implicit platform: Platform): IO[List[Match]] = {
     logger.debug(s"Querying match history by " + s"summonerId=$summonerId " + s"gamesQueryCount=$gamesQueryCount " +
-                 s"queues=${queues.mkString(",")}" + s"platform=$platform")
+                 s"queues=${queues.mkString(",")} " + s"platform=$platform")
     summonerBySummonerId(summonerId).flatMap { summoner =>
       ratelimitedSttpBackend.sendCachedRateLimited(
         riotApi.`match`.matchlistByAccountId(platform, summoner.accountId, queues))

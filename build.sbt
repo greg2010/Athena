@@ -1,4 +1,4 @@
-lazy val projectCodename = "Athena"
+lazy val projectCodename = "athena"
 
 name := projectCodename
 organization in ThisBuild := "org.kys"
@@ -53,11 +53,13 @@ lazy val wartremoverSettings = Seq(wartremoverWarnings in(Compile, compile) ++= 
 })
 
 lazy val assemblySettings = Seq(assemblyJarName in assembly := projectCodename + "-" + name.value + ".jar",
-                                assemblyMergeStrategy in assembly :=
-                                { case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-                                case "application.conf" => MergeStrategy.concat
-                                case x => val oldStrategy = (assemblyMergeStrategy in assembly).value
-                                  oldStrategy(x)
+                                assemblyMergeStrategy in assembly := {
+                                  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+                                  case "module-info.class" => MergeStrategy.discard
+                                  case "application.conf" => MergeStrategy.concat
+                                  case x =>
+                                    val oldStrategy = (assemblyMergeStrategy in assembly).value
+                                    oldStrategy(x)
                                 })
 
 lazy val settings = commonSettings ++ wartremoverSettings

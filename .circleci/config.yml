@@ -1,0 +1,69 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/athena
+    docker:
+      - image: circleci/openjdk:13-jdk-buster
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - athena-{{ checksum "build.sbt" }}
+            - athena
+      - run: sbt compile
+      - run: sbt test
+      - store_test_results:
+          path: test-results
+      - run: sbt assembly
+      - persist_to_workspace:
+          root: .
+          paths:
+            - backend/target/scala-2.13/athena-backend.jar
+      - store_artifacts:
+          path: backend/target/scala-2.13/athena-backend.jar
+          destination: jar
+      - save_cache:
+          key: athena-{{ checksum "build.sbt" }}
+          paths:
+            - backend/scala-2.13/target/resolution-cache
+            - backend/scala-2.13/target/streams
+            - project/target/resolution-cache
+            - project/target/streams
+            - ~/.sbt
+            - ~/.ivy2/cache
+            - ~/.m2
+      - save_cache:
+          key: athena
+          paths:
+            - ~/.sbt
+            - ~/.ivy2/cache
+            - ~/.m2
+  deploy:
+    working_directory: ~/athena
+    docker:
+      - image: docker:17.05.0-ce-git
+    steps:
+      - checkout
+      - setup_remote_docker
+      - attach_workspace:
+          at: .
+      - run: 
+          command: docker build -t greg2010/athena-backend .
+          working_directory: backend
+      - run: docker tag greg2010/athena-backend greg2010/athena-backend:${CIRCLE_BRANCH}_${CIRCLE_SHA1:0:7}
+      - run: docker tag greg2010/athena-backend greg2010/athena-backend:${CIRCLE_BRANCH}_latest
+      - run: docker tag greg2010/athena-backend greg2010/athena-backend:latest
+      - run: docker login --username ${DOCKER_USER} --password ${DOCKER_PASSWORD}
+      - run: docker push greg2010/athena-backend
+workflows:
+  version: 2
+  build-and-deploy:
+    jobs:
+      - build:
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+      - deploy:
+          requires:
+            - build

@@ -10,7 +10,8 @@ import sttp.client.asynchttpclient.cats.AsyncHttpClientCatsBackend
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.middleware.CORS
-import org.kys.athena.api.RiotApi
+import org.kys.athena.api.{RiotApi, RiotApiClient}
+import org.kys.athena.controllers.{CurrentGameController, GroupController, PositionHeuristicsController}
 import org.kys.athena.http.middleware.{ApacheLogging, ErrorHandler}
 import org.kys.athena.http.routes.Base
 import org.kys.athena.util.RatelimitedSttpBackend
@@ -49,9 +50,10 @@ object Server extends IOApp {
   // Setup business logic
   val cgc = new CurrentGameController(riotApiClient)
   val gc  = new GroupController(riotApiClient)
+  val hc  = new PositionHeuristicsController()
 
   // Setup HTTP server
-  val baseRoutes: HttpRoutes[IO]                         = Base(cgc, gc)
+  val baseRoutes: HttpRoutes[IO]                         = Base(cgc, gc, hc)
   val httpApp   : HttpRoutes[IO]                         = Router(LAConfig.http.prefix -> baseRoutes)
   val svc       : Kleisli[IO, Request[IO], Response[IO]] = ApacheLogging(CORS(ErrorHandler(httpApp))).orNotFound;
 

@@ -1,5 +1,6 @@
 package org.kys.athena.data
 
+import org.kys.athena.api.dto.common.GameQueueTypeEnum
 import org.kys.athena.api.dto.currentgameinfo.{BannedChampion, CurrentGameInfo}
 import org.kys.athena.http.models.InGameSummoner
 
@@ -11,7 +12,7 @@ final case class OngoingGameInfo(gameId: Long,
                                  redTeamSummoners: Set[InGameSummoner],
                                  blueTeamBans: Set[BannedChampion],
                                  redTeamBans: Set[BannedChampion],
-                                 gameQueueId: Long) {
+                                 gameQueueId: GameQueueTypeEnum) {
 }
 
 object OngoingGameInfo {

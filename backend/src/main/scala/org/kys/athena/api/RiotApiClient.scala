@@ -1,22 +1,21 @@
-package org.kys.athena
+package org.kys.athena.api
 
-import io.circe.parser.parse
 import cats.effect.IO
 import cats.implicits._
-import sttp.client.{DeserializationException, HttpError, Response, ResponseException}
 import com.typesafe.scalalogging.LazyLogging
 import io.circe
-import org.kys.athena.api.dto.currentgameinfo.CurrentGameParticipant
+import io.circe.parser.parse
 import org.kys.athena.api.dto.`match`.Match
-import org.kys.athena.api.dto.currentgameinfo.CurrentGameInfo
+import org.kys.athena.api.dto.common.GameQueueTypeEnum
+import org.kys.athena.api.dto.currentgameinfo.{CurrentGameInfo, CurrentGameParticipant}
 import org.kys.athena.api.dto.league.League
 import org.kys.athena.api.dto.summoner.Summoner
-import org.kys.athena.api.{Platform, RiotApi}
+import org.kys.athena.data
 import org.kys.athena.data.SummonerMatchHistory
 import org.kys.athena.http.models.InGameSummoner
 import org.kys.athena.util.RatelimitedSttpBackend
-import org.kys.athena.http.models.extensions._
 import org.kys.athena.util.exceptions.{NotFoundException, RiotException}
+import sttp.client.{DeserializationException, HttpError, Response, ResponseException}
 import sttp.model.StatusCode
 
 
@@ -75,7 +74,7 @@ class RiotApiClient(riotApi: RiotApi)(implicit ratelimitedSttpBackend: Ratelimit
       .flatMap(liftErrors)
   }
 
-  def matchHistoryBySummonerId(summonerId: String, gamesQueryCount: Int, queues: Set[Int] = Set())
+  def matchHistoryBySummonerId(summonerId: String, gamesQueryCount: Int, queues: Set[GameQueueTypeEnum] = Set())
                               (implicit platform: Platform): IO[List[Match]] = {
     logger.debug(s"Querying match history by " + s"summonerId=$summonerId " + s"gamesQueryCount=$gamesQueryCount " +
                  s"queues=${queues.mkString(",")} " + s"platform=$platform")
@@ -94,7 +93,7 @@ class RiotApiClient(riotApi: RiotApi)(implicit ratelimitedSttpBackend: Ratelimit
 
   // Returns hydrated match history for each summoner (last `gamesQueryCount` games)
   def matchHistoryByInGameSummonerSet(inGameSummonerSet: Set[InGameSummoner],
-                                      gamesQueryCount: Int, queues: Set[Int] = Set())
+                                      gamesQueryCount: Int, queues: Set[GameQueueTypeEnum] = Set())
                                      (implicit platform: Platform): IO[Set[SummonerMatchHistory]] = {
     inGameSummonerSet.toList.map { inGameSummoner =>
       matchHistoryBySummonerId(inGameSummoner.summonerId, gamesQueryCount, queues).map { history =>

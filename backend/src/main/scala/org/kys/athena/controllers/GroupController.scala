@@ -1,19 +1,24 @@
-package org.kys.athena
+package org.kys.athena.controllers
 
 import cats.effect.IO
 import com.typesafe.scalalogging.LazyLogging
-import org.kys.athena.api.Platform
-import org.kys.athena.data.{OngoingGameInfo, SummonerMatchHistory}
-import org.kys.athena.http.models.{PlayerGroup, OngoingGameInfoWithGroups}
+import org.kys.athena.api.{Platform, RiotApiClient}
+import org.kys.athena.api.dto.common.GameQueueTypeEnum
+import org.kys.athena.data.{OngoingGameInfo, SummonerMatchHistory, TeamGroupsTuple}
+import org.kys.athena.http.models.{PlayerGroup, PremadeResponse}
 
 
 class GroupController(riotApiClient: RiotApiClient)
   extends LazyLogging {
   case class TeamTupleWithHistory(blueTeam: Set[SummonerMatchHistory], redTeam: Set[SummonerMatchHistory])
-  case class TeamGroupsTuple(blueTeamGroups: Set[PlayerGroup], redTeamGroups: Set[PlayerGroup])
 
-  // See http://static.developer.riotgames.com/docs/lol/queues.json
-  val queues = Set(400, 420, 430, 440, 450, 700)
+
+  val queues: Set[GameQueueTypeEnum] = Set(GameQueueTypeEnum.SummonersRiftBlind,
+                                           GameQueueTypeEnum.SummonersRiftDraft,
+                                           GameQueueTypeEnum.SummonersRiftSoloRanked,
+                                           GameQueueTypeEnum.SummonersRiftFlexRanked,
+                                           GameQueueTypeEnum.HowlingAbyss,
+                                           GameQueueTypeEnum.SummonersRiftClash)
 
   def getTeamHistory(ongoingGameInfo: OngoingGameInfo, gameQueryCount: Int)
                     (implicit platform: Platform): IO[TeamTupleWithHistory] = {
@@ -68,11 +73,11 @@ class GroupController(riotApiClient: RiotApiClient)
 
   def getGroupsForGame(platform: Platform,
                        ongoingGameInfo: OngoingGameInfo,
-                       gamesQueryCount: Int = 5): IO[OngoingGameInfoWithGroups] = {
+                       gamesQueryCount: Int = 5): IO[TeamGroupsTuple] = {
     implicit val p: Platform = platform
     for {
       teamHistory <- getTeamHistory(ongoingGameInfo, gamesQueryCount)
       groupsTuple <- IO.pure(determineGroups(teamHistory))
-    } yield OngoingGameInfoWithGroups(ongoingGameInfo, groupsTuple.blueTeamGroups, groupsTuple.redTeamGroups)
+    } yield groupsTuple
   }
 }

@@ -1,9 +1,9 @@
-package org.kys.athena
+package org.kys.athena.controllers
 
 import cats.effect.IO
 import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
-import org.kys.athena.api.Platform
+import org.kys.athena.api.{Platform, RiotApiClient}
 import org.kys.athena.api.dto.currentgameinfo.{BannedChampion, CurrentGameInfo}
 import org.kys.athena.data.OngoingGameInfo
 import org.kys.athena.http.models.InGameSummoner

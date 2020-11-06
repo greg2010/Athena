@@ -1,3 +1,6 @@
 package org.kys.athena.http.models
 
-final case class SummonerSpells(spell1Id: Long, spell2Id: Long)
+import org.kys.athena.api.dto.common.SummonerSpellsEnum
+
+
+final case class SummonerSpells(spell1Id: SummonerSpellsEnum, spell2Id: SummonerSpellsEnum)

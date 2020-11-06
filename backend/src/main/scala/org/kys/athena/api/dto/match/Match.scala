@@ -1,10 +1,11 @@
 package org.kys.athena.api.dto.`match`
 
 import cats.implicits._
+import org.kys.athena.api.dto.common.GameQueueTypeEnum
 
 
 final case class Match(seasonId: Int,
-                       queueId: Int,
+                       queueId: GameQueueTypeEnum,
                        gameId: Long,
                        participantIdentities: List[ParticipantIdentity],
                        gameVersion: String,

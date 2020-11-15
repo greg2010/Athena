@@ -2,9 +2,9 @@ package org.kys.athena.api
 
 import cats.effect.IO
 import cats.implicits._
-import com.typesafe.scalalogging.LazyLogging
 import io.circe
 import io.circe.parser.parse
+import org.kys.athena.api.backends.CombinedSttpBackend
 import org.kys.athena.api.dto.`match`.Match
 import org.kys.athena.api.dto.common.GameQueueTypeEnum
 import org.kys.athena.api.dto.currentgameinfo.{CurrentGameInfo, CurrentGameParticipant}
@@ -13,34 +13,32 @@ import org.kys.athena.api.dto.summoner.Summoner
 import org.kys.athena.data
 import org.kys.athena.data.SummonerMatchHistory
 import org.kys.athena.http.models.InGameSummoner
-import org.kys.athena.util.RatelimitedSttpBackend
 import org.kys.athena.util.exceptions.{NotFoundException, RiotException}
 import sttp.client.{DeserializationException, HttpError, Response, ResponseException}
 import sttp.model.StatusCode
 
 
-class RiotApiClient(riotApi: RiotApi)(implicit ratelimitedSttpBackend: RatelimitedSttpBackend[Any])
-  extends LazyLogging {
+class RiotApiClient(riotApi: RiotApi)(combinedSttpBackend: CombinedSttpBackend[IO, Any]) {
 
   private def liftErrors[T](r: Response[Either[ResponseException[String, circe.Error], T]]): IO[T] = {
     r.body match {
       case Left(HttpError(body, statusCode)) => {
         statusCode match {
           case StatusCode.NotFound => {
-            logger.debug(s"Riot api responded with 404")
+            scribe.debug(s"Riot api responded with 404")
             IO.raiseError(NotFoundException("Riot API responded: Not Found"))
           }
           case code => {
             val maybeReason: Option[String] = parse(body)
               .flatMap(_.hcursor.downField("status").get[String]("message"))
               .toOption
-            logger.warn(s"Got non-200/404 from Riot API: code=$code maybeReason=$maybeReason")
+            scribe.warn(s"Got non-200/404 from Riot API: code=$code maybeReason=$maybeReason")
             IO.raiseError(RiotException(code.code, maybeReason))
           }
         }
       }
       case Left(DeserializationException(errDesc, ex)) => {
-        logger.error(s"Got parse error while parsing Riot API response. error=${errDesc}", ex)
+        scribe.error(s"Got parse error while parsing Riot API response. error=${errDesc}", ex)
         IO.raiseError(ex)
       }
       case Right(resp) => IO.pure(resp)
@@ -48,38 +46,38 @@ class RiotApiClient(riotApi: RiotApi)(implicit ratelimitedSttpBackend: Ratelimit
   }
 
   def summonerByName(name: String)(implicit platform: Platform): IO[Summoner] = {
-    logger.debug(s"Querying summoner by name=$name platform=$platform")
-    ratelimitedSttpBackend.sendCachedRateLimited(riotApi.summoner.byName(platform, name)).flatMap(liftErrors)
+    scribe.debug(s"Querying summoner by name=$name platform=$platform")
+    combinedSttpBackend.sendCachedRateLimited(riotApi.summoner.byName(platform, name)).flatMap(liftErrors)
   }
 
   def summonerBySummonerId(id: String)(implicit platform: Platform): IO[Summoner] = {
-    logger.debug(s"Querying summoner by id=$id platform=$platform")
-    ratelimitedSttpBackend.sendCachedRateLimited(riotApi.summoner.bySummonerId(platform, id)).flatMap(liftErrors)
+    scribe.debug(s"Querying summoner by id=$id platform=$platform")
+    combinedSttpBackend.sendCachedRateLimited(riotApi.summoner.bySummonerId(platform, id)).flatMap(liftErrors)
   }
 
   def leaguesBySummonerId(id: String)(implicit platform: Platform): IO[List[League]] = {
-    logger.debug(s"Querying leagues by id=$id platform=$platform")
-    ratelimitedSttpBackend.sendCachedRateLimited(riotApi.league.bySummonerId(platform, id)).flatMap(liftErrors)
+    scribe.debug(s"Querying leagues by id=$id platform=$platform")
+    combinedSttpBackend.sendCachedRateLimited(riotApi.league.bySummonerId(platform, id)).flatMap(liftErrors)
   }
 
   def currentGameBySummonerId(summonerId: String)(implicit platform: Platform): IO[CurrentGameInfo] = {
-    logger.debug(s"Querying current game by summonerId=$summonerId platform=$platform")
-    ratelimitedSttpBackend.sendRatelimited(riotApi.spectator.activeGameBySummoner(platform, summonerId))
+    scribe.debug(s"Querying current game by summonerId=$summonerId platform=$platform")
+    combinedSttpBackend.sendRatelimited(riotApi.spectator.activeGameBySummoner(platform, summonerId))
       .flatMap(liftErrors)
   }
 
   def matchByMatchId(matchId: Long)(implicit platform: Platform): IO[Match] = {
-    logger.debug(s"Querying match by matchId=$matchId platform=$platform")
-    ratelimitedSttpBackend.sendCachedRateLimited(riotApi.`match`.matchByMatchId(platform, matchId))
+    scribe.debug(s"Querying match by matchId=$matchId platform=$platform")
+    combinedSttpBackend.sendCachedRateLimited(riotApi.`match`.matchByMatchId(platform, matchId))
       .flatMap(liftErrors)
   }
 
   def matchHistoryBySummonerId(summonerId: String, gamesQueryCount: Int, queues: Set[GameQueueTypeEnum] = Set())
                               (implicit platform: Platform): IO[List[Match]] = {
-    logger.debug(s"Querying match history by " + s"summonerId=$summonerId " + s"gamesQueryCount=$gamesQueryCount " +
+    scribe.debug(s"Querying match history by " + s"summonerId=$summonerId " + s"gamesQueryCount=$gamesQueryCount " +
                  s"queues=${queues.mkString(",")} " + s"platform=$platform")
     summonerBySummonerId(summonerId).flatMap { summoner =>
-      ratelimitedSttpBackend.sendCachedRateLimited(
+      combinedSttpBackend.sendCachedRateLimited(
         riotApi.`match`.matchlistByAccountId(platform, summoner.accountId, queues))
         .flatMap(liftErrors)
         .flatMap { ml => {

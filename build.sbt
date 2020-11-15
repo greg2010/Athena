@@ -21,8 +21,8 @@ lazy val backend = project
                 dependencies.catsEffect,
                 dependencies.typesafeConfig,
                 dependencies.pureconfig,
-                dependencies.logbackClassic,
-                dependencies.scalaLogging,
+                dependencies.scribe,
+                dependencies.scribeSlf4j,
                 dependencies.http4sDsl,
                 dependencies.http4sBlazeServer,
                 dependencies.http4sBlazeClient,
@@ -36,8 +36,7 @@ lazy val backend = project
                 dependencies.enumeratumCirce,
                 dependencies.sttpCore,
                 dependencies.sttpCirce,
-                dependencies.sttpCats,
-                dependencies.resilience4j,
+                dependencies.sttpHttp4s,
                 dependencies.scaffeine),
             javaOptions in Compile ++= Seq("-J-Xss8M"))
 
@@ -80,8 +79,8 @@ lazy val dependencies = new {
   val typesafeConfig = "com.typesafe" % "config" % "1.4.0"
   val pureconfig     = "com.github.pureconfig" %% "pureconfig" % "0.14.0"
 
-  val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
-  val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
+  val scribe      = "com.outr" %% "scribe" % "3.0.4"
+  val scribeSlf4j = "com.outr" %% "scribe-slf4j" % "3.0.2"
 
   val http4sDsl         = "org.http4s" %% "http4s-dsl" % http4sVersion
   val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % http4sVersion
@@ -97,11 +96,9 @@ lazy val dependencies = new {
   val enumeratum      = "com.beachape" %% "enumeratum" % enumeratumVersion
   val enumeratumCirce = "com.beachape" %% "enumeratum-circe" % "1.5.22"
 
-  val sttpCore  = "com.softwaremill.sttp.client" %% "core" % sttpVersion
-  val sttpCirce = "com.softwaremill.sttp.client" %% "circe" % sttpVersion
-  val sttpCats  = "com.softwaremill.sttp.client" %% "async-http-client-backend-cats" % sttpVersion
-
-  val resilience4j = "io.github.resilience4j" % "resilience4j-ratelimiter" % "1.6.1"
+  val sttpCore   = "com.softwaremill.sttp.client" %% "core" % sttpVersion
+  val sttpCirce  = "com.softwaremill.sttp.client" %% "circe" % sttpVersion
+  val sttpHttp4s = "com.softwaremill.sttp.client" %% "http4s-backend" % sttpVersion
 
   val scaffeine = "com.github.blemale" %% "scaffeine" % "4.0.2"
 }

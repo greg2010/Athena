@@ -24,7 +24,7 @@ object Premades {
       pathVar[String]("summonerName") +? param[String]("platform") &
       param[Int]("gameDepth", 5) |>> { (summonerName: String, platform: String, gameDepth: Int) =>
         implicit val qIdEnc            : Encoder[GameQueueTypeEnum] = GameQueueTypeEnum.circeEncoder
-        implicit val PositionKeyEncoder: KeyEncoder[PositionEnum]   = (position: PositionEnum) => position.toString
+        implicit val PositionKeyEncoder: KeyEncoder[PositionEnum]   = (position: PositionEnum) => position.entryName
         import org.http4s.circe.CirceEntityEncoder._
 
         val gameDepthClamped = scala.math.min(scala.math.max(1, gameDepth), 15)
@@ -33,8 +33,8 @@ object Premades {
             for {
               game <- currentGameController.getCurrentGame(p, summonerName)
               groups <- groupController.getGroupsForGame(p, game, gameDepthClamped)
-              blueTeamPositions <- IO.pure(heuristicsController.estimatePositions(game, game.blueTeamSummoners))
-              redTeamPositions <- IO.pure(heuristicsController.estimatePositions(game, game.redTeamSummoners))
+              blueTeamPositions <- heuristicsController.estimatePositions(game, game.blueTeamSummoners)
+              redTeamPositions <- heuristicsController.estimatePositions(game, game.redTeamSummoners)
             } yield Ok(PremadeResponse(game,
                                        groups.blueTeamGroups, groups.redTeamGroups,
                                        blueTeamPositions, redTeamPositions))

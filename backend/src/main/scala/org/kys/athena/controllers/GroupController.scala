@@ -1,15 +1,13 @@
 package org.kys.athena.controllers
 
 import cats.effect.IO
-import com.typesafe.scalalogging.LazyLogging
 import org.kys.athena.api.{Platform, RiotApiClient}
 import org.kys.athena.api.dto.common.GameQueueTypeEnum
 import org.kys.athena.data.{OngoingGameInfo, SummonerMatchHistory, TeamGroupsTuple}
 import org.kys.athena.http.models.{PlayerGroup, PremadeResponse}
 
 
-class GroupController(riotApiClient: RiotApiClient)
-  extends LazyLogging {
+class GroupController(riotApiClient: RiotApiClient) {
   case class TeamTupleWithHistory(blueTeam: Set[SummonerMatchHistory], redTeam: Set[SummonerMatchHistory])
 
 
@@ -40,7 +38,7 @@ class GroupController(riotApiClient: RiotApiClient)
       gameParticipants.count(_.isEmpty) match {
         case 0 => ()
         case c => {
-          logger.error("Got bad response from API: Some of the participants don't have corresponding player. " +
+          scribe.error("Got bad response from API: Some of the participants don't have corresponding player. " +
                        "Flattening and proceeding. Please investigate " + curTeam)
           ()
         }

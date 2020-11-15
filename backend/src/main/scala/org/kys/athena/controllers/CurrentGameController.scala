@@ -2,14 +2,13 @@ package org.kys.athena.controllers
 
 import cats.effect.IO
 import cats.implicits._
-import com.typesafe.scalalogging.LazyLogging
 import org.kys.athena.api.{Platform, RiotApiClient}
 import org.kys.athena.api.dto.currentgameinfo.{BannedChampion, CurrentGameInfo}
 import org.kys.athena.data.OngoingGameInfo
 import org.kys.athena.http.models.InGameSummoner
 
 
-class CurrentGameController(riotApiClient: RiotApiClient) extends LazyLogging {
+class CurrentGameController(riotApiClient: RiotApiClient) {
   case class TeamsTuple(blueTeam: Set[InGameSummoner], redTeam: Set[InGameSummoner])
   case class BansTuple(blueBans: Set[BannedChampion], redBans: Set[BannedChampion])
 

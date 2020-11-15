@@ -4,7 +4,6 @@ import java.util.Calendar
 
 import cats.data.{Kleisli, OptionT}
 import cats.effect.Effect
-import com.typesafe.scalalogging.LazyLogging
 import org.http4s.headers.`User-Agent`
 import org.http4s._
 import cats.implicits._
@@ -15,7 +14,7 @@ import fs2.RaiseThrowable
   * [[ApacheLogging]] contains, as the name suggests, custom org.kys.lolassistant.http middleware for our [[org
   * .http4s.server]] server.
   */
-object ApacheLogging extends LazyLogging {
+object ApacheLogging {
 
   /** Apache log implementation. Backed by [[org.log4s]].
     * Apache log string: `"%h %t %r %>s %b %{Referer}i %{User-agent}i %Dms"`
@@ -28,7 +27,7 @@ object ApacheLogging extends LazyLogging {
   private def apacheLoggingImpl[F[_]](req: Request[F], resp: Response[F], time: Long)
                                      (implicit F: Effect[F]): F[Unit] = {
     resp.bodyText(RaiseThrowable.fromApplicativeError, resp.charset.getOrElse(Charset.`UTF-8`)).map { body =>
-      logger.info(s"${req.remoteAddr.getOrElse("")} " + s"${Calendar.getInstance().getTime} " +
+      scribe.info(s"${req.remoteAddr.getOrElse("")} " + s"${Calendar.getInstance().getTime} " +
                   s"${req.method} ${req.pathInfo} ${req.httpVersion} " + s"${resp.status.code} " + s"${body.length} " +
                   s"${req.headers.find(_.name == "referer").getOrElse("-")} " +
                   req.headers.get(`User-Agent`).map(ua => s"${ua.renderString} ").getOrElse("") + s"${time}ms")
@@ -36,7 +35,7 @@ object ApacheLogging extends LazyLogging {
   }
 
   private def exceptionLogging(ex: Throwable): Unit = {
-    logger.error("Uncaught exception reached middleware", ex)
+    scribe.error("Uncaught exception reached middleware", ex)
   }
 
   /** Apache logging middleware implementation. Defines a function that takes [[HttpService]]

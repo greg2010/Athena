@@ -1,13 +1,11 @@
 package org.kys.athena.api.ratelimit
 
 
-import java.util.concurrent.{Executors, ScheduledExecutorService, TimeUnit}
-
-import cats.effect.concurrent.{Deferred, Semaphore}
-import cats.effect.{Clock, Concurrent, ConcurrentEffect, ContextShift, Fiber, IO, Resource, SyncIO, Timer}
+import cats.effect.concurrent.Semaphore
+import cats.effect.{Concurrent, ConcurrentEffect, IO, Resource, Timer}
 import cats.implicits._
+import org.kys.athena.util.ThreadPools
 
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 import scala.concurrent.duration.{FiniteDuration, MILLISECONDS, NANOSECONDS}
 
 
@@ -30,7 +28,7 @@ object TokenBucket {
             }
 
             private def releaseAfter(d: FiniteDuration): Unit = {
-                t.sleep(d).flatMap (_ => F.toIO(bucket.release)).unsafeRunAsyncAndForget()
+              t.sleep(d).flatMap(_ => F.toIO(bucket.release)).unsafeRunAsyncAndForget()
             }
           }
         }
@@ -39,19 +37,7 @@ object TokenBucket {
 
 
   private def allocateTimer[F[_]](implicit F: Concurrent[F])
-  : Resource[F, Timer[IO]] =
-    allocateThreadPool.map { case (ec, sc) => IO.timer(ec, sc) }
-
-
-  private def allocateThreadPool[F[_]](implicit F: Concurrent[F]): Resource[F, (ExecutionContextExecutorService, ScheduledExecutorService)] = {
-    Resource.make {
-      F.delay {
-        val sc = Executors.newScheduledThreadPool(4)
-        val ec = ExecutionContext.fromExecutorService(sc)
-        (ec, sc)
-      }
-    } {
-      case (sc, ec) => F.delay(ec.shutdownNow()).map(_ => ())
-    }
+  : Resource[F, Timer[IO]] = {
+    ThreadPools.allocateScheduled(Some("rate")).map { case (ec, sc) => IO.timer(ec, sc) }
   }
 }

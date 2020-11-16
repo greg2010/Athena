@@ -6,6 +6,7 @@
     "@kennethormandy/react-fittext": "^0.6.0",
     "@material-ui/core": "^4.11.0",
     "@material-ui/icons": "^4.9.1",
+    "@material-ui/lab": "^4.0.0-alpha.56",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
@@ -15,13 +16,15 @@
     "@types/react-dom": "^16.9.9",
     "@types/react-router": "^5.1.8",
     "@types/react-router-dom": "^5.1.6",
+    "@types/uuid": "^8.3.0",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-query": "^2.26.2",
     "react-router": "^5.2.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.0",
-    "typescript": "^4.0.5"
+    "typescript": "^4.0.5",
+    "uuid": "^8.3.1"
   },
   "scripts": {
     "start": "./env.sh && cp env-config.js ./public/ && react-scripts start",

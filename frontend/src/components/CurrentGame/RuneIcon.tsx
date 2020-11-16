@@ -9,7 +9,7 @@ interface Props {
     boxSize: string,
     iconSize: string,
     runeStyle?: any,
-    rune: RunesReforgedEntry,
+    rune?: RunesReforgedEntry,
     ttPlacement?: TooltipProps['placement']
 }
 
@@ -35,17 +35,24 @@ const RuneIcon: React.FC<Props> = (props: Props) => {
 
     const classes = makeStyles(() => createStyles(styles))();
 
-    // @ts-ignore
-    const url = window._env_.DDRAGON_BASE_URL + 'img/' + props.rune.icon
-    return (
-        <Box className={classes.runeBox}>
-            <IconTooltip arrow title={props.rune.name} placement={props.ttPlacement}>
-                <img className={classes.runeIcon}
-                     src={url}
-                     alt={props.rune.name}/>
-            </IconTooltip>
-        </Box>
-    );
+    if (props.rune) {
+        // @ts-ignore
+        const url = window._env_.DDRAGON_BASE_URL + 'img/' + props.rune.icon
+        return (
+            <Box className={classes.runeBox}>
+                <IconTooltip arrow title={props.rune.name} placement={props.ttPlacement}>
+                    <img className={classes.runeIcon}
+                         src={url}
+                         alt={props.rune.name}/>
+                </IconTooltip>
+            </Box>
+        );
+    } else {
+        return (
+            <Box className={classes.runeBox}>
+                <Box className={classes.runeIcon} style={{backgroundColor: '#bbb'}}/>
+            </Box>)
+    }
 }
 
 export default RuneIcon

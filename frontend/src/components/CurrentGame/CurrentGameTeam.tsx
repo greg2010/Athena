@@ -11,24 +11,23 @@ import {ChampionAPI, RunesReforgedAPI, SummonerSpellAPI} from "../../api/riot";
 
 
 export type SummonerWithGroups = Summoner & {
-    playedWithChampions: number[]
+    playedWithChampions?: number[]
 }
 
 
 interface Props {
-    teamSummoners: [Summoner],
-    teamPositions: TeamPositions,
-    teamGroups: SummonerGroupEntry[],
-    teamBans: [TeamBan],
+    teamSummoners?: [Summoner],
+    teamPositions?: TeamPositions,
+    teamGroups?: SummonerGroupEntry[],
+    teamBans?: [TeamBan],
     teamName: string,
 
-    championData: ChampionAPI,
-    summonerSpellData: SummonerSpellAPI,
-    runesReforgedData: RunesReforgedAPI
+    championData?: ChampionAPI,
+    summonerSpellData?: SummonerSpellAPI,
+    runesReforgedData?: RunesReforgedAPI
 }
 
 const CurrentGameTeam: React.FC<Props> = (props: Props) => {
-
     type TeamStats = {
         winrateAverage: number,
         winrateRange: number
@@ -46,7 +45,6 @@ const CurrentGameTeam: React.FC<Props> = (props: Props) => {
         }
     }
 
-
     const outerJoin = <T extends unknown>(key: T, arr: [T][]): T[] => {
         const ret = new Set<T>([key])
         let prevSize = 1
@@ -59,7 +57,8 @@ const CurrentGameTeam: React.FC<Props> = (props: Props) => {
         return Array.from(ret)
     }
 
-    const determinePlayedWith = (summoners: [Summoner], groups: SummonerGroupEntry[]): SummonerWithGroups[] => {
+    const determinePlayedWith = (summoners: [Summoner], groups: SummonerGroupEntry[]): [SummonerWithGroups] => {
+        // @ts-ignore
         return summoners.map(summoner => {
             return {
                 ...summoner,
@@ -74,22 +73,6 @@ const CurrentGameTeam: React.FC<Props> = (props: Props) => {
         })
     }
 
-    const teamAverages = processTeam(props.teamSummoners)
-
-    let sortedSummoners = props.teamSummoners
-    if (props.teamPositions) {
-        sortedSummoners = sortedSummoners.sort((sumL,sumR) => {
-            const posns = Object.entries(props.teamPositions) as [SSPosition, string][]
-            // @ts-ignore position always guaranteed to be in array
-            const sumLPosn = posns.find(kv => kv[1] == sumL.summonerId)[0]
-            // @ts-ignore position always guaranteed to be in array
-            const sumRPosn = posns.find(kv => kv[1] == sumR.summonerId)[0]
-            return positionOrder(sumLPosn) - positionOrder(sumRPosn)
-        })
-    }
-
-    const sortedSummonersWithGroups = determinePlayedWith(sortedSummoners, props.teamGroups)
-
     const styles = createStyles({
         teamBox: {
             display: 'flex',
@@ -102,18 +85,49 @@ const CurrentGameTeam: React.FC<Props> = (props: Props) => {
 
     const classes = makeStyles(() => styles)();
 
-    return (
-        <Box className={classes.teamBox}>
-            <TeamHeader {...teamAverages} teamName={props.teamName}/>
-            {sortedSummonersWithGroups.map((s) =>
-                <CurrentGameCard playerData={s}
-                                 key={s.summonerId}
-                                 championData={props.championData}
-                                 runesData={props.runesReforgedData}
-                                 ssData={props.summonerSpellData} />)}
-            <Bans bans={props.teamBans} championData={props.championData}/>
-        </Box>
-    );
+    if (props.teamSummoners && props.championData && props.runesReforgedData && props.summonerSpellData) {
+
+        const teamAverages = processTeam(props.teamSummoners)
+
+        let sortedSummoners = props.teamSummoners
+
+        if (props.teamPositions) {
+            sortedSummoners = sortedSummoners.sort((sumL, sumR) => {
+                const posns = Object.entries(props.teamPositions!) as [SSPosition, string][]
+                // @ts-ignore position always guaranteed to be in array
+                const sumLPosn = posns.find(kv => kv[1] == sumL.summonerId)[0]
+                // @ts-ignore position always guaranteed to be in array
+                const sumRPosn = posns.find(kv => kv[1] == sumR.summonerId)[0]
+                return positionOrder(sumLPosn) - positionOrder(sumRPosn)
+            })
+        }
+
+        if (props.teamGroups) {
+            sortedSummoners = determinePlayedWith(sortedSummoners, props.teamGroups)
+        }
+
+        return (
+            <Box className={classes.teamBox}>
+                <TeamHeader isLoading={false} {...teamAverages} teamName={props.teamName}/>
+                {sortedSummoners.map((s) =>
+                    <CurrentGameCard playerData={s}
+                                     key={s.summonerId}
+                                     championData={props.championData}
+                                     runesData={props.runesReforgedData}
+                                     ssData={props.summonerSpellData}/>)}
+                <Bans isLoading={false} bans={props.teamBans} championData={props.championData}/>
+            </Box>
+        );
+
+    } else {
+        return (
+            <Box className={classes.teamBox}>
+                <TeamHeader isLoading={true} teamName={props.teamName}/>
+                {[0, 1, 2, 3, 4].map(i => <CurrentGameCard key={i}/>)}
+                <Bans isLoading={true} bans={props.teamBans} championData={props.championData}/>
+            </Box>
+        );
+    }
 }
 
 export default CurrentGameTeam

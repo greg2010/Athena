@@ -2,8 +2,9 @@ import { makeStyles } from '@material-ui/core/styles';
 import Paper from "@material-ui/core/Paper";
 import ChampionIcon from "./ChampionIcon";
 import React from "react";
-import {ChampionAPI, championDataById, fetchChampion} from "../../api/riot";
+import {ChampionAPI, championDataById, ChampionEntry, fetchChampion} from "../../api/riot";
 import {TeamBan} from "../../api/backend";
+import {Skeleton} from "@material-ui/lab";
 
 const useStyles = makeStyles(theme => ({
     bannedMain: {
@@ -19,8 +20,9 @@ const useStyles = makeStyles(theme => ({
 }));
 
 interface Props {
-    bans: TeamBan[]
-    championData: ChampionAPI
+    bans: TeamBan[] | undefined
+    championData?: ChampionAPI,
+    isLoading: boolean
 }
 
 const Bans: React.FC<Props> = (props: Props) => {
@@ -44,23 +46,44 @@ const Bans: React.FC<Props> = (props: Props) => {
     const beforeStyle = {
         filter: 'grayscale(50%)'
     }
+    if (props.isLoading) {
+        return (
+            <Paper elevation={5} className={classes.bannedMain}>
+                {[0, 1, 2, 3, 4].map(i => <Skeleton variant={'rect'}
+                                                    width='64px'
+                                                    height='64px'
+                                                    style={{
+                                                        marginRight: '4px',
+                                                        marginLeft: '4px',
+                                                        borderRadius: '10%'
+                                                    }}
+                                                    key={i}/>)}
+            </Paper>)
+    }
 
-    return (
-        <Paper elevation={5} className={classes.bannedMain}>
-            {props.bans
-                .map(b => {
-                    return {...championDataById(props.championData, b.championId), ...b}
-                })
-                .map(p =>
-                    <ChampionIcon
-                        champion={p}
-                        size='64px'
-                        beforeStyles={{...beforeStyle}}
-                        styles={{...crossedLineStyle, marginRight:'4px', marginLeft:'4px'}}
-                        key={p.pickTurn}/>)
-            }
-        </Paper>
-    );
+    if (props.bans && props.championData) {
+        return (
+            <Paper elevation={5} className={classes.bannedMain}>
+                {props.bans
+                    .map(b => {
+                        return {
+                            ban: b,
+                            champion: championDataById(props.championData!, b.championId)
+                        }
+                    })
+                    .map(p =>
+                        <ChampionIcon
+                            champion={p.champion}
+                            size='64px'
+                            beforeStyles={{...beforeStyle}}
+                            styles={{...crossedLineStyle, marginRight: '4px', marginLeft: '4px'}}
+                            key={p.ban.pickTurn}/>)
+                }
+            </Paper>
+        );
+    } else {
+        return null
+    }
 }
 
 export default Bans

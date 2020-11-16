@@ -16,6 +16,7 @@ import org.kys.athena.api.{RiotApi, RiotApiClient}
 import org.kys.athena.controllers.{CurrentGameController, GroupController, PositionHeuristicsController}
 import org.kys.athena.http.middleware.{ApacheLogging, ErrorHandler}
 import org.kys.athena.http.routes.Base
+import org.kys.athena.util.ThreadPools
 import sttp.client.http4s.Http4sBackend
 
 import scala.concurrent.duration._
@@ -52,23 +53,6 @@ object Server extends IOApp {
   }
 
   // Stage 0 - allocate thread pool(s)
-  def allocateCachedThreadPool(threadPoolName: Option[String] = None): Resource[IO, ExecutionContextExecutorService] = {
-    Resource.make {
-      IO.delay {
-        threadPoolName match {
-          case Some(name) => {
-            val tfb = new ThreadFactoryBuilder
-            val tf  = tfb.setNameFormat(s"$name-pool-%d").build()
-            ExecutionContext.fromExecutorService(Executors.newCachedThreadPool(tf))
-          }
-          case None => ExecutionContext.fromExecutorService(Executors.newCachedThreadPool())
-        }
-
-      }
-    } { ec =>
-      IO.delay(ec.shutdownNow()).map(_ => ())
-    }
-  }
 
   // Stage 1 - allocate client rate limiters
   def allocateRateLimiters: Resource[IO, RegionalRateLimiter[IO]] = {
@@ -83,11 +67,12 @@ object Server extends IOApp {
   // Stage 2 - allocate http client
   def prepareClient: Resource[IO, CombinedSttpBackend[IO, Any]] = {
     val res = for {
-      ec <- allocateCachedThreadPool(Some("client"))
+      ec <- ThreadPools.allocateCached[IO](Some("client"))
       rl <- allocateRateLimiters
-      bb <- Http4sBackend.usingDefaultClientBuilder[IO](Blocker.liftExecutionContext(ec), ec)(ConcurrentEffect[IO],
-                                                                                              IO.contextShift(ec))
-    } yield (ec, rl, bb)
+      bb <- Http4sBackend.usingDefaultClientBuilder[IO](Blocker.liftExecutionContext(ec._1), ec._1)(
+        ConcurrentEffect[IO],
+        IO.contextShift(ec._1))
+    } yield (ec._1, rl, bb)
 
     res.evalMap { case (ec, rl, bb) =>
       IO.pure {
@@ -133,14 +118,15 @@ object Server extends IOApp {
 
   // Stage 6 - allocate http server
   def prepareServer(svc: HttpApp[IO]): Resource[IO, fs2.Stream[IO, ExitCode]] = {
-    allocateCachedThreadPool(Some("server")).map { ec =>
-      BlazeServerBuilder[IO](executionContext = ec)(
-        implicitly[ConcurrentEffect[IO]], IO.timer(ec))
-        .bindHttp(port = LAConfig.http.port, host = LAConfig.http.host)
-        .withIdleTimeout(6.minutes)
-        .withResponseHeaderTimeout(5.minutes)
-        .withHttpApp(svc)
-        .serve
+    ThreadPools.allocateCached[IO](Some("server")).map {
+      case (ec, _) =>
+        BlazeServerBuilder[IO](executionContext = ec)(
+          implicitly[ConcurrentEffect[IO]], IO.timer(ec))
+          .bindHttp(port = LAConfig.http.port, host = LAConfig.http.host)
+          .withIdleTimeout(6.minutes)
+          .withResponseHeaderTimeout(5.minutes)
+          .withHttpApp(svc)
+          .serve
     }
   }
 }

@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build:
+  build-backend:
     working_directory: ~/athena
     docker:
       - image: circleci/openjdk:13-jdk-buster
@@ -8,8 +8,8 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - athena-{{ checksum "build.sbt" }}
-            - athena
+            - athena-backend-{{ checksum "build.sbt" }}
+            - athena-backend
       - run: sbt compile
       - run: sbt test
       - store_test_results:
@@ -23,7 +23,7 @@ jobs:
           path: backend/target/scala-2.13/athena-backend.jar
           destination: jar
       - save_cache:
-          key: athena-{{ checksum "build.sbt" }}
+          key: athena-backend-{{ checksum "build.sbt" }}
           paths:
             - backend/scala-2.13/target/resolution-cache
             - backend/scala-2.13/target/streams
@@ -33,11 +33,39 @@ jobs:
             - ~/.ivy2/cache
             - ~/.m2
       - save_cache:
-          key: athena
+          key: athena-backend
           paths:
             - ~/.sbt
             - ~/.ivy2/cache
             - ~/.m2
+  build-frontend:
+    working_directory: ~/athena
+    docker:
+      - image: cimg/node:15.2.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - athena-frontend-{{ checksum "frontend/package-lock.json" }}
+            - athena-frontend
+      - run:
+          command: npm install
+          working_directory: frontend
+      - run:
+          command: CI=false npm run build
+          working_directory: frontend
+      - persist_to_workspace:
+          root: .
+          paths:
+            - frontend/build
+      - save_cache:
+          key: athena-frontend-{{ checksum "frontend/package-lock.json" }}
+          paths:
+            - frontend/node_modules
+      - save_cache:
+          key: athena-frontend
+          paths:
+            - frontend/node_modules
   deploy:
     working_directory: ~/athena
     docker:
@@ -47,23 +75,38 @@ jobs:
       - setup_remote_docker
       - attach_workspace:
           at: .
-      - run: 
+      - run:
           command: docker build -t greg2010/athena-backend .
           working_directory: backend
+      - run:
+          command: docker build -t greg2010/athena-frontend .
+          working_directory: frontend
+      - run: docker tag greg2010/athena-frontend greg2010/athena-frontend:${CIRCLE_BRANCH}_${CIRCLE_SHA1:0:7}
+      - run: docker tag greg2010/athena-frontend greg2010/athena-frontend:${CIRCLE_BRANCH}_latest
+      - run: docker tag greg2010/athena-frontend greg2010/athena-frontend:latest
+      - run: docker login --username ${DOCKER_USER} --password ${DOCKER_PASSWORD}
+      - run: docker push greg2010/athena-frontend
       - run: docker tag greg2010/athena-backend greg2010/athena-backend:${CIRCLE_BRANCH}_${CIRCLE_SHA1:0:7}
       - run: docker tag greg2010/athena-backend greg2010/athena-backend:${CIRCLE_BRANCH}_latest
       - run: docker tag greg2010/athena-backend greg2010/athena-backend:latest
       - run: docker login --username ${DOCKER_USER} --password ${DOCKER_PASSWORD}
       - run: docker push greg2010/athena-backend
+
 workflows:
   version: 2
   build-and-deploy:
     jobs:
-      - build:
+      - build-backend:
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+      - build-frontend:
           filters:
             branches:
               ignore:
                 - gh-pages
       - deploy:
           requires:
-            - build
+            - build-backend
+            - build-frontend

@@ -13,7 +13,7 @@ import org.kys.athena.http.models.PremadeResponse
 import org.kys.athena.util.exceptions.BadRequestException
 
 
-object Premades {
+object CurrentGame {
 
   def apply(currentGameController: CurrentGameController,
             groupController: GroupController,

@@ -8,11 +8,11 @@ export type CurrentGameResponse = {
     blueTeamSummoners: [Summoner],
     blueTeamPositions: TeamPositions,
     blueTeamBans: [TeamBan],
-    blueTeamGroups: SummonerGroupEntry[],
+    blueTeamGroups?: [SummonerGroupEntry] | [],
     redTeamSummoners: [Summoner],
     redTeamPositions: TeamPositions,
     redTeamBans: [TeamBan],
-    redTeamGroups: SummonerGroupEntry[]
+    redTeamGroups?: [SummonerGroupEntry] | []
 }
 
 export type Summoner = {

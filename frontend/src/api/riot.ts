@@ -1,6 +1,3 @@
-import champion from "../util/champion.json";
-import summoner from "../util/summoner.json";
-import runesReforged from "../util/runesReforged.json";
 import {fetchUrlAs} from "../util/request";
 
 
@@ -61,10 +58,8 @@ export const fetchRunesReforged = ():  () => Promise<RunesReforgedAPI> => {
 }
 
 export const ddChampionKey = 'ddChampion'
-export const championDataById = (champion: ChampionAPI, championId: number): ChampionEntry => {
-    const ret = Object.values(champion.data).find(ch => ch.key == championId.toString())
-    if (ret) return ret
-    else throw Error('Champion ID resolution failed, championId=' + championId)
+export const championDataById = (champion: ChampionAPI, championId: number): ChampionEntry | undefined => {
+    return Object.values(champion.data).find(ch => ch.key == championId.toString())
 }
 
 export const ddSummonerKey = 'ddSummoner'

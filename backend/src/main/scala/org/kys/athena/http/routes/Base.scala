@@ -10,8 +10,8 @@ object Base {
   def apply(currentGameController: CurrentGameController,
             groupController: GroupController,
             heuristicsController: PositionHeuristicsController): HttpRoutes[IO] = {
-    val premades = Premades(currentGameController, groupController, heuristicsController)
+    val currentGame = CurrentGame(currentGameController, groupController, heuristicsController)
 
-    premades.toRoutes(identity)
+    currentGame.toRoutes(identity)
   }
 }

@@ -11,13 +11,18 @@ interface Props {
     styles?: any,
     size: string,
     ttPlacement?: TooltipProps['placement'],
-    champion: ChampionEntry
+    champion?: ChampionEntry
 }
 
 
 const ChampionIcon: React.FC<Props> = (props: Props) => {
-    // @ts-ignore
-    const srcUrl = window._env_.DDRAGON_BASE_URL + window._env_.DDRAGON_VERSION + '/img/champion/' + props.champion.id + '.png'
+    let srcUrl = 'placeholder_champion.png'
+    let championName = 'Unknown'
+    if (props.champion) {
+        // @ts-ignore
+        srcUrl = window._env_.DDRAGON_BASE_URL + window._env_.DDRAGON_VERSION + '/img/champion/' + props.champion.id + '.png'
+        championName = props.champion.name
+    }
 
     const styles = (theme: Theme) => ({
         champIcon: {
@@ -45,7 +50,7 @@ const ChampionIcon: React.FC<Props> = (props: Props) => {
 
     const classes = makeStyles(styles)();
     return (
-        <IconTooltip arrow title={props.champion.name} placement={props.ttPlacement}>
+        <IconTooltip arrow title={championName} placement={props.ttPlacement}>
             <Box className={classes.champIcon}/>
         </IconTooltip>
     );

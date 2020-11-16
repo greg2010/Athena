@@ -102,6 +102,6 @@ export const positionOrder = (position: SSPosition): number => {
 export const currentGameKey = 'backendCurGame'
 export const fetchCurrentGame = (realm: string, summonerName: string): () => Promise<CurrentGameResponse> => {
     // @ts-ignore
-    const url = 'http://' +  window._env_.BACKEND_API_URL + '/premades/by-summoner-name/' + summonerName + '?platform=' + realm + '&gameDepth=5'
+    const url = window._env_.BACKEND_API_URL + '/premades/by-summoner-name/' + summonerName + '?platform=' + realm + '&gameDepth=5'
     return () => fetchUrlAs<CurrentGameResponse>(url)
 }

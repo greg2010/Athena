@@ -32,7 +32,8 @@ class PositionHeuristicsController(combinedSttpBackend: CombinedSttpBackend[IO, 
     }
   }
 
-  def estimatePositions(ongoingGameInfo: OngoingGameInfo, team: Set[InGameSummoner]): IO[Map[PositionEnum, String]] = {
+  def estimatePositions(ongoingGameInfo: OngoingGameInfo,
+                        team: Set[InGameSummoner]): IO[Option[Map[PositionEnum, String]]] = {
     // Reject non-summoner's rift games
     ongoingGameInfo.gameQueueId match {
       case q if q.in(GameQueueTypeEnum.SummonersRiftBlind,
@@ -41,7 +42,7 @@ class PositionHeuristicsController(combinedSttpBackend: CombinedSttpBackend[IO, 
                      GameQueueTypeEnum.SummonersRiftFlexRanked,
                      GameQueueTypeEnum.SummonersRiftClash) => {
         playRates.map { playRate =>
-          team.toList.permutations.map(PositionEnum.values.zip(_)).toList.map { perm =>
+          val posns = team.toList.permutations.map(PositionEnum.values.zip(_)).toList.map { perm =>
             val score = perm.map {
               case (posn, sum) =>
                 playRate.data.get(sum.championId.toInt).flatMap(_.get(posn)) match {
@@ -51,9 +52,10 @@ class PositionHeuristicsController(combinedSttpBackend: CombinedSttpBackend[IO, 
             }.sum
             (perm.toMap.view.mapValues(_.summonerId), score)
           }.maxBy(_._2)._1.toMap
+          Some(posns)
         }
       }
-      case _ => IO.pure(Map())
+      case _ => IO.pure(None)
     }
   }
 }

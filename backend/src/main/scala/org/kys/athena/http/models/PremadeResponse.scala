@@ -9,9 +9,9 @@ final case class PremadeResponse(gameId: Long,
                                  gameStartTime: Long,
                                  platformId: String,
                                  blueTeamSummoners: Set[InGameSummoner],
-                                 blueTeamPositions: Map[PositionEnum, String],
+                                 blueTeamPositions: Option[Map[PositionEnum, String]],
                                  redTeamSummoners: Set[InGameSummoner],
-                                 redTeamPositions: Map[PositionEnum, String],
+                                 redTeamPositions: Option[Map[PositionEnum, String]],
                                  blueTeamBans: Set[BannedChampion],
                                  redTeamBans: Set[BannedChampion],
                                  gameQueueId: GameQueueTypeEnum,
@@ -23,8 +23,8 @@ object PremadeResponse {
   def apply(ongoingGameInfo: OngoingGameInfo,
             blueTeamGroups: Set[PlayerGroup],
             redTeamGroups: Set[PlayerGroup],
-            blueTeamPositions: Map[PositionEnum, String],
-            redTeamPositions: Map[PositionEnum, String]): PremadeResponse = {
+            blueTeamPositions: Option[Map[PositionEnum, String]],
+            redTeamPositions: Option[Map[PositionEnum, String]]): PremadeResponse = {
     PremadeResponse(
       gameId = ongoingGameInfo.gameId,
       gameStartTime = ongoingGameInfo.gameStartTime,

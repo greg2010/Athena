@@ -6,15 +6,15 @@ import React from "react";
 import * as rankedUtils from "../../util/rankedDataUtils";
 import {ParsedRankedData} from "../../util/rankedDataUtils";
 import {QueueType} from "../../api/backend";
-
+import {LoadableProp} from "../LoadableProp";
+import {Skeleton} from "@material-ui/lab";
 
 
 interface Props {
     rankedData?: ParsedRankedData
 }
 
-const RankedWinrate: React.FC<Props> = (props: Props) => {
-
+const RankedWinrate: React.FC<Props & LoadableProp> = (props: Props & LoadableProp) => {
     const styles = createStyles({
         winrateBlock: {
             display: 'flex',
@@ -25,29 +25,49 @@ const RankedWinrate: React.FC<Props> = (props: Props) => {
 
     const classes = makeStyles(() => styles)();
 
-    if (!props.rankedData) return (
-        <Box className={classes.winrateBlock}>
-            <Typography variant='subtitle1'>No ranked data</Typography>
-        </Box>
-    )
-    else {
-        let queueName = ''
-        if (props.rankedData.queueType == QueueType.RANKED_SOLO_5x5) {
-            queueName = 'Solo/Duo'
-        } else {
-            queueName = 'Flex'
-        }
+    if (props.isLoading) {
         return (
             <Box className={classes.winrateBlock}>
-                <WinrateBar winrate={props.rankedData.winrate}/>
-                <Typography variant='subtitle2' style={{flex: 1, textAlign: 'right', fontSize: 12}}>
-                    {queueName} WR: {rankedUtils.renderWRPercentage(props.rankedData.winrate)}%
-                </Typography>
-                <Typography variant='subtitle2' style={{flex: 1, textAlign: 'right', fontSize: 12}}>
-                    ({props.rankedData.totalGames} Played)
-                </Typography>
+                <Skeleton><WinrateBar winrate={0}/></Skeleton>
+                <Skeleton>
+                    <Typography variant='subtitle2' style={{flex: 1, textAlign: 'right', fontSize: 12}}>
+                        N/A Winrate
+                    </Typography>
+                </Skeleton>
+                <Skeleton>
+                    <Typography variant='subtitle2' style={{flex: 1, textAlign: 'right', fontSize: 12}}>
+                        N/A played
+                    </Typography>
+                </Skeleton>
             </Box>
-        );
+        )
+
+    } else {
+
+        if (!props.rankedData) return (
+            <Box className={classes.winrateBlock}>
+                <Typography variant='subtitle1'>No ranked data</Typography>
+            </Box>
+        )
+        else {
+            let queueName = ''
+            if (props.rankedData.queueType == QueueType.RANKED_SOLO_5x5) {
+                queueName = 'Solo/Duo'
+            } else {
+                queueName = 'Flex'
+            }
+            return (
+                <Box className={classes.winrateBlock}>
+                    <WinrateBar winrate={props.rankedData.winrate}/>
+                    <Typography variant='subtitle2' style={{flex: 1, textAlign: 'right', fontSize: 12}}>
+                        {queueName} WR: {rankedUtils.renderWRPercentage(props.rankedData.winrate)}%
+                    </Typography>
+                    <Typography variant='subtitle2' style={{flex: 1, textAlign: 'right', fontSize: 12}}>
+                        ({props.rankedData.totalGames} Played)
+                    </Typography>
+                </Box>
+            );
+        }
     }
 }
 

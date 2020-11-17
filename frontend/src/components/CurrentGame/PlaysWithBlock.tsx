@@ -6,11 +6,12 @@ import SeriesBar from "./SeriesBar";
 import {ParsedRankedData} from "../../util/rankedDataUtils";
 import ChampionIcon from "./ChampionIcon";
 import Paper from "@material-ui/core/Paper";
-import {ChampionEntry} from "../../api/riot";
+import {ChampionAPI, ChampionEntry} from "../../api/riot";
 import {Skeleton} from "@material-ui/lab";
 
 interface Props {
-    playsWithChampions?: (ChampionEntry | undefined)[]
+    playsWithChampions?: (number | undefined)[],
+    championData?: ChampionAPI
 }
 
 const PlaysWithBlock: React.FC<Props> = (props: Props) => {
@@ -41,7 +42,10 @@ const PlaysWithBlock: React.FC<Props> = (props: Props) => {
                 <Typography variant='subtitle2'>Plays with</Typography>
                 <Box className={classes.playsWith}>
                     {props.playsWithChampions.map((p, index) =>
-                        <ChampionIcon champion={p} size='32px' styles={{marginLeft: '2px', marginRight: '2px'}}
+                        <ChampionIcon championId={p}
+                                      championData={props.championData}
+                                      size='32px'
+                                      styles={{marginLeft: '2px', marginRight: '2px'}}
                                       key={index}/>)}
                 </Box>
             </Box>)
@@ -61,10 +65,10 @@ const PlaysWithBlock: React.FC<Props> = (props: Props) => {
             <Box display='flex' flexDirection='column' alignItems='center' justifyContent='center'>
                 <Skeleton><Typography variant='subtitle2'>Plays with</Typography></Skeleton>
                 <Box className={classes.playsWith}>
-                    <Skeleton variant='rect' width='32px' height='32px'/>
-                    <Skeleton variant='rect' width='32px' height='32px'/>
-                    <Skeleton variant='rect' width='32px' height='32px'/>
-                    <Skeleton variant='rect' width='32px' height='32px'/>
+                    <ChampionIcon size='32px'/>
+                    <ChampionIcon size='32px'/>
+                    <ChampionIcon size='32px'/>
+                    <ChampionIcon size='32px'/>
                 </Box>
             </Box>)
     }

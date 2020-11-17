@@ -9,14 +9,7 @@ import RuneIcon from "./RuneIcon";
 import RankedWinrate from "./RankedWinrate";
 import RankedIconBlock from "./RankedIconBlock";
 import * as rankedUtils from "../../util/rankedDataUtils";
-import {SummonerWithGroups} from "./CurrentGameTeam";
-import {
-    ChampionAPI,
-    championDataById,
-    ChampionEntry, RunesReforgedAPI,
-    runesReforgedDataById, SummonerSpellAPI,
-    summonerSpellDataById
-} from "../../api/riot";
+import {ChampionAPI, championDataById, RunesReforgedAPI, SummonerSpellAPI} from "../../api/riot";
 import {Skeleton} from "@material-ui/lab";
 import PlaysWithBlock from "./PlaysWithBlock";
 import {Summoner} from "../../api/backend";
@@ -55,93 +48,69 @@ const useStyles = makeStyles(theme => ({
 }));
 
 interface Props {
-    playerData?: Summoner | SummonerWithGroups
+    playerData?: Summoner
     championData?: ChampionAPI,
     ssData?: SummonerSpellAPI,
-    runesData?: RunesReforgedAPI
+    runesData?: RunesReforgedAPI,
+    playedWith?: number[]
 }
 
 const CurrentGame: React.FC<Props> = (props: Props) => {
     const classes = useStyles();
-    const resolveIds = (playerData: SummonerWithGroups, championData: ChampionAPI, ssData: SummonerSpellAPI, rrData: RunesReforgedAPI) => {
-        const championObj = championDataById(championData, playerData.championId)
 
-        const sums = Object.values(playerData.summonerSpells).map(ss => summonerSpellDataById(ssData, ss))
 
-        let championsPlayedWith: (ChampionEntry | undefined)[] | undefined = undefined
-        if (playerData.playedWithChampions) {
-            championsPlayedWith = playerData.playedWithChampions.map(c => championDataById(championData, c))
-        }
-
-        return {
-            champion: championObj,
-            summonerName: playerData.name,
-            summonerSpells: sums,
-            runes: {
-                keystone: runesReforgedDataById(rrData, playerData.runes.primaryPathId, playerData.runes.keystone),
-                secondary: runesReforgedDataById(rrData, playerData.runes.secondaryPathId)
-            },
-            championsPlayedWith: championsPlayedWith
-        }
+    let championName
+    if (props.championData && props.playerData) {
+        championName = championDataById(props.championData, props.playerData.championId)?.name
+    }
+    let rankedData
+    if (props.playerData) {
+        rankedData = rankedUtils.rankedDataUtils(props.playerData.rankedLeagues)
     }
 
-
-    if (props.championData && props.ssData && props.runesData && props.playerData) {
-        const resolvedPlayerData = resolveIds(props.playerData, props.championData, props.ssData, props.runesData)
-        const processedRankedData = rankedUtils.rankedDataUtils(props.playerData.rankedLeagues)
-        return (
-            <Paper elevation={4} className={classes.cardMain}>
-                <ChampionIcon champion={resolvedPlayerData.champion} size='80px'
-                              styles={{'margin-left': '4px', 'margin-right': '4px'}} ttPlacement='left'/>
-                <Box display='flex' flexDirection='column' height='90%' justifyContent='space-around'>
-                    {resolvedPlayerData.summonerSpells.map((s, index) => <SummonerSpellIcon summonerSpell={s}
-                                                                                            size='32px'
-                                                                                            key={index}/>)}
-                </Box>
-                <Box display='flex' flexDirection='column' height='90%' justifyContent='space-around'
-                     alignItems='center' marginLeft='4px'>
-                    <RuneIcon boxSize='32px' iconSize='32px' rune={resolvedPlayerData.runes.keystone}/>
-                    <RuneIcon boxSize='32px' iconSize='26px' rune={resolvedPlayerData.runes.secondary}
-                              runeStyle={{borderRadius: '50%'}}/>
-                </Box>
-                <Box className={classes.nameBlock}>
-                    <Typography className={classes.nameText} variant='h6'>{resolvedPlayerData.summonerName}</Typography>
-                    <Typography className={classes.championText}
-                                variant='subtitle1'>{resolvedPlayerData.champion!.name}</Typography>
-                    <RankedWinrate rankedData={processedRankedData}/>
-                </Box>
-                <RankedIconBlock rankedData={processedRankedData}/>
-                <PlaysWithBlock playsWithChampions={resolvedPlayerData.championsPlayedWith}/>
-            </Paper>
-        );
-    } else {
-        return (
-            <Paper elevation={4} className={classes.cardMain}>
-                <Skeleton variant='rect' width='80px' height='80px'/>
-                <Box display='flex' flexDirection='column' height='90%' justifyContent='space-around'>
-                    <Skeleton variant='rect' width='32px' height='32px'/>
-                    <Skeleton variant='rect' width='32px' height='32px'/>
-                </Box>
-                <Box display='flex' flexDirection='column' height='90%' justifyContent='space-around'
-                     alignItems='center' marginLeft='4px'>
-                    <Skeleton variant='circle' width='32px' height='32px'/>
-                    <Skeleton variant='circle' width='32px' height='32px'/>
-                </Box>
-                <Box className={classes.nameBlock}>
-                    <Skeleton>
-                        <Typography className={classes.nameText} variant='h6'>Summoner Name</Typography>
-                    </Skeleton>
-                    <Skeleton>
-                        <Typography className={classes.championText}
-                                    variant='subtitle1'>Champ Name</Typography>
-                    </Skeleton>
-                    <Skeleton><RankedWinrate rankedData={undefined}/></Skeleton>
-                </Box>
-                <Skeleton><RankedIconBlock rankedData={undefined}/></Skeleton>
-                <PlaysWithBlock/>
-            </Paper>
-        )
-    }
+    return (
+        <Paper elevation={4} className={classes.cardMain}>
+            <ChampionIcon championData={props.championData}
+                          championId={props.playerData?.championId}
+                          size='80px'
+                          styles={{'margin-left': '4px', 'margin-right': '4px'}} ttPlacement='left'/>
+            <Box display='flex' flexDirection='column' height='90%' justifyContent='space-around'>
+                <SummonerSpellIcon size='32px'
+                                   ssData={props.ssData}
+                                   summonerSpellId={props.playerData?.summonerSpells.spell1Id}/>
+                <SummonerSpellIcon size='32px'
+                                   ssData={props.ssData}
+                                   summonerSpellId={props.playerData?.summonerSpells.spell2Id}/>
+            </Box>
+            <Box display='flex' flexDirection='column' height='90%' justifyContent='space-around'
+                 alignItems='center' marginLeft='4px'>
+                <RuneIcon boxSize='32px'
+                          iconSize='32px'
+                          rrData={props.runesData}
+                          treeId={props.playerData?.runes.primaryPathId}
+                          keystoneId={props.playerData?.runes.keystone}/>
+                <RuneIcon boxSize='32px'
+                          iconSize='26px'
+                          rrData={props.runesData}
+                          treeId={props.playerData?.runes.secondaryPathId}
+                          runeStyle={{borderRadius: '50%'}}/>
+            </Box>
+            <Box className={classes.nameBlock}>
+                {props.playerData?.name ?
+                    <Typography className={classes.nameText} variant='h6'>{props.playerData.name}</Typography>
+                    :
+                    <Skeleton><Typography className={classes.nameText} variant='h6'>Loading</Typography></Skeleton>}
+                {championName ?
+                    <Typography className={classes.championText} variant='subtitle1'>{championName}</Typography>
+                    : <Skeleton><Typography className={classes.championText}
+                                            variant='subtitle1'>Loading</Typography></Skeleton>}
+                {props.playerData ? <RankedWinrate rankedData={rankedData}/> : <RankedWinrate isLoading={true}/>}
+            </Box>
+            {props.playerData ? <RankedIconBlock rankedData={rankedData}/> : <RankedIconBlock isLoading={true}/>}
+            <PlaysWithBlock playsWithChampions={props.playedWith}
+                            championData={props.championData}/>
+        </Paper>
+    );
 
 
 }

@@ -3,13 +3,17 @@ import Box from "@material-ui/core/Box";
 import React from "react";
 import {IconTooltip} from "./IconTooltip";
 import {TooltipProps} from "@material-ui/core/Tooltip";
-import {RunesReforgedEntry} from "../../api/riot";
+import {RunesReforgedAPI, runesReforgedDataById, RunesReforgedEntry} from "../../api/riot";
+import {LoadableProp} from "../LoadableProp";
+import {Skeleton} from "@material-ui/lab";
 
 interface Props {
     boxSize: string,
     iconSize: string,
     runeStyle?: any,
-    rune?: RunesReforgedEntry,
+    rrData?: RunesReforgedAPI
+    treeId?: number
+    keystoneId?: number
     ttPlacement?: TooltipProps['placement']
 }
 
@@ -32,26 +36,30 @@ const RuneIcon: React.FC<Props> = (props: Props) => {
             height: props.iconSize,
         },
     }
-
     const classes = makeStyles(() => createStyles(styles))();
 
-    if (props.rune) {
-        // @ts-ignore
-        const url = window._env_.DDRAGON_BASE_URL + 'img/' + props.rune.icon
-        return (
-            <Box className={classes.runeBox}>
-                <IconTooltip arrow title={props.rune.name} placement={props.ttPlacement}>
-                    <img className={classes.runeIcon}
-                         src={url}
-                         alt={props.rune.name}/>
-                </IconTooltip>
-            </Box>
-        );
+    if (!props.rrData || !props.treeId) {
+        return (<Skeleton variant='circle' className={classes.runeBox}/>)
     } else {
-        return (
-            <Box className={classes.runeBox}>
-                <Box className={classes.runeIcon} style={{backgroundColor: '#bbb'}}/>
-            </Box>)
+        const rune = runesReforgedDataById(props.rrData, props.treeId, props.keystoneId)
+        if (rune) {
+            // @ts-ignore
+            const url = window._env_.DDRAGON_BASE_URL + 'img/' + rune.icon
+            return (
+                <Box className={classes.runeBox}>
+                    <IconTooltip arrow title={rune.name} placement={props.ttPlacement}>
+                        <img className={classes.runeIcon}
+                             src={url}
+                             alt={rune.name}/>
+                    </IconTooltip>
+                </Box>
+            );
+        } else {
+            return (
+                <Box className={classes.runeBox}>
+                    <Box className={classes.runeIcon} style={{backgroundColor: '#bbb'}}/>
+                </Box>)
+        }
     }
 }
 

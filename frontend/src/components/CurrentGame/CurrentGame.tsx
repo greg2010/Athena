@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {PropsWithChildren} from 'react';
 import {makeStyles} from '@material-ui/core/styles';
 import Container from "@material-ui/core/Container";
 import Typography from "@material-ui/core/Typography";
@@ -7,9 +7,8 @@ import Box from "@material-ui/core/Box";
 import {RouteComponentProps, withRouter} from "react-router";
 import Divider from "@material-ui/core/Divider";
 import Grid from "@material-ui/core/Grid";
-import Skeleton from "@material-ui/lab/Skeleton"
 import CurrentGameTeam from "./CurrentGameTeam";
-import {currentGameKey, CurrentGameResponse, fetchCurrentGame} from "../../api/backend";
+import {currentGameKey, fetchCurrentGame} from "../../api/backend";
 import {
     ddChampionKey,
     ddRuneKey,
@@ -49,13 +48,23 @@ const useStyles = makeStyles(theme => ({
 }));
 
 interface Props {
-    dummy?: any
+    dummy?: number
 }
 
 const CurrentGame: React.FC<Props & RouteComponentProps> = (props: Props  & RouteComponentProps) => {
 
     const [_, realm, summonerName] = props.location.pathname.split('/')
     const classes = useStyles();
+
+    const OuterWrapper = (props: { children?: React.ReactNode }) => {
+
+        return (
+            <Container className={classes.container}>
+                <Paper className={classes.mainPaper} style={{width: '100%', marginTop: '20px'}}>
+                    {props.children}
+                </Paper>
+            </Container>)
+    }
 
 
     const ddQueryOpts = {
@@ -75,66 +84,63 @@ const CurrentGame: React.FC<Props & RouteComponentProps> = (props: Props  & Rout
     const championQuery = useQuery(ddChampionKey, fetchChampion(), ddQueryOpts)
     const ssQuery = useQuery(ddSummonerKey, fetchSummonerSpell(), ddQueryOpts)
     const rrQuery = useQuery(ddRuneKey, fetchRunesReforged(), ddQueryOpts)
-
-    if (championQuery.isError || ssQuery.isError || rrQuery.isError) {
-        return (<div>DD Bad response</div>)
-    }
     const summonerQuery = useQuery([currentGameKey, realm, summonerName], fetchCurrentGame(realm, summonerName), backendQueryOpts)
 
-    const refetchAll = () => {
+    const fetchAll = () => {
         championQuery.refetch()
         ssQuery.refetch()
         rrQuery.refetch()
         return summonerQuery.refetch()
     }
 
+    if (championQuery.isError || ssQuery.isError || rrQuery.isError) return (<OuterWrapper><ApiError
+        reloadHook={fetchAll}/></OuterWrapper>)
+
+
     if (summonerQuery.isError) {
         const fe = summonerQuery.error as FetchError
         if (fe.res && fe.res.status == 404) {
-            return (<NotInGame realm={realm} name={summonerName} reloadHook={summonerQuery.refetch}/>)
+            return (<OuterWrapper><NotInGame realm={realm} name={summonerName}
+                                             reloadHook={summonerQuery.refetch}/></OuterWrapper>)
         }
-        return (<ApiError reloadHook={refetchAll}/>)
+        return (<OuterWrapper><ApiError reloadHook={fetchAll}/></OuterWrapper>)
     }
 
-    const useData = summonerQuery.data
-
     return (
-        <Container className={classes.container}>
-            <Paper className={classes.mainPaper} style={{width: '100%', marginTop: '20px'}}>
-                <Box display='flex' flexDirection='column'>
-                    <Box display='flex' justifyContent='center' alignItems='center'>
-                        <Paper className={classes.headerPaper}>
-                            <Typography variant='h4'>
-                                Live game of {summonerName}
-                            </Typography>
-                        </Paper>
-                    </Box>
-                    <Grid container>
-                        <Grid item xs={12} sm={12} md={6}>
-                            <CurrentGameTeam teamName='Blue'
-                                             teamSummoners={useData ? useData.blueTeamSummoners : undefined}
-                                             teamGroups={useData ? useData.blueTeamGroups : undefined}
-                                             teamPositions={useData ? useData.blueTeamPositions : undefined}
-                                             teamBans={useData ? useData.blueTeamBans : undefined}
-                                             championData={championQuery.data}
-                                             runesReforgedData={rrQuery.data}
-                                             summonerSpellData={ssQuery.data}/>
-                        </Grid>
-                        <Divider orientation='vertical' absolute={true}/>
-                        <Grid item xs={12} sm={12} md={6}>
-                            <CurrentGameTeam teamName='Red'
-                                             teamSummoners={useData ? useData.redTeamSummoners : undefined}
-                                             teamGroups={useData ? useData.redTeamGroups : undefined}
-                                             teamPositions={useData ? useData.redTeamPositions : undefined}
-                                             teamBans={useData ? useData.redTeamBans : undefined}
-                                             championData={championQuery.data}
-                                             runesReforgedData={rrQuery.data}
-                                             summonerSpellData={ssQuery.data}/>
-                        </Grid>
-                    </Grid>
+        <OuterWrapper>
+            <Box display='flex' flexDirection='column'>
+                <Box display='flex' justifyContent='center' alignItems='center'>
+                    <Paper className={classes.headerPaper}>
+                        <Typography variant='h4'>
+                            Live game of {summonerName}
+                        </Typography>
+                    </Paper>
                 </Box>
-            </Paper>
-        </Container>
+                <Grid container>
+                    <Grid item xs={12} sm={12} md={6}>
+                        <CurrentGameTeam teamName='Blue'
+                                         teamSummoners={summonerQuery.data?.blueTeamSummoners}
+                                         teamGroups={summonerQuery.data?.blueTeamGroups}
+                                         teamPositions={summonerQuery.data?.blueTeamPositions}
+                                         teamBans={summonerQuery.data?.blueTeamBans}
+                                         championData={championQuery.data}
+                                         runesReforgedData={rrQuery.data}
+                                         summonerSpellData={ssQuery.data}/>
+                    </Grid>
+                    <Divider orientation='vertical' absolute={true}/>
+                    <Grid item xs={12} sm={12} md={6}>
+                        <CurrentGameTeam teamName='Red'
+                                         teamSummoners={summonerQuery.data?.redTeamSummoners}
+                                         teamGroups={summonerQuery.data?.redTeamGroups}
+                                         teamPositions={summonerQuery.data?.redTeamPositions}
+                                         teamBans={summonerQuery.data?.redTeamBans}
+                                         championData={championQuery.data}
+                                         runesReforgedData={rrQuery.data}
+                                         summonerSpellData={ssQuery.data}/>
+                    </Grid>
+                </Grid>
+            </Box>
+        </OuterWrapper>
     );
 }
 

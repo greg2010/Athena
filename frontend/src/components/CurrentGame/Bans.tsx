@@ -20,7 +20,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 interface Props {
-    bans: TeamBan[] | undefined
+    bans?: TeamBan[]
     championData?: ChampionAPI,
     isLoading: boolean
 }
@@ -61,23 +61,18 @@ const Bans: React.FC<Props> = (props: Props) => {
             </Paper>)
     }
 
-    if (props.bans && props.championData) {
+    if (props.bans && props.bans.length > 0) {
         return (
             <Paper elevation={5} className={classes.bannedMain}>
                 {props.bans
-                    .map(b => {
-                        return {
-                            ban: b,
-                            champion: championDataById(props.championData!, b.championId)
-                        }
-                    })
-                    .map(p =>
+                    .map((p, index) =>
                         <ChampionIcon
-                            champion={p.champion}
+                            championId={p.championId}
+                            championData={props.championData}
                             size='64px'
                             beforeStyles={{...beforeStyle}}
                             styles={{...crossedLineStyle, marginRight: '4px', marginLeft: '4px'}}
-                            key={p.ban.pickTurn}/>)
+                            key={index}/>)
                 }
             </Paper>
         );

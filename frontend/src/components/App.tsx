@@ -21,7 +21,7 @@ const useStyles = makeStyles(theme => ({
             //opacity: 0.5,
             height: '100vh',
             width: '100vw',
-            position: 'absolute',
+            position: 'fixed',
             zIndex: '-1',
         },
         display: 'flex',

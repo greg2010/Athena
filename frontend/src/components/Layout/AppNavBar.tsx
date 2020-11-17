@@ -31,14 +31,14 @@ const AppNavBar: React.FC<Props> = (props: Props) => {
 
     return (
         <div className={classes.root}>
-            <AppBar position="static">
+            <AppBar position="sticky">
                 <Toolbar>
                     <Typography className={classes.title} variant="h6" noWrap>
                         <NavLink style={{color: 'White', textDecoration: 'none'}} to='/'>
                             Athena
                         </NavLink>
                     </Typography>
-                    <Box  hidden={!props.showSearch}>
+                    <Box hidden={!props.showSearch}>
                         <SimpleSearchBar isLanding={false}/>
                     </Box>
                 </Toolbar>

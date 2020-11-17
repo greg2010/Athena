@@ -25,11 +25,11 @@ import NotInGame from "./NotInGame";
 
 const useStyles = makeStyles(theme => ({
     container: {
-        marginTop: theme.spacing(8),
+        marginTop: theme.spacing(2),
+        marginBottom: theme.spacing(2),
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        padding: `${theme.spacing(2)}px ${theme.spacing(3)}px ${theme.spacing(3)}px`,
     },
     separatorLine: {
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -44,7 +44,7 @@ const useStyles = makeStyles(theme => ({
         border: '1px solid #000000',
         'border-radius': '10px',
         marginBottom: '16px',
-        padding: `${theme.spacing(2)}px ${theme.spacing(3)}px ${theme.spacing(3)}px`,
+        padding: `${theme.spacing(1)}px ${theme.spacing(2)}px ${theme.spacing(2)}px`,
     }
 }));
 
@@ -104,7 +104,7 @@ const CurrentGame: React.FC<Props & RouteComponentProps> = (props: Props  & Rout
                 <Box display='flex' flexDirection='column'>
                     <Box display='flex' justifyContent='center' alignItems='center'>
                         <Paper className={classes.headerPaper}>
-                            <Typography variant='h2'>
+                            <Typography variant='h4'>
                                 Live game of {summonerName}
                             </Typography>
                         </Paper>

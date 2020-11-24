@@ -115,8 +115,10 @@ workflows:
               ignore:
                 - gh-pages
       - deploy-frontend:
+          context: KYS-Primary
           requires:
             - build-frontend
       - deploy-backend:
+          context: KYS-Primary
           requires:
             - build-backend

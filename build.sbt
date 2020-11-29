@@ -3,44 +3,40 @@ lazy val projectCodename = "athena"
 name := projectCodename
 organization in ThisBuild := "org.kys"
 version in ThisBuild := "0.1"
-scalaVersion in ThisBuild := "2.13.3"
+scalaVersion in ThisBuild := "2.13.4"
 
 // Projects
 lazy val global = project
   .in(file("."))
   .settings(settings)
   .disablePlugins(AssemblyPlugin)
-  .aggregate(backend)
+  .aggregate(common.jvm, common.js, backend, frontend)
+
+lazy val common = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .settings(name := "common",
+            settings,
+            libraryDependencies ++= dependencies.common.value)
+  .disablePlugins(AssemblyPlugin)
 
 lazy val backend = project
   .settings(name := "backend",
             settings,
             assemblySettings,
-            libraryDependencies ++=
-            Seq(dependencies.catsCore,
-                dependencies.catsEffect,
-                dependencies.typesafeConfig,
-                dependencies.pureconfig,
-                dependencies.scribe,
-                dependencies.scribeSlf4j,
-                dependencies.http4sDsl,
-                dependencies.http4sBlazeServer,
-                dependencies.http4sBlazeClient,
-                dependencies.http4sCirce,
-                dependencies.rhoSwagger,
-                dependencies.circeGeneric,
-                dependencies.circeGenericExtras,
-                dependencies.circeParser,
-                dependencies.circeLiteral,
-                dependencies.enumeratum,
-                dependencies.enumeratumCirce,
-                dependencies.sttpCore,
-                dependencies.sttpCirce,
-                dependencies.sttpHttp4s,
-                dependencies.scaffeine),
+            libraryDependencies ++= dependencies.jvm.value,
             javaOptions in Compile ++= Seq("-J-Xss8M"))
+  .dependsOn(common.jvm)
 
-// Settings
+lazy val frontend = project
+  .settings(name := "frontend",
+            settings,
+            libraryDependencies ++= dependencies.js.value,
+            scalaJSUseMainModuleInitializer := true)
+  .disablePlugins(AssemblyPlugin)
+  .enablePlugins(ScalaJSPlugin)
+  .dependsOn(common.js)
+
+// Settingssb
 lazy val compilerOptions = Seq("-unchecked", "-feature", "-deprecation", "-Wunused:imports", "-Ymacro-annotations",
                                "-encoding", "utf8")
 
@@ -73,32 +69,37 @@ lazy val dependencies = new {
   val sttpVersion       = "3.0.0-RC3"
   val doobieVersion     = "0.8.7"
 
-  val catsCore   = "org.typelevel" %% "cats-core" % catsVersion
-  val catsEffect = "org.typelevel" %% "cats-effect" % catsVersion
+  val laminarVersion = "0.11.0"
 
-  val typesafeConfig = "com.typesafe" % "config" % "1.4.0"
-  val pureconfig     = "com.github.pureconfig" %% "pureconfig" % "0.14.0"
+  val common = Def.setting(Seq(
+    "org.typelevel" %%% "cats-core" % catsVersion,
+    "org.typelevel" %%% "cats-effect" % catsVersion,
+    "com.beachape" %%% "enumeratum" % enumeratumVersion,
+    "com.beachape" %%% "enumeratum-circe" % "1.6.1",
+    "io.circe" %%% "circe-generic" % circeVersion,
+    "io.circe" %%% "circe-generic-extras" % circeVersion,
+    "io.circe" %%% "circe-parser" % circeVersion,
+    "io.circe" %%% "circe-literal" % circeVersion,
+    "com.outr" %%% "scribe" % "3.0.4",
+    "com.softwaremill.sttp.client" %%% "core" % sttpVersion,
+    "com.softwaremill.sttp.client" %%% "circe" % sttpVersion))
 
-  val scribe      = "com.outr" %% "scribe" % "3.0.4"
-  val scribeSlf4j = "com.outr" %% "scribe-slf4j" % "3.0.2"
+  val jvm = Def.setting(common.value ++ Seq(
+    "com.typesafe" % "config" % "1.4.0",
+    "com.github.pureconfig" %% "pureconfig" % "0.14.0",
+    "com.outr" %% "scribe-slf4j" % "3.0.2",
+    "org.http4s" %% "http4s-dsl" % http4sVersion,
+    "org.http4s" %% "http4s-blaze-server" % http4sVersion,
+    "org.http4s" %% "http4s-blaze-client" % http4sVersion,
+    "org.http4s" %% "http4s-circe" % http4sVersion,
+    "org.http4s" %% "rho-swagger" % rhoVersion,
+    "com.softwaremill.sttp.client" %% "http4s-backend" % sttpVersion,
+    "com.github.blemale" %% "scaffeine" % "4.0.2"
+    ))
 
-  val http4sDsl         = "org.http4s" %% "http4s-dsl" % http4sVersion
-  val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % http4sVersion
-  val http4sBlazeClient = "org.http4s" %% "http4s-blaze-client" % http4sVersion
-  val http4sCirce       = "org.http4s" %% "http4s-circe" % http4sVersion
-  val rhoSwagger        = "org.http4s" %% "rho-swagger" % rhoVersion
-
-  val circeGeneric       = "io.circe" %% "circe-generic" % circeVersion
-  val circeGenericExtras = "io.circe" %% "circe-generic-extras" % circeVersion
-  val circeParser        = "io.circe" %% "circe-parser" % circeVersion
-  val circeLiteral       = "io.circe" %% "circe-literal" % circeVersion
-
-  val enumeratum      = "com.beachape" %% "enumeratum" % enumeratumVersion
-  val enumeratumCirce = "com.beachape" %% "enumeratum-circe" % "1.5.22"
-
-  val sttpCore   = "com.softwaremill.sttp.client" %% "core" % sttpVersion
-  val sttpCirce  = "com.softwaremill.sttp.client" %% "circe" % sttpVersion
-  val sttpHttp4s = "com.softwaremill.sttp.client" %% "http4s-backend" % sttpVersion
-
-  val scaffeine = "com.github.blemale" %% "scaffeine" % "4.0.2"
+  val js = Def.setting(common.value ++ Seq(
+    "com.raquo" %%% "laminar" % laminarVersion,
+    "com.raquo" %%% "airstream" % laminarVersion,
+    "com.raquo" %%% "waypoint" % "0.2.0"
+    ))
 }

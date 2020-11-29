@@ -1,26 +1,24 @@
 package org.kys.athena
 
-import java.util.concurrent.{Executors, ThreadFactory}
 
 import cats.data.Kleisli
-import cats.effect.{Blocker, ConcurrentEffect, ExitCode, IO, IOApp, Resource, Timer}
-import com.google.common.util.concurrent.ThreadFactoryBuilder
+import cats.effect.{Blocker, ConcurrentEffect, ContextShift, ExitCode, IO, IOApp, Resource, Timer}
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.{HttpApp, HttpRoutes, Request, Response}
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.middleware.CORS
-import org.kys.athena.api.backends.CombinedSttpBackend
-import org.kys.athena.api.ratelimit.{RegionalRateLimiter, RiotRateLimits}
-import org.kys.athena.api.{RiotApi, RiotApiClient}
-import org.kys.athena.controllers.{CurrentGameController, GroupController, PositionHeuristicsController}
+import org.kys.athena.riot.api.backends.CombinedSttpBackend
+import org.kys.athena.riot.api.ratelimit.{RegionalRateLimiter, RiotRateLimits}
+import org.kys.athena.riot.api.{RiotApi, RiotApiClient}
+import org.kys.athena.controllers.{CurrentGameController, GroupController}
 import org.kys.athena.http.middleware.{ApacheLogging, ErrorHandler}
 import org.kys.athena.http.routes.Base
+import org.kys.athena.meraki.api.{MerakiApi, MerakiApiClient}
 import org.kys.athena.util.ThreadPools
 import sttp.client.http4s.Http4sBackend
 
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 
 
 /** This is the main entrypoint to the application.
@@ -31,10 +29,9 @@ object Server extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
     val resources = for {
       http4sClient <- prepareClient
-      rateLimiter <- allocateRateLimiters
-      riotApiClient <- prepareRiotApiClient(http4sClient)
-      controllers <- prepareControllers(riotApiClient, http4sClient)
-      svc <- prepareSvc(controllers._1, controllers._2, controllers._3)
+      apiClients <- prepareApiClients(http4sClient)
+      controllers <- prepareControllers(apiClients._1, apiClients._2)
+      svc <- prepareSvc(controllers._1, controllers._2)
       server <- prepareServer(svc)
 
     } yield (server)
@@ -84,33 +81,34 @@ object Server extends IOApp {
     }
   }
 
-  // Stage 3 - allocate riot http client
-  def prepareRiotApiClient(combinedSttpBackend: CombinedSttpBackend[IO, Any]): Resource[IO, RiotApiClient] = {
-    Resource.pure[IO, RiotApiClient] {
-      val riotApi = new RiotApi(LAConfig.riotApiKey)
-      new RiotApiClient(riotApi)(combinedSttpBackend)
+  // Stage 3 - allocate http clients
+  def prepareApiClients(combinedSttpBackend: CombinedSttpBackend[IO, Any])
+  : Resource[IO, (RiotApiClient, MerakiApiClient)] = {
+    Resource.pure[IO, (RiotApiClient, MerakiApiClient)] {
+      val riotApi   = new RiotApi(LAConfig.riotApiKey)
+      val rac       = new RiotApiClient(riotApi)(combinedSttpBackend)
+      val merakiApi = new MerakiApi
+      val mac       = new MerakiApiClient(merakiApi)(combinedSttpBackend)
+      (rac, mac)
     }
   }
 
   // Stage 4 - allocate logic controllers
   def prepareControllers(riotApiClient: RiotApiClient,
-                         combinedSttpBackend:
-                         CombinedSttpBackend[IO, Any]): Resource[IO, (CurrentGameController, GroupController,
-    PositionHeuristicsController)] = {
-    Resource.pure[IO, (CurrentGameController, GroupController, PositionHeuristicsController)] {
-      val cgc = new CurrentGameController(riotApiClient)
-      val gc  = new GroupController(riotApiClient)
-      val hc  = new PositionHeuristicsController(combinedSttpBackend)
-      (cgc, gc, hc)
+                         merakiApiClient: MerakiApiClient)
+  : Resource[IO, (CurrentGameController, GroupController)] = {
+    ThreadPools.allocateCached(Some("Controller"))(implicitly[ConcurrentEffect[IO]]).map { tp =>
+      val cgc = new CurrentGameController(riotApiClient, merakiApiClient)(implicitly[ContextShift[IO]])
+      val gc  = new GroupController(riotApiClient)(implicitly[ContextShift[IO]])
+      (cgc, gc)
     }
   }
 
   // Stage 5 - allocate http routes (server)
   def prepareSvc(cgc: CurrentGameController,
-                 gc: GroupController,
-                 hc: PositionHeuristicsController): Resource[IO, Kleisli[IO, Request[IO], Response[IO]]] = {
+                 gc: GroupController): Resource[IO, Kleisli[IO, Request[IO], Response[IO]]] = {
     Resource.pure[IO, Kleisli[IO, Request[IO], Response[IO]]] {
-      val baseRoutes: HttpRoutes[IO] = Base(cgc, gc, hc)
+      val baseRoutes: HttpRoutes[IO] = Base(cgc, gc)
       val httpApp   : HttpRoutes[IO] = Router(LAConfig.http.prefix -> baseRoutes)
       ApacheLogging(CORS(ErrorHandler(httpApp))).orNotFound
     }

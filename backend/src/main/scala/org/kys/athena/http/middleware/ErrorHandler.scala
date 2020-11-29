@@ -5,9 +5,9 @@ import cats.effect.Effect
 import io.circe.generic.auto._
 import org.http4s.dsl.Http4sDsl
 import org.http4s._
-import org.kys.athena.http.models.ErrorResponse
 import org.kys.athena.util.exceptions.{BadRequestException, InconsistentAPIException, NotFoundException, RiotException}
 import cats.implicits._
+import org.kys.athena.http.models.common.ErrorResponse
 
 
 /**

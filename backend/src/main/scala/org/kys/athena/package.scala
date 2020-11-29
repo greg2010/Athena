@@ -19,7 +19,7 @@ package object athena {
   }
 
 
-  val myFormatter: Formatter = formatter"$level [$date][$threadName] $positionAbbreviated - $message"
+  val myFormatter: Formatter = formatter"$level [$dateFull][$threadName] $positionAbbreviated - $message"
   Logger.root
     .clearHandlers()
     .clearModifiers()

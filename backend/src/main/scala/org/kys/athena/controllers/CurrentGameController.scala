@@ -2,11 +2,11 @@ package org.kys.athena.controllers
 
 import cats.effect.{Blocker, ContextShift, IO}
 import cats.implicits._
-import org.kys.athena.riot.api.{Platform, RiotApiClient}
+import org.kys.athena.riot.api.RiotApiClient
 import org.kys.athena.riot.api.dto.currentgameinfo.{BannedChampion, CurrentGameInfo, CurrentGameParticipant}
 import org.kys.athena.http.models.current.{InGameSummoner, OngoingGameResponse, OngoingGameTeam, PositionEnum}
 import org.kys.athena.meraki.api.MerakiApiClient
-import org.kys.athena.riot.api.dto.common.GameQueueTypeEnum
+import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform}
 
 import scala.concurrent.ExecutionContext
 
@@ -78,6 +78,7 @@ class CurrentGameController(riotApiClient: RiotApiClient, merakiApiClient: Merak
       bluePositions <- estimatePositions(game.gameQueueConfigId, blueSummoners)
       redPositions <- estimatePositions(game.gameQueueConfigId, redSummoners)
     } yield OngoingGameResponse(game,
+                                summoner,
                                 OngoingGameTeam(blueSummoners, bluePositions, bans.blue),
                                 OngoingGameTeam(redSummoners, redPositions, bans.red))
 

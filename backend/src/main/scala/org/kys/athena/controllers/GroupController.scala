@@ -6,8 +6,8 @@ import cats.effect.{Async, Blocker, Concurrent, ContextShift, IO}
 import cats.effect.concurrent.Deferred
 import cats.implicits._
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
-import org.kys.athena.riot.api.{Platform, RiotApiClient}
-import org.kys.athena.riot.api.dto.common.GameQueueTypeEnum
+import org.kys.athena.riot.api.RiotApiClient
+import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform}
 import org.kys.athena.data.SummonerMatchHistory
 import org.kys.athena.http.models.current.OngoingGameResponse
 import org.kys.athena.http.models.premade.{PlayerGroup, PremadeResponse}

@@ -2,7 +2,7 @@ package org.kys.athena.riot.api.dto.league
 
 
 final case class League(leagueId: String,
-                        queueType: String,
+                        queueType: RankedQueueTypeEnum,
                         tier: String,
                         rank: String,
                         summonerId: String,

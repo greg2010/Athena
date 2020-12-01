@@ -1,7 +1,6 @@
 package org.kys.athena.riot.api.dto.currentgameinfo
 
-import org.kys.athena.riot.api.Platform
-import org.kys.athena.riot.api.dto.common.GameQueueTypeEnum
+import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform}
 
 
 final case class CurrentGameInfo(gameId: Long,

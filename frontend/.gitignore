@@ -23,3 +23,4 @@ yarn-debug.log*
 yarn-error.log*
 /public/env-config.js
 env-config.js
+.scala-js-sources/

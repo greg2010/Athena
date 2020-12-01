@@ -1,6 +1,6 @@
 package org.kys.athena.riot.api.backends
 
-import org.kys.athena.riot.api.Platform
+import org.kys.athena.riot.api.dto.common.Platform
 import org.kys.athena.riot.api.ratelimit.RegionalRateLimiter
 import sttp.capabilities.Effect
 import sttp.client.{Request, Response}

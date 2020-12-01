@@ -5,7 +5,18 @@ import enumeratum._
 import io.circe.{KeyDecoder, KeyEncoder}
 
 
-sealed abstract class PositionEnum extends EnumEntry with Uppercase
+sealed abstract class PositionEnum extends EnumEntry with Uppercase {
+  // Sorting
+  lazy val toOrder: Int = {
+    this match {
+      case PositionEnum.Top => 0
+      case PositionEnum.Jungle => 1
+      case PositionEnum.Middle => 2
+      case PositionEnum.Bottom => 3
+      case PositionEnum.Utility => 4
+    }
+  }
+}
 
 object PositionEnum extends Enum[PositionEnum] with CirceEnum[PositionEnum] {
   val values: IndexedSeq[PositionEnum] = findValues

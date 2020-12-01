@@ -1,0 +1,520 @@
+{
+  "gameId": 3686739799,
+  "querySummonerId": "4sDaY-lLun9Oo1JqOtpY_EntP-EOTknMCoIXazsEQ2ScNZ0",
+  "querySummonerName": "IvanJYang",
+  "gameStartTime": 1606774317775,
+  "platformId": "NA1",
+  "gameQueueId": 420,
+  "blueTeam": {
+    "summoners": [
+      {
+        "name": "Döflamingo",
+        "summonerId": "EKfmlYXYb3pyAKqSdR4bDbH43HhhKx1uPNijBXBcfHIrhqWD",
+        "summonerLevel": 54,
+        "championId": 4,
+        "runes": {
+          "primaryPathId": 8300,
+          "secondaryPathId": 8200,
+          "keystone": 8360,
+          "runeIds": [
+            8360,
+            8313,
+            8316,
+            8352,
+            8275,
+            8233,
+            5005,
+            5008,
+            5003
+          ]
+        },
+        "summonerSpells": {
+          "spell1Id": 12,
+          "spell2Id": 4
+        },
+        "teamId": 100,
+        "rankedLeagues": [
+          {
+            "leagueId": "136579ee-a212-34b0-b4b8-69ba529f4d7f",
+            "queueType": "RANKED_SOLO_5x5",
+            "tier": "MASTER",
+            "rank": "I",
+            "leaguePoints": 1,
+            "wins": 44,
+            "losses": 29,
+            "miniSeries": null
+          }
+        ]
+      },
+      {
+        "name": "100 PERCENT SLOW",
+        "summonerId": "D6_1ncqDC1IrScRtm1ExtjPUJW6A2NFEsueJxmfr_5kBtiM",
+        "summonerLevel": 117,
+        "championId": 40,
+        "runes": {
+          "primaryPathId": 8200,
+          "secondaryPathId": 8100,
+          "keystone": 8214,
+          "runeIds": [
+            8214,
+            8226,
+            8210,
+            8236,
+            8105,
+            8139,
+            5008,
+            5008,
+            5002
+          ]
+        },
+        "summonerSpells": {
+          "spell1Id": 4,
+          "spell2Id": 14
+        },
+        "teamId": 100,
+        "rankedLeagues": [
+          {
+            "leagueId": "86095819-693e-3935-a2e9-4529e0736d74",
+            "queueType": "RANKED_SOLO_5x5",
+            "tier": "GRANDMASTER",
+            "rank": "I",
+            "leaguePoints": 491,
+            "wins": 188,
+            "losses": 146,
+            "miniSeries": null
+          }
+        ]
+      },
+      {
+        "name": "uforgjengelig",
+        "summonerId": "3LFOThLF5RmD_wBFts3FsmEkFHJmcsDE6mn2GnoyAWfTxQok",
+        "summonerLevel": 60,
+        "championId": 164,
+        "runes": {
+          "primaryPathId": 8400,
+          "secondaryPathId": 8300,
+          "keystone": 8437,
+          "runeIds": [
+            8437,
+            8401,
+            8473,
+            8451,
+            8304,
+            8345,
+            5008,
+            5008,
+            5002
+          ]
+        },
+        "summonerSpells": {
+          "spell1Id": 4,
+          "spell2Id": 12
+        },
+        "teamId": 100,
+        "rankedLeagues": [
+          {
+            "leagueId": "86095819-693e-3935-a2e9-4529e0736d74",
+            "queueType": "RANKED_SOLO_5x5",
+            "tier": "GRANDMASTER",
+            "rank": "I",
+            "leaguePoints": 547,
+            "wins": 174,
+            "losses": 131,
+            "miniSeries": null
+          }
+        ]
+      },
+      {
+        "name": "IvanJYang",
+        "summonerId": "4sDaY-lLun9Oo1JqOtpY_EntP-EOTknMCoIXazsEQ2ScNZ0",
+        "summonerLevel": 407,
+        "championId": 245,
+        "runes": {
+          "primaryPathId": 8100,
+          "secondaryPathId": 8300,
+          "keystone": 8128,
+          "runeIds": [
+            8128,
+            8143,
+            8138,
+            8135,
+            8304,
+            8321,
+            5005,
+            5008,
+            5002
+          ]
+        },
+        "summonerSpells": {
+          "spell1Id": 11,
+          "spell2Id": 4
+        },
+        "teamId": 100,
+        "rankedLeagues": [
+          {
+            "leagueId": "8394c73f-4d3d-4a0b-acbc-25c5df93c8f7",
+            "queueType": "RANKED_FLEX_SR",
+            "tier": "PLATINUM",
+            "rank": "III",
+            "leaguePoints": 73,
+            "wins": 59,
+            "losses": 35,
+            "miniSeries": null
+          },
+          {
+            "leagueId": "f1448acf-1c69-4b92-b22a-74cefe75e704",
+            "queueType": "RANKED_SOLO_5x5",
+            "tier": "DIAMOND",
+            "rank": "I",
+            "leaguePoints": 64,
+            "wins": 1069,
+            "losses": 1082,
+            "miniSeries": null
+          }
+        ]
+      },
+      {
+        "name": "verybadending",
+        "summonerId": "dp55XleRdBTdWU-MYznlrzhtBI_SoKOQTNh8RP5aV553nXg",
+        "summonerLevel": 406,
+        "championId": 110,
+        "runes": {
+          "primaryPathId": 8200,
+          "secondaryPathId": 8000,
+          "keystone": 8229,
+          "runeIds": [
+            8229,
+            8226,
+            8210,
+            8237,
+            8009,
+            8017,
+            5005,
+            5008,
+            5002
+          ]
+        },
+        "summonerSpells": {
+          "spell1Id": 4,
+          "spell2Id": 7
+        },
+        "teamId": 100,
+        "rankedLeagues": [
+          {
+            "leagueId": "8b454a1b-b104-4511-a079-fb059976a9df",
+            "queueType": "RANKED_SOLO_5x5",
+            "tier": "DIAMOND",
+            "rank": "I",
+            "leaguePoints": 96,
+            "wins": 555,
+            "losses": 546,
+            "miniSeries": null
+          },
+          {
+            "leagueId": "6856f524-0218-4450-be9c-2b3ceaa810c1",
+            "queueType": "RANKED_FLEX_SR",
+            "tier": "DIAMOND",
+            "rank": "IV",
+            "leaguePoints": 97,
+            "wins": 57,
+            "losses": 21,
+            "miniSeries": null
+          }
+        ]
+      }
+    ],
+    "positions": {
+      "BOTTOM": "dp55XleRdBTdWU-MYznlrzhtBI_SoKOQTNh8RP5aV553nXg",
+      "JUNGLE": "4sDaY-lLun9Oo1JqOtpY_EntP-EOTknMCoIXazsEQ2ScNZ0",
+      "TOP": "3LFOThLF5RmD_wBFts3FsmEkFHJmcsDE6mn2GnoyAWfTxQok",
+      "UTILITY": "D6_1ncqDC1IrScRtm1ExtjPUJW6A2NFEsueJxmfr_5kBtiM",
+      "MIDDLE": "EKfmlYXYb3pyAKqSdR4bDbH43HhhKx1uPNijBXBcfHIrhqWD"
+    },
+    "bans": [
+      {
+        "pickTurn": 4,
+        "championId": 145,
+        "teamId": 100
+      },
+      {
+        "pickTurn": 3,
+        "championId": 360,
+        "teamId": 100
+      },
+      {
+        "pickTurn": 5,
+        "championId": 121,
+        "teamId": 100
+      },
+      {
+        "pickTurn": 2,
+        "championId": 107,
+        "teamId": 100
+      },
+      {
+        "pickTurn": 1,
+        "championId": 122,
+        "teamId": 100
+      }
+    ]
+  },
+  "redTeam": {
+    "summoners": [
+      {
+        "name": "Djalal",
+        "summonerId": "--WGaq9pI2ZoYV6TQqC7Jwe2BR6gTPDBs58lempUKifI1eXo",
+        "summonerLevel": 93,
+        "championId": 517,
+        "runes": {
+          "primaryPathId": 8000,
+          "secondaryPathId": 8200,
+          "keystone": 8010,
+          "runeIds": [
+            8010,
+            8009,
+            9105,
+            8299,
+            8210,
+            8226,
+            5007,
+            5008,
+            5003
+          ]
+        },
+        "summonerSpells": {
+          "spell1Id": 4,
+          "spell2Id": 12
+        },
+        "teamId": 200,
+        "rankedLeagues": [
+          {
+            "leagueId": "86095819-693e-3935-a2e9-4529e0736d74",
+            "queueType": "RANKED_SOLO_5x5",
+            "tier": "GRANDMASTER",
+            "rank": "I",
+            "leaguePoints": 178,
+            "wins": 270,
+            "losses": 245,
+            "miniSeries": null
+          }
+        ]
+      },
+      {
+        "name": "Apple Pie 78",
+        "summonerId": "s36kLn_JETMTbnSIUXG-n4p3rw5eV4030SqSQLrSuFbkzrw",
+        "summonerLevel": 164,
+        "championId": 432,
+        "runes": {
+          "primaryPathId": 8400,
+          "secondaryPathId": 8100,
+          "keystone": 8465,
+          "runeIds": [
+            8465,
+            8463,
+            8444,
+            8453,
+            8136,
+            8105,
+            5005,
+            5002,
+            5002
+          ]
+        },
+        "summonerSpells": {
+          "spell1Id": 3,
+          "spell2Id": 4
+        },
+        "teamId": 200,
+        "rankedLeagues": [
+          {
+            "leagueId": "86095819-693e-3935-a2e9-4529e0736d74",
+            "queueType": "RANKED_SOLO_5x5",
+            "tier": "GRANDMASTER",
+            "rank": "I",
+            "leaguePoints": 363,
+            "wins": 520,
+            "losses": 494,
+            "miniSeries": null
+          }
+        ]
+      },
+      {
+        "name": "xFSN Rin",
+        "summonerId": "a4vXiz2IinLMVwxKUGvPT8ZUMQuaUHO2mFOQQtD2Bl7l7Es",
+        "summonerLevel": 141,
+        "championId": 51,
+        "runes": {
+          "primaryPathId": 8000,
+          "secondaryPathId": 8100,
+          "keystone": 8008,
+          "runeIds": [
+            8008,
+            8009,
+            9103,
+            8017,
+            8139,
+            8135,
+            5005,
+            5008,
+            5002
+          ]
+        },
+        "summonerSpells": {
+          "spell1Id": 1,
+          "spell2Id": 4
+        },
+        "teamId": 200,
+        "rankedLeagues": [
+          {
+            "leagueId": "f1448acf-1c69-4b92-b22a-74cefe75e704",
+            "queueType": "RANKED_SOLO_5x5",
+            "tier": "DIAMOND",
+            "rank": "I",
+            "leaguePoints": 100,
+            "wins": 123,
+            "losses": 105,
+            "miniSeries": {
+              "wins": 0,
+              "losses": 0,
+              "target": 3,
+              "progress": "NNNNN"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Albus NoX",
+        "summonerId": "gLoITRlP-LVAPW-pIFmr9HtBpPZzXJ5zDWL6N7Lfp38WROI",
+        "summonerLevel": 311,
+        "championId": 114,
+        "runes": {
+          "primaryPathId": 8000,
+          "secondaryPathId": 8400,
+          "keystone": 8010,
+          "runeIds": [
+            8010,
+            9111,
+            9103,
+            8299,
+            8446,
+            8473,
+            5005,
+            5008,
+            5002
+          ]
+        },
+        "summonerSpells": {
+          "spell1Id": 4,
+          "spell2Id": 12
+        },
+        "teamId": 200,
+        "rankedLeagues": [
+          {
+            "leagueId": "86095819-693e-3935-a2e9-4529e0736d74",
+            "queueType": "RANKED_SOLO_5x5",
+            "tier": "GRANDMASTER",
+            "rank": "I",
+            "leaguePoints": 230,
+            "wins": 332,
+            "losses": 321,
+            "miniSeries": null
+          },
+          {
+            "leagueId": "8394c73f-4d3d-4a0b-acbc-25c5df93c8f7",
+            "queueType": "RANKED_FLEX_SR",
+            "tier": "PLATINUM",
+            "rank": "IV",
+            "leaguePoints": 20,
+            "wins": 28,
+            "losses": 19,
+            "miniSeries": null
+          }
+        ]
+      },
+      {
+        "name": "Icelandic Hero",
+        "summonerId": "qsMurxQF1Jhdl6Cz55M2NvflR2bqg_4cyfyQFuwsMcMjDIo",
+        "summonerLevel": 372,
+        "championId": 20,
+        "runes": {
+          "primaryPathId": 8200,
+          "secondaryPathId": 8100,
+          "keystone": 8230,
+          "runeIds": [
+            8230,
+            8275,
+            8234,
+            8232,
+            8126,
+            8105,
+            5005,
+            5008,
+            5003
+          ]
+        },
+        "summonerSpells": {
+          "spell1Id": 4,
+          "spell2Id": 11
+        },
+        "teamId": 200,
+        "rankedLeagues": [
+          {
+            "leagueId": "bbf359b1-1b07-43bd-9843-f72579723366",
+            "queueType": "RANKED_FLEX_SR",
+            "tier": "PLATINUM",
+            "rank": "I",
+            "leaguePoints": 44,
+            "wins": 20,
+            "losses": 17,
+            "miniSeries": null
+          },
+          {
+            "leagueId": "86095819-693e-3935-a2e9-4529e0736d74",
+            "queueType": "RANKED_SOLO_5x5",
+            "tier": "GRANDMASTER",
+            "rank": "I",
+            "leaguePoints": 165,
+            "wins": 769,
+            "losses": 745,
+            "miniSeries": null
+          }
+        ]
+      }
+    ],
+    "positions": {
+      "BOTTOM": "a4vXiz2IinLMVwxKUGvPT8ZUMQuaUHO2mFOQQtD2Bl7l7Es",
+      "JUNGLE": "qsMurxQF1Jhdl6Cz55M2NvflR2bqg_4cyfyQFuwsMcMjDIo",
+      "TOP": "gLoITRlP-LVAPW-pIFmr9HtBpPZzXJ5zDWL6N7Lfp38WROI",
+      "UTILITY": "s36kLn_JETMTbnSIUXG-n4p3rw5eV4030SqSQLrSuFbkzrw",
+      "MIDDLE": "--WGaq9pI2ZoYV6TQqC7Jwe2BR6gTPDBs58lempUKifI1eXo"
+    },
+    "bans": [
+      {
+        "pickTurn": 10,
+        "championId": 120,
+        "teamId": 200
+      },
+      {
+        "pickTurn": 7,
+        "championId": 202,
+        "teamId": 200
+      },
+      {
+        "pickTurn": 6,
+        "championId": 141,
+        "teamId": 200
+      },
+      {
+        "pickTurn": 9,
+        "championId": 26,
+        "teamId": 200
+      },
+      {
+        "pickTurn": 8,
+        "championId": 84,
+        "teamId": 200
+      }
+    ]
+  },
+  "groupUuid": "743acba9-9832-4318-9603-08504d6853d9"
+}

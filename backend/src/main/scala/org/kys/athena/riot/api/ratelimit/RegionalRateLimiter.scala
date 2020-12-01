@@ -3,7 +3,7 @@ package org.kys.athena.riot.api.ratelimit
 import cats.data.NonEmptyList
 import cats.effect.{Concurrent, ConcurrentEffect, Resource, Timer}
 import cats.implicits._
-import org.kys.athena.riot.api.Platform
+import org.kys.athena.riot.api.dto.common.Platform
 
 
 class RegionalRateLimiter[F[_]](platformList: Map[Platform, RateLimiter[F]])(implicit F: Concurrent[F]) {

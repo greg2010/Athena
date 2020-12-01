@@ -7,8 +7,7 @@ import io.circe.{Encoder, KeyEncoder}
 import org.http4s.rho.RhoRoutes
 import org.http4s.rho.swagger.syntax.io._
 import io.circe.generic.auto._
-import org.kys.athena.riot.api.Platform
-import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, SummonerSpellsEnum}
+import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform, SummonerSpellsEnum}
 import org.kys.athena.controllers.{CurrentGameController, GroupController}
 import org.kys.athena.http.models.current.PositionEnum
 import org.kys.athena.util.exceptions.{BadRequestException, NotFoundException}

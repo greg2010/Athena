@@ -45,3 +45,5 @@ if test -f ".env.local"; then
 fi
 
 echo "}" >> ./env-config.js
+
+mv ./env-config.js src/main/resources

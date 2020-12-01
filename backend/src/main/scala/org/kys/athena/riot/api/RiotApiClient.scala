@@ -10,7 +10,7 @@ import org.kys.athena.http.models
 import org.kys.athena.http.models.current.InGameSummoner
 import org.kys.athena.riot.api.backends.CombinedSttpBackend
 import org.kys.athena.riot.api.dto.`match`.Match
-import org.kys.athena.riot.api.dto.common.GameQueueTypeEnum
+import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform}
 import org.kys.athena.riot.api.dto.currentgameinfo.{CurrentGameInfo, CurrentGameParticipant}
 import org.kys.athena.riot.api.dto.league.League
 import org.kys.athena.riot.api.dto.summoner.Summoner

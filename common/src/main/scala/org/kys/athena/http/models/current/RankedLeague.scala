@@ -1,10 +1,10 @@
 package org.kys.athena.http.models.current
 
-import org.kys.athena.riot.api.dto.league.{League, MiniSeries}
+import org.kys.athena.riot.api.dto.league.{League, MiniSeries, RankedQueueTypeEnum}
 
 
 final case class RankedLeague(leagueId: String,
-                              queueType: String,
+                              queueType: RankedQueueTypeEnum,
                               tier: String,
                               rank: String,
                               leaguePoints: Int,

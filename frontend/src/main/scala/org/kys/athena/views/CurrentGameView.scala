@@ -186,7 +186,7 @@ object CurrentGameView extends View[CurrentGamePage] {
     }
 
     def findGroupBySummoner(g: Set[Set[InGameSummoner]], s: InGameSummoner): Option[Set[InGameSummoner]] = {
-      g.find(_.contains(s))
+      g.find(_.contains(s)).map(_.filterNot(_.summonerId == s.summonerId))
     }
 
     // Sort by position number, zip with index. Index serves as a key for rendering
@@ -261,7 +261,7 @@ object CurrentGameView extends View[CurrentGamePage] {
         }
       }
     }
-    val teamNameElem = span(cls := "text-3xl", s"${teamName} Team")
+    val teamNameElem = span(cls := "text-3xl font-medium tracking-wider", s"${teamName} Team")
     div(
       cls := s"flex justify-around items-center p-4 mb-4 w-full $paperCls",
       children <-- summary.map {
@@ -418,7 +418,7 @@ object CurrentGameView extends View[CurrentGamePage] {
       }
 
       div(
-        cls := "flex flex-col items-center justify-center mx-1", width := "92px",
+        cls := "flex flex-col items-center justify-center", width := "86px",
         rl match {
           case Some(l) => {
             val t = l.tier.entryName.toLowerCase.capitalize
@@ -443,37 +443,38 @@ object CurrentGameView extends View[CurrentGamePage] {
 
     def renderPlaysWith(pwData: LoadState[(Option[Set[InGameSummoner]], DData)]) = {
       div(
-        width := "72px",
-        minWidth := "72px",
-        height := "72px",
+        width := "80px",
+        minWidth := "80px",
+        height := "80px",
         cls := "flex flex-wrap items-center justify-center mx-1",
         pwData match {
           case Some((Some(g), dd)) => {
             g.map { p =>
-              div(renderChampionIcon(p.championId, "32px", None)(dd), cls := "mr-1")
+              div(renderChampionIcon(p.championId, "36px", None)(dd), cls := "ml-1")
             }.toList
           }
           case Some((None, _)) => {
-            div(
-              cls := "flex flex-grow flex-col border border-gray-300 rounded-lg items-center justify-center mr-1",
-              minWidth := "72px",
-              minHeight := "72px",
+            List(
+              inContext { ctx: ReactiveHtmlElement[html.Div] =>
+                ctx.amend(cls := "flex-col border border-gray-300 rounded-lg")
+              },
               span(cls := "font-semibold", "Plays"),
               span(cls := "font-semibold", "solo"))
           }
           case None => {
             Range(0, 4).map(
-              _ => div(width := "32px", height := "32px", cls := "animate-pulse bg-gray-500 mr-1"))
+              _ => div(width := "36px", height := "36px", cls := "animate-pulse bg-gray-500 mr-1"))
           }
         })
     }
 
     // BODY
 
-    val boxHeight  = "108px"
-    val boxCls     = s"flex $paperCls mt-1 p-1 items-center justify-center"
-    val sumRuneCls = "flex flex-col justify-around h-5/6 px-1"
-    val textWidth  = "200px"
+    val boxHeight = "108px"
+    val boxCls    = s"flex $paperCls mt-1 p-1 items-center justify-center"
+    val sumCls    = "flex flex-col justify-around h-5/6 px-1"
+    val runeCls   = "flex flex-col justify-around h-5/6"
+    val textWidth = "180px"
 
     val rankedData: Signal[LoadState[Option[RankedLeague]]] = data.map {
       case Some((p, _)) => getRankedData(p.rankedLeagues).some
@@ -484,13 +485,13 @@ object CurrentGameView extends View[CurrentGamePage] {
       height := boxHeight,
       cls := boxCls,
       child <-- data.map {
-        case Some((p, dd)) => renderChampionIcon(p.championId, "80px", "rounded-lg".some)(dd)
-        case None => div(cls := "animate-pulse bg-gray-500 rounded-lg",
+        case Some((p, dd)) => renderChampionIcon(p.championId, "80px", "rounded-lg ml-1".some)(dd)
+        case None => div(cls := "animate-pulse bg-gray-500 rounded-lg ml-1",
                          width := "80px",
                          height := "80px")
       },
       div(
-        cls := sumRuneCls,
+        cls := sumCls,
         children <-- data.map {
           case Some((p, dd)) =>
             List(
@@ -500,7 +501,7 @@ object CurrentGameView extends View[CurrentGamePage] {
             _ => div(width := "32px", height := "32px", cls := "animate-pulse bg-gray-500 rounded-md"))
         }),
       div(
-        cls := sumRuneCls,
+        cls := runeCls,
         children <-- data.map {
           case Some((p, dd)) =>
             List(
@@ -514,12 +515,12 @@ object CurrentGameView extends View[CurrentGamePage] {
         width := textWidth,
         child <-- data.map {
           case Some((p, _)) =>
-            span(cls := "text-center text-xl max-w-full truncate overflow-ellipsis font-bold", p.name)
+            span(cls := "text-center text-xl max-w-full truncate overflow-ellipsis font-medium", p.name)
           case None => div(width := "120px", height := "14px", cls := "animate-pulse bg-gray-500")
         },
         child <-- data.map {
           case Some((p, dd)) =>
-            dd.championById(p.championId).map(_.name).getOrElse[String]("Unknown")
+            span(dd.championById(p.championId).map(_.name).getOrElse[String]("Unknown"), cls := "font-normal")
           case None => div(width := "90px", height := "14px", cls := "animate-pulse bg-gray-500 mt-1")
         },
         children <-- rankedData.map {
@@ -530,7 +531,7 @@ object CurrentGameView extends View[CurrentGamePage] {
       child <-- rankedData.map {
         case Some(rd) => renderRankedIcon(rd)
         case None =>
-          div(cls := "flex flex-col items-center",
+          div(cls := "flex flex-col items-center", width := "86px",
               div(width := "46px", height := "60px", cls := "animate-pulse bg-gray-500"),
               div(width := "46px", height := "14px", cls := "animate-pulse bg-gray-500 mt-1"))
       },

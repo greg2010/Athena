@@ -13,6 +13,7 @@ import org.kys.athena.riot.api.dto.ddragon.runes.RuneTree
 import org.kys.athena.riot.api.dto.ddragon.summonerspells.SummonerSpells
 import org.kys.athena.util.exceptions.{NotFoundException, RiotException}
 import org.kys.athena.util.{CacheManager, Config}
+import org.scalajs.dom.window
 import sttp.client3._
 import sttp.client3.circe._
 import sttp.model.StatusCode
@@ -73,7 +74,7 @@ object Client {
   def fetchOngoingGameByName(realm: Platform, name: String)(debug: Boolean = false): IO[OngoingGameResponse] = {
     val url = if (!debug)
                 uri"${Config.BACKEND_API_URL}/current/by-summoner-name/${realm.entryName}/$name?fetchGroups=true"
-              else uri"http://localhost:8080/sampleongoing.json"
+              else uri"http://${window.location.hostname}/sampleongoing.json"
     val q   = basicRequest
       .get(url)
       .response(asJson[OngoingGameResponse])
@@ -83,7 +84,7 @@ object Client {
   def fetchGroupsByUUID(uuid: UUID)(debug: Boolean = false): IO[PremadeResponse] = {
     val url = if (!debug)
                 uri"${Config.BACKEND_API_URL}/current/by-uuid/${uuid}/groups"
-              else uri"http://localhost:8080/samplepremades.json"
+              else uri"http://${window.location.hostname}/samplepremades.json"
     val q   = basicRequest.get(url)
       .response(asJson[PremadeResponse])
     fetchAndLift(q)
@@ -92,7 +93,7 @@ object Client {
   def fetchGroupsByName(realm: Platform, name: String)(debug: Boolean = false): IO[PremadeResponse] = {
     val url = if (!debug)
                 uri"${Config.BACKEND_API_URL}/current/by-summoner-name/${realm.entryName}/$name/groups"
-              else uri"http://localhost:8080/samplepremades.json"
+              else uri"http://${window.location.hostname}/samplepremades.json"
     val q   = basicRequest.get(url)
       .response(asJson[PremadeResponse])
     fetchAndLift(q)

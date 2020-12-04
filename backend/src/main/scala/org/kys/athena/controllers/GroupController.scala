@@ -18,7 +18,7 @@ class GroupController(riotApiClient: RiotApiClient)(implicit cs: ContextShift[IO
   case class TeamTupleWithHistory(blueTeam: Set[SummonerMatchHistory], redTeam: Set[SummonerMatchHistory])
 
   private val uuidCache: Cache[UUID, Deferred[IO, Either[Throwable, PremadeResponse]]] = Scaffeine().recordStats()
-    .expireAfterWrite(1.minute)
+    .expireAfterWrite(5.minutes)
     .build[UUID, Deferred[IO, Either[Throwable, PremadeResponse]]]()
 
   val queues: Set[GameQueueTypeEnum] = Set(GameQueueTypeEnum.SummonersRiftBlind,

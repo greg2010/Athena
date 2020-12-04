@@ -43,15 +43,16 @@ object CurrentGameView extends View[CurrentGamePage] {
 
   def fetchAndWriteGameInfo(platform: Platform, name: String): IO[Unit] = {
     for {
-      g <- {
-        val fg = fetchOngoingGameByName(platform, name)(debug)
-        writeIOToObserver(fg, ongoingVar.writer).flatMap(_ => fg)
-      }
-      _ <- g.groupUuid match {
-        case Some(u) => writeIOToObserver(fetchGroupsByUUID(u)(debug), groupsVar.writer)
-        case None => {
+      _ <- writeIOToObserver(fetchOngoingGameByName(platform, name)(debug), ongoingVar.writer)
+      _ <- ongoingVar.now().map(_.flatMap(_.groupUuid)) match {
+        case Right(Some(v)) => writeIOToObserver(fetchGroupsByUUID(v)(debug), groupsVar.writer)
+        case Right(None) => {
           scribe.warn("Server did not return a UUID, querying groups manually")
           writeIOToObserver(fetchGroupsByName(platform, name)(debug), groupsVar.writer)
+        }
+        case Left(ex) => {
+          scribe.error("Got error for ongoing, can't fetch groups")
+          writeIOToObserver(IO.raiseError(ex), groupsVar.writer)
         }
       }
     } yield ()
@@ -164,7 +165,7 @@ object CurrentGameView extends View[CurrentGamePage] {
               val m       = (diff - h * 3600 * 1000) / (60 * 1000)
               val s       = (diff - (h * (3600 * 1000) + m * (60 * 1000))) / 1000
               val hstr    = if (h > 0) s"$h:" else ""
-              s"$sign$hstr$m:$s"
+              s"$sign$hstr${if (m < 10) s"${m}0" else m.toString}:${if (s < 10) s"${s}0" else s.toString}"
             }
             span(s"${renderQueueName(g.gameQueueId)} | ", child.text <-- timeES, cls := "mt-4 text-md")
           case None =>

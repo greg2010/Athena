@@ -1,8 +1,8 @@
 package org.kys.athena.riot.api.ratelimit
 
 import cats.data.NonEmptyList
-import cats.implicits._
 import cats.effect.{Concurrent, ConcurrentEffect, Resource, Timer}
+import cats.implicits._
 
 
 class RateLimiter[F[_]](limiterList: NonEmptyList[TokenBucket[F]])(implicit F: Concurrent[F]) {

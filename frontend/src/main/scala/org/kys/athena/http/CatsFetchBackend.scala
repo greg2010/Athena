@@ -2,16 +2,18 @@ package org.kys.athena.http
 
 import cats.effect.{Concurrent, ContextShift, IO}
 import org.scalajs.dom.experimental
-import sttp.client.{AbstractFetchBackend, FetchOptions}
 import org.scalajs.dom.experimental.{BodyInit, Request => FetchRequest}
-import sttp.client.internal.NoStreams
-import scala.scalajs.js
+import sttp.client3.internal.NoStreams
+import sttp.client3.{AbstractFetchBackend, FetchOptions}
 
+import scala.scalajs.js
 import scala.scalajs.js.{Promise, UndefOr}
 
-class CatsFetchBackend private (fetchOptions: FetchOptions, customizeRequest: FetchRequest => FetchRequest)
-                               (implicit F: Concurrent[IO], contextShift: ContextShift[IO])
-  extends AbstractFetchBackend[IO, Nothing, Any](options = fetchOptions, customizeRequest = customizeRequest)(new EffectMonad[IO]) {
+
+class CatsFetchBackend private(fetchOptions: FetchOptions, customizeRequest: FetchRequest => FetchRequest)
+                              (implicit F: Concurrent[IO], contextShift: ContextShift[IO])
+  extends AbstractFetchBackend[IO, Nothing, Any](options = fetchOptions, customizeRequest = customizeRequest)(
+    new EffectMonad[IO]) {
   override val streams: NoStreams = NoStreams
 
   override protected def addCancelTimeoutHook[T](result: IO[T],

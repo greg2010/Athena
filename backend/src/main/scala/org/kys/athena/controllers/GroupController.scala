@@ -1,30 +1,25 @@
 package org.kys.athena.controllers
 
-import java.util.UUID
-
-import cats.effect.{Async, Blocker, Concurrent, ContextShift, IO}
 import cats.effect.concurrent.Deferred
+import cats.effect.{Async, ContextShift, IO}
 import cats.implicits._
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
-import org.kys.athena.riot.api.RiotApiClient
-import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform}
 import org.kys.athena.data.SummonerMatchHistory
 import org.kys.athena.http.models.current.OngoingGameResponse
 import org.kys.athena.http.models.premade.{PlayerGroup, PremadeResponse}
-import sttp.client.Response
+import org.kys.athena.riot.api.RiotApiClient
+import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform}
 
-import scala.collection.concurrent.TrieMap
-import scala.collection.mutable
-import scala.concurrent.ExecutionContext
+import java.util.UUID
 import scala.concurrent.duration.DurationInt
 
 
 class GroupController(riotApiClient: RiotApiClient)(implicit cs: ContextShift[IO]) {
   case class TeamTupleWithHistory(blueTeam: Set[SummonerMatchHistory], redTeam: Set[SummonerMatchHistory])
 
-  private val uuidCache: Cache[UUID, Deferred[IO, PremadeResponse]] = Scaffeine().recordStats()
+  private val uuidCache: Cache[UUID, Deferred[IO, Either[Throwable, PremadeResponse]]] = Scaffeine().recordStats()
     .expireAfterWrite(1.minute)
-    .build[UUID, Deferred[IO, PremadeResponse]]()
+    .build[UUID, Deferred[IO, Either[Throwable, PremadeResponse]]]()
 
   val queues: Set[GameQueueTypeEnum] = Set(GameQueueTypeEnum.SummonersRiftBlind,
                                            GameQueueTypeEnum.SummonersRiftDraft,
@@ -78,14 +73,8 @@ class GroupController(riotApiClient: RiotApiClient)(implicit cs: ContextShift[IO
         }
       })
     }
-    val blueGroups = determineGroupsImpl(teamTupleWithHistory.blueTeam) match {
-      case s if s.nonEmpty => Some(s)
-      case _ => None
-    }
-    val redGroups  = determineGroupsImpl(teamTupleWithHistory.redTeam) match {
-      case s if s.nonEmpty => Some(s)
-      case _ => None
-    }
+    val blueGroups = determineGroupsImpl(teamTupleWithHistory.blueTeam)
+    val redGroups  = determineGroupsImpl(teamTupleWithHistory.redTeam)
 
     PremadeResponse(blueGroups, redGroups)
   }
@@ -104,13 +93,13 @@ class GroupController(riotApiClient: RiotApiClient)(implicit cs: ContextShift[IO
   def getGroupsForGameAsync(platform: Platform,
                             ongoingGameInfo: OngoingGameResponse,
                             gamesQueryCount: Int = 5): IO[UUID] = {
-    val deferred = Deferred[IO, PremadeResponse]
+    val deferred = Deferred[IO, Either[Throwable, PremadeResponse]]
     for {
       uuid <- IO.delay(UUID.randomUUID())
       d <- deferred
       _ <- IO.delay(uuidCache.put(uuid, d))
       _ <- Async[IO]
-        .liftIO(getGroupsForGame(platform, ongoingGameInfo, gamesQueryCount).flatMap(r => d.complete(r)))
+        .liftIO(getGroupsForGame(platform, ongoingGameInfo, gamesQueryCount).attempt.flatMap(d.complete))
         .start
     } yield uuid
 
@@ -119,8 +108,10 @@ class GroupController(riotApiClient: RiotApiClient)(implicit cs: ContextShift[IO
   def getGroupsByUUID(uuid: UUID): IO[Option[PremadeResponse]] = {
     for {
       entry <- IO.delay(uuidCache.getIfPresent(uuid))
-      res <- entry.map(_.get).sequence
+      res <- entry.map(_.get.flatMap {
+        case Right(re) => IO.pure(re)
+        case Left(ex) => IO.raiseError(ex)
+      }).sequence
     } yield res
-
   }
 }

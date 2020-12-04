@@ -61,15 +61,17 @@ lazy val settings = commonSettings ++ wartremoverSettings
 
 // Dependencies repository
 lazy val dependencies = new {
-  val catsVersion       = "2.2.0"
-  val http4sVersion     = "0.21.8"
+  val catsVersion       = "2.3.0"
+  val http4sVersion     = "0.21.13"
   val rhoVersion        = "0.21.0-RC1"
   val circeVersion      = "0.13.0"
   val enumeratumVersion = "1.6.1"
-  val sttpVersion       = "3.0.0-RC3"
+  val sttpVersion       = "3.0.0-RC11"
   val doobieVersion     = "0.8.7"
+  val scribeVersion     = "3.1.7"
 
-  val laminarVersion = "0.11.0"
+  val laminarVersion   = "0.11.0"
+  val airstreamVersion = "0.11.1"
 
   val common = Def.setting(Seq(
     "org.typelevel" %%% "cats-core" % catsVersion,
@@ -80,26 +82,26 @@ lazy val dependencies = new {
     "io.circe" %%% "circe-generic-extras" % circeVersion,
     "io.circe" %%% "circe-parser" % circeVersion,
     "io.circe" %%% "circe-literal" % circeVersion,
-    "com.outr" %%% "scribe" % "3.0.4",
-    "com.softwaremill.sttp.client" %%% "core" % sttpVersion,
-    "com.softwaremill.sttp.client" %%% "circe" % sttpVersion))
+    "com.outr" %%% "scribe" % scribeVersion,
+    "com.softwaremill.sttp.client3" %%% "core" % sttpVersion,
+    "com.softwaremill.sttp.client3" %%% "circe" % sttpVersion))
 
   val jvm = Def.setting(common.value ++ Seq(
-    "com.typesafe" % "config" % "1.4.0",
+    "com.typesafe" % "config" % "1.4.1",
     "com.github.pureconfig" %% "pureconfig" % "0.14.0",
-    "com.outr" %% "scribe-slf4j" % "3.0.2",
+    "com.outr" %% "scribe-slf4j" % scribeVersion,
     "org.http4s" %% "http4s-dsl" % http4sVersion,
     "org.http4s" %% "http4s-blaze-server" % http4sVersion,
     "org.http4s" %% "http4s-blaze-client" % http4sVersion,
     "org.http4s" %% "http4s-circe" % http4sVersion,
     "org.http4s" %% "rho-swagger" % rhoVersion,
-    "com.softwaremill.sttp.client" %% "http4s-backend" % sttpVersion,
+    "com.softwaremill.sttp.client3" %% "http4s-backend" % sttpVersion,
     "com.github.blemale" %% "scaffeine" % "4.0.2"
     ))
 
   val js = Def.setting(common.value ++ Seq(
     "com.raquo" %%% "laminar" % laminarVersion,
-    "com.raquo" %%% "airstream" % laminarVersion,
+    "com.raquo" %%% "airstream" % airstreamVersion,
     "com.raquo" %%% "waypoint" % "0.2.0"
     ))
 }

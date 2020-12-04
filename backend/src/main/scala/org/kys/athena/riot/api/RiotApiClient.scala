@@ -4,9 +4,7 @@ import cats.effect.{ContextShift, IO}
 import cats.implicits._
 import io.circe
 import io.circe.parser.parse
-import org.kys.athena.data
 import org.kys.athena.data.SummonerMatchHistory
-import org.kys.athena.http.models
 import org.kys.athena.http.models.current.InGameSummoner
 import org.kys.athena.riot.api.backends.CombinedSttpBackend
 import org.kys.athena.riot.api.dto.`match`.Match
@@ -15,7 +13,7 @@ import org.kys.athena.riot.api.dto.currentgameinfo.{CurrentGameInfo, CurrentGame
 import org.kys.athena.riot.api.dto.league.League
 import org.kys.athena.riot.api.dto.summoner.Summoner
 import org.kys.athena.util.exceptions.{NotFoundException, RiotException}
-import sttp.client.{DeserializationException, HttpError, Response, ResponseException}
+import sttp.client3.{DeserializationException, HttpError, Response, ResponseException}
 import sttp.model.StatusCode
 
 

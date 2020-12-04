@@ -1,12 +1,13 @@
 package org.kys.athena.meraki.api
 
-import org.kys.athena.meraki.api.dto.ChampionRates
 import io.circe
-import io.circe.{Decoder, KeyDecoder, KeyEncoder}
-import sttp.client._
-import sttp.client.circe._
+import io.circe.KeyDecoder
 import io.circe.generic.auto._
 import org.kys.athena.http.models.current.PositionEnum
+import org.kys.athena.meraki.api.dto.ChampionRates
+import sttp.client3._
+import sttp.client3.circe._
+
 
 class MerakiApi {
   def playRates: RequestT[Identity, Either[ResponseException[String, circe.Error], ChampionRates], Any] = {

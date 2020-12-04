@@ -1,14 +1,12 @@
 package org.kys.athena.controllers
 
-import cats.effect.{Blocker, ContextShift, IO}
+import cats.effect.{ContextShift, IO}
 import cats.implicits._
-import org.kys.athena.riot.api.RiotApiClient
-import org.kys.athena.riot.api.dto.currentgameinfo.{BannedChampion, CurrentGameInfo, CurrentGameParticipant}
 import org.kys.athena.http.models.current.{InGameSummoner, OngoingGameResponse, OngoingGameTeam, PositionEnum}
 import org.kys.athena.meraki.api.MerakiApiClient
-import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform}
-
-import scala.concurrent.ExecutionContext
+import org.kys.athena.riot.api.RiotApiClient
+import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform, SummonerSpellsEnum}
+import org.kys.athena.riot.api.dto.currentgameinfo.{BannedChampion, CurrentGameInfo, CurrentGameParticipant}
 
 
 class CurrentGameController(riotApiClient: RiotApiClient, merakiApiClient: MerakiApiClient)
@@ -40,6 +38,19 @@ class CurrentGameController(riotApiClient: RiotApiClient, merakiApiClient: Merak
 
   def estimatePositions(gameQueueId: GameQueueTypeEnum,
                         team: Set[InGameSummoner]): IO[Option[Map[PositionEnum, String]]] = {
+    // When generating possible team permutations, apply this filter
+    // to force player(s) with smite to be in jungle position
+    def summonersPred(arrangement: IndexedSeq[(PositionEnum, InGameSummoner)]): Boolean = {
+      arrangement.foldRight(true) { (entry, soFar) =>
+        soFar &&
+        ((entry._1, entry._2.summonerSpells.spell1Id, entry._2.summonerSpells.spell2Id) match {
+          case (p, SummonerSpellsEnum.Smite, _) if p != PositionEnum.Jungle => false
+          case (p, _, SummonerSpellsEnum.Smite) if p != PositionEnum.Jungle => false
+          case _ => true
+        })
+      }
+    }
+
     // Reject non-summoner's rift games
     gameQueueId match {
       case q if q.in(GameQueueTypeEnum.SummonersRiftBlind,
@@ -48,16 +59,25 @@ class CurrentGameController(riotApiClient: RiotApiClient, merakiApiClient: Merak
                      GameQueueTypeEnum.SummonersRiftFlexRanked,
                      GameQueueTypeEnum.SummonersRiftClash) => {
         merakiApiClient.playrates.map { playRate =>
-          val posns = team.toList.permutations.map(PositionEnum.values.zip(_)).toList.map { perm =>
-            val score = perm.map {
-              case (posn, sum) =>
-                playRate.data.get(sum.championId.toInt).flatMap(_.get(posn)) match {
-                  case Some(p) => p.playRate
-                  case None => 0D
-                }
-            }.sum
-            (perm.toMap.view.mapValues(_.summonerId), score)
-          }.maxBy(_._2)._1.toMap
+          val posns = team
+            .toList
+            .permutations
+            .map(PositionEnum.values.zip(_))
+            .filter(summonersPred)
+            .toList
+            .map { perm =>
+              val score = perm.map {
+                case (posn, sum) =>
+                  playRate.data.get(sum.championId.toInt).flatMap(_.get(posn)) match {
+                    case Some(p) => p.playRate
+                    case None => 0D
+                  }
+              }.sum
+              (perm.toMap.view.mapValues(_.summonerId), score)
+            }
+            .maxBy(_._2)
+            ._1
+            .toMap
           Some(posns)
         }
       }
@@ -81,6 +101,5 @@ class CurrentGameController(riotApiClient: RiotApiClient, merakiApiClient: Merak
                                 summoner,
                                 OngoingGameTeam(blueSummoners, bluePositions, bans.blue),
                                 OngoingGameTeam(redSummoners, redPositions, bans.red))
-
   }
 }

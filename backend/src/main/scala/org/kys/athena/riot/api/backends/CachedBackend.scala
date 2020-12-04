@@ -1,12 +1,11 @@
 package org.kys.athena.riot.api.backends
 
-import java.nio.charset.StandardCharsets
-
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import sttp.capabilities.Effect
-import sttp.client.{Request, Response}
+import sttp.client3.{Request, Response}
 import sttp.monad.MonadError
 
+import java.nio.charset.StandardCharsets
 import scala.concurrent.duration.FiniteDuration
 
 

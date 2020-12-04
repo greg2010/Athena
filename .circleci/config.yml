@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build-backend:
+  build-scala:
     working_directory: ~/athena
     docker:
       - image: circleci/openjdk:13-jdk-buster
@@ -11,14 +11,14 @@ jobs:
             - athena-backend-{{ checksum "build.sbt" }}
             - athena-backend
       - run: sbt compile
-      - run: sbt test
-      - store_test_results:
-          path: test-results
       - run: sbt assembly
+      - run: sbt frontend/fullOptJS
       - persist_to_workspace:
           root: .
           paths:
             - backend/target/scala-2.13/athena-backend.jar
+            - frontend/target/scala-2.13/frontend-opt.js
+            - frontend/target/scala-2.13/frontend-opt.js.map
       - store_artifacts:
           path: backend/target/scala-2.13/athena-backend.jar
           destination: jar
@@ -38,12 +38,14 @@ jobs:
             - ~/.sbt
             - ~/.ivy2/cache
             - ~/.m2
-  build-frontend:
+  build-js:
     working_directory: ~/athena
     docker:
       - image: cimg/node:15.2.0
     steps:
       - checkout
+      - attach_workspace:
+          at: .
       - restore_cache:
           keys:
             - athena-frontend-{{ checksum "frontend/package-lock.json" }}
@@ -104,21 +106,20 @@ workflows:
   version: 2
   build-and-deploy:
     jobs:
-      - build-backend:
+      - build-scala:
           filters:
             branches:
               ignore:
                 - gh-pages
-      - build-frontend:
-          filters:
-            branches:
-              ignore:
-                - gh-pages
+      - build-js:
+          requires:
+            - build-scala
       - deploy-frontend:
           context: KYS-Primary
           requires:
-            - build-frontend
+            - build-js
       - deploy-backend:
           context: KYS-Primary
           requires:
-            - build-backend
+            - build-scala
+

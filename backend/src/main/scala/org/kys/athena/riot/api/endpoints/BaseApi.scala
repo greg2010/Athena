@@ -1,7 +1,7 @@
 package org.kys.athena.riot.api.endpoints
 
 import org.kys.athena.riot.api.dto.common.Platform
-import sttp.client._
+import sttp.client3._
 import sttp.model.Uri
 
 

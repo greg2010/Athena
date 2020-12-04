@@ -13,7 +13,14 @@ final case class InGameSummoner(name: String,
                                 runes: RunesSelected,
                                 summonerSpells: SummonerSpells,
                                 teamId: Long,
-                                rankedLeagues: List[RankedLeague])
+                                rankedLeagues: List[RankedLeague]) {
+  override def equals(obj: Any): Boolean = {
+    obj match {
+      case s: InGameSummoner => s.summonerId == summonerId
+      case _ => false
+    }
+  }
+}
 
 object InGameSummoner {
   def apply(summoner: Summoner,

@@ -1,18 +1,21 @@
 package org.kys.athena.util
 
 import cats.effect.IO
-import com.raquo.airstream.signal.Var
+import com.raquo.airstream.core.Observer
 
 
 object IOToAS {
-  def writeIOToVar[T](io: IO[T],
-                      v: Var[Option[T]]): IO[Unit] = {
-    io.redeemWith (ex => IO.delay {
-      scribe.error("Exception caught while running IO", ex)
-      v.setError(ex)
-    }, res => IO.delay {
-      scribe.debug(s"Writing IO to var res=${res}")
-      v.set(Some(res))
-    })
+  type DataState[T] = Either[Throwable, Option[T]]
+
+  def writeIOToObserver[T](io: IO[T], v: Observer[DataState[T]]): IO[Unit] = {
+    io.attempt.flatMap {
+      case Right(r) => IO.delay {
+        v.onNext(Right(Some(r)))
+      }
+      case Left(ex) => IO.delay {
+        scribe.error("Exception caught while running IO", ex)
+        v.onNext(Left(ex))
+      }
+    }
   }
 }

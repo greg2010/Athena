@@ -6,7 +6,7 @@ import cats.effect.{Concurrent, ConcurrentEffect, IO, Resource, Timer}
 import cats.implicits._
 import org.kys.athena.util.ThreadPools
 
-import scala.concurrent.duration.{FiniteDuration, MILLISECONDS, NANOSECONDS}
+import scala.concurrent.duration.FiniteDuration
 
 
 trait TokenBucket[F[_]] {

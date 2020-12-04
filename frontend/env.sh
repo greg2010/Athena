@@ -46,4 +46,5 @@ fi
 
 echo "}" >> ./env-config.js
 
-mv ./env-config.js src/main/resources
+[ -d "src/main/resources" ] && mv ./env-config.js src/main/resources
+exit 0

@@ -1,24 +1,23 @@
 package org.kys.athena.http
 
-import java.util.UUID
-
 import cats.effect.{Concurrent, ContextShift, IO}
 import io.circe
-import io.circe.{Decoder, Encoder}
 import io.circe.generic.auto._
 import io.circe.parser.parse
-import org.kys.athena.riot.api.dto.ddragon.champions.Champions
-import org.kys.athena.riot.api.dto.ddragon.runes.RuneTree
-import org.kys.athena.riot.api.dto.ddragon.summonerspells.SummonerSpells
-import org.kys.athena.util.{CacheManager, Config}
-import org.kys.athena.util.exceptions.{NotFoundException, RiotException}
+import io.circe.{Decoder, Encoder}
 import org.kys.athena.http.models.current.OngoingGameResponse
 import org.kys.athena.http.models.premade.PremadeResponse
 import org.kys.athena.riot.api.dto.common.Platform
-import sttp.client._
-import sttp.client.circe._
+import org.kys.athena.riot.api.dto.ddragon.champions.Champions
+import org.kys.athena.riot.api.dto.ddragon.runes.RuneTree
+import org.kys.athena.riot.api.dto.ddragon.summonerspells.SummonerSpells
+import org.kys.athena.util.exceptions.{NotFoundException, RiotException}
+import org.kys.athena.util.{CacheManager, Config}
+import sttp.client3._
+import sttp.client3.circe._
 import sttp.model.StatusCode
 
+import java.util.UUID
 import scala.concurrent.duration.Duration
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
@@ -44,7 +43,9 @@ object Client {
         scribe.error(s"Failed to parse response. error=${errDesc}", ex)
         IO.raiseError(ex)
       }
-      case Right(resp) => IO.pure(resp)
+      case Right(resp) => {
+        IO.pure(resp)
+      }
     }
   }
 
@@ -73,7 +74,7 @@ object Client {
     val url = if (!debug)
                 uri"${Config.BACKEND_API_URL}/current/by-summoner-name/${realm.entryName}/$name?fetchGroups=true"
               else uri"http://localhost:8080/sampleongoing.json"
-    val q = sttp.client.basicRequest
+    val q   = basicRequest
       .get(url)
       .response(asJson[OngoingGameResponse])
     fetchAndLift(q)
@@ -83,7 +84,7 @@ object Client {
     val url = if (!debug)
                 uri"${Config.BACKEND_API_URL}/current/by-uuid/${uuid}/groups"
               else uri"http://localhost:8080/samplepremades.json"
-    val q = sttp.client.basicRequest.get(url)
+    val q   = basicRequest.get(url)
       .response(asJson[PremadeResponse])
     fetchAndLift(q)
   }
@@ -92,27 +93,27 @@ object Client {
     val url = if (!debug)
                 uri"${Config.BACKEND_API_URL}/current/by-summoner-name/${realm.entryName}/$name/groups"
               else uri"http://localhost:8080/samplepremades.json"
-    val q = sttp.client.basicRequest.get(url)
+    val q   = basicRequest.get(url)
       .response(asJson[PremadeResponse])
     fetchAndLift(q)
   }
 
   def fetchCachedDDragonChampion(): IO[Champions] = {
     val url = uri"${Config.DDRAGON_BASE_URL}${Config.DDRAGON_VERSION}/data/${Config.LOCALE}/champion.json"
-    val q = sttp.client.basicRequest.get(url).response(asJson[Champions])
+    val q   = basicRequest.get(url).response(asJson[Champions])
     fetchCachedAndLift(q)
 
   }
 
   def fetchCachedDDragonRunes(): IO[List[RuneTree]] = {
     val url = uri"${Config.DDRAGON_BASE_URL}${Config.DDRAGON_VERSION}/data/${Config.LOCALE}/runesReforged.json"
-    val q = sttp.client.basicRequest.get(url).response(asJson[List[RuneTree]])
+    val q   = basicRequest.get(url).response(asJson[List[RuneTree]])
     fetchCachedAndLift(q)
   }
 
   def fetchCachedDDragonSummoners(): IO[SummonerSpells] = {
     val url = uri"${Config.DDRAGON_BASE_URL}${Config.DDRAGON_VERSION}/data/${Config.LOCALE}/summoner.json"
-    val q = sttp.client.basicRequest.get(url).response(asJson[SummonerSpells])
+    val q   = basicRequest.get(url).response(asJson[SummonerSpells])
     fetchCachedAndLift(q)
   }
 }

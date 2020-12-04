@@ -1,19 +1,16 @@
 package org.kys.athena.http.routes
 
-import java.util.UUID
-
-import cats.effect.{Concurrent, IO}
-import io.circe.{Encoder, KeyEncoder}
+import cats.effect.IO
+import io.circe.generic.auto._
+import org.http4s.circe.CirceEntityEncoder._
 import org.http4s.rho.RhoRoutes
 import org.http4s.rho.swagger.syntax.io._
-import io.circe.generic.auto._
-import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform, SummonerSpellsEnum}
 import org.kys.athena.controllers.{CurrentGameController, GroupController}
-import org.kys.athena.http.models.current.PositionEnum
-import org.kys.athena.util.exceptions.{BadRequestException, NotFoundException}
-import org.http4s.circe.CirceEntityEncoder._
-import org.kys.athena.Server.contextShift
 import org.kys.athena.http.models.common.ErrorResponse
+import org.kys.athena.riot.api.dto.common.Platform
+import org.kys.athena.util.exceptions.BadRequestException
+
+import java.util.UUID
 
 
 object CurrentGame {

@@ -1,6 +1,6 @@
 package org.kys.athena.http
 
-import cats.effect.{Concurrent, _}
+import cats.effect.Concurrent
 import sttp.monad.{Canceler, MonadAsyncError}
 
 

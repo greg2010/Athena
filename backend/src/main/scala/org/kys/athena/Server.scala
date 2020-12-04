@@ -3,20 +3,20 @@ package org.kys.athena
 
 import cats.data.Kleisli
 import cats.effect.{Blocker, ConcurrentEffect, ContextShift, ExitCode, IO, IOApp, Resource, Timer}
-import org.http4s.server.blaze.BlazeServerBuilder
-import org.http4s.{HttpApp, HttpRoutes, Request, Response}
 import org.http4s.implicits._
 import org.http4s.server.Router
+import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.CORS
-import org.kys.athena.riot.api.backends.CombinedSttpBackend
-import org.kys.athena.riot.api.ratelimit.{RegionalRateLimiter, RiotRateLimits}
-import org.kys.athena.riot.api.{RiotApi, RiotApiClient}
+import org.http4s.{HttpApp, HttpRoutes, Request, Response}
 import org.kys.athena.controllers.{CurrentGameController, GroupController}
 import org.kys.athena.http.middleware.{ApacheLogging, ErrorHandler}
 import org.kys.athena.http.routes.Base
 import org.kys.athena.meraki.api.{MerakiApi, MerakiApiClient}
+import org.kys.athena.riot.api.backends.CombinedSttpBackend
+import org.kys.athena.riot.api.ratelimit.{RegionalRateLimiter, RiotRateLimits}
+import org.kys.athena.riot.api.{RiotApi, RiotApiClient}
 import org.kys.athena.util.ThreadPools
-import sttp.client.http4s.Http4sBackend
+import sttp.client3.http4s.Http4sBackend
 
 import scala.concurrent.duration._
 

@@ -1,11 +1,11 @@
 package org.kys.athena.riot.api.backends
 
 
-import cats.effect.{ConcurrentEffect, ContextShift}
+import cats.effect.ContextShift
 import org.kys.athena.riot.api.dto.common.Platform
 import org.kys.athena.riot.api.ratelimit.RegionalRateLimiter
 import sttp.capabilities.Effect
-import sttp.client.{Request, Response, SttpBackend}
+import sttp.client3.{Request, Response, SttpBackend}
 import sttp.monad.MonadError
 
 import scala.concurrent.duration._

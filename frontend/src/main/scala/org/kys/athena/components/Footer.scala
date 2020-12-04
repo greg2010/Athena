@@ -11,6 +11,6 @@ object Footer {
     "properties are trademarks or registered trademarks of Riot Games, Inc."
 
   def render(): HtmlElement = {
-    footer(cls := "max-w-md mb-2", p(cls := "text-center text-xs text-gray-700 ", disclaimer))
+    footer(cls := "max-w-md mb-2", p(cls := "text-center text-xs text-gray-800 ", disclaimer))
   }
 }

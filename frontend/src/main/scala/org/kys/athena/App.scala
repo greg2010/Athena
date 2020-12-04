@@ -2,14 +2,13 @@ package org.kys.athena
 
 import com.raquo.laminar.api.L._
 import com.raquo.waypoint._
-import io.circe.syntax._
-import org.scalajs.dom
-import io.circe.syntax._
 import io.circe.parser._
+import io.circe.syntax._
 import org.kys.athena.components.{AppBar, Footer}
 import org.kys.athena.pages._
 import org.kys.athena.riot.api.dto.common.Platform
 import org.kys.athena.views.{CurrentGameView, LandingView}
+import org.scalajs.dom
 import urldsl.errors.DummyError
 import urldsl.vocabulary.{FromString, Printer}
 
@@ -58,7 +57,8 @@ object App {
     }
 
   def render(): HtmlElement = {
-    div(cls := "root h-screen bg-gradient-to-b from-white to-gray-300 flex flex-col items-center",
+    div(cls := "root h-screen flex flex-col items-center",
+        div(cls := "bg-gradient-to-b h-full w-full from-white to-gray-400 fixed", zIndex := "-10"),
         AppBar.render(router.$currentPage.map {
           case LandingPage => false
           case _ => true

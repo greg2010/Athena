@@ -1,17 +1,17 @@
 package org.kys.athena.util
 
-import java.util.concurrent.{ExecutorService, Executors, ScheduledExecutorService}
-
-import cats.effect.{Concurrent, IO, Resource}
+import cats.effect.{Concurrent, Resource}
+import cats.implicits._
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 
+import java.util.concurrent.{ExecutorService, Executors, ScheduledExecutorService}
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
-import cats.implicits._
 
 
 object ThreadPools {
   def allocateCached[F[_]](threadPoolName: Option[String] = None)
-                          (implicit F: Concurrent[F]): Resource[F, (ExecutionContextExecutorService, ExecutorService)] = {
+                          (implicit F: Concurrent[F]): Resource[F, (ExecutionContextExecutorService, ExecutorService)
+  ] = {
     Resource.make {
       F.delay {
         val tfb = threadPoolName match {

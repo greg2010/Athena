@@ -1,11 +1,11 @@
 package org.kys.athena.riot.api.endpoints
 
 import io.circe
-import sttp.client._
-import sttp.client.circe._
 import io.circe.generic.auto._
 import org.kys.athena.riot.api.dto.common.Platform
 import org.kys.athena.riot.api.dto.summoner.{Summoner => DTOSummoner}
+import sttp.client3._
+import sttp.client3.circe._
 
 
 class Summoner(apiKey: String) extends BaseApi(apiKey) {

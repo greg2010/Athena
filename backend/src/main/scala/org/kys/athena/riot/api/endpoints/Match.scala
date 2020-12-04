@@ -2,12 +2,12 @@ package org.kys.athena.riot.api.endpoints
 
 import io.circe
 import io.circe.Decoder
-import sttp.client._
-import sttp.client.circe._
 import io.circe.generic.auto._
 import org.kys.athena.riot.api.dto.`match`.{Match => DTOMatch}
 import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform}
 import org.kys.athena.riot.api.dto.matchlist.Matchlist
+import sttp.client3._
+import sttp.client3.circe._
 
 
 class Match(apiKey: String) extends BaseApi(apiKey) {

@@ -1,10 +1,10 @@
 package org.kys
 
 import org.kys.athena.util.Config
+import pureconfig._
 import scribe.filter.{level => flevel, _}
 import scribe.{Level, Logger}
 import scribe.format._
-import pureconfig._
 import pureconfig.generic.auto._
 
 

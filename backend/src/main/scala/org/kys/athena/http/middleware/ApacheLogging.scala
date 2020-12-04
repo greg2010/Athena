@@ -1,13 +1,13 @@
 package org.kys.athena.http.middleware
 
-import java.util.Calendar
-
 import cats.data.{Kleisli, OptionT}
 import cats.effect.Effect
-import org.http4s.headers.`User-Agent`
-import org.http4s._
 import cats.implicits._
 import fs2.RaiseThrowable
+import org.http4s._
+import org.http4s.headers.`User-Agent`
+
+import java.util.Calendar
 
 
 /**

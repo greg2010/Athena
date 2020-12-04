@@ -2,11 +2,11 @@ package org.kys.athena.riot.api.endpoints
 
 import io.circe
 import io.circe.Decoder
-import sttp.client._
-import sttp.client.circe._
 import io.circe.generic.auto._
 import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform}
 import org.kys.athena.riot.api.dto.currentgameinfo.CurrentGameInfo
+import sttp.client3._
+import sttp.client3.circe._
 
 
 class Spectator(apiKey: String) extends BaseApi(apiKey) {

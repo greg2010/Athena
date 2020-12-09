@@ -4,6 +4,7 @@
     <option name="incrementalityType" value="SBT" />
     <profile name="sbt 1" modules="athena_4172,athena_4802" />
     <profile name="sbt 2" modules="common(JS+JVM) (shared),common(JS+JVM)-test (shared),commonJS,frontend">
+      <option name="postfixOps" value="true" />
       <option name="deprecationWarnings" value="true" />
       <option name="uncheckedWarnings" value="true" />
       <option name="featureWarnings" value="true" />

@@ -21,6 +21,7 @@ import org.scalajs.dom
 import org.scalajs.dom.html
 import org.scalajs.dom.raw.HTMLElement
 
+import scala.annotation.tailrec
 import scala.concurrent.duration.DurationInt
 
 
@@ -179,10 +180,18 @@ object CurrentGameView extends View[CurrentGamePage] {
                          color: String) = {
 
     def transitiveJoinSets[T](s: Set[Set[T]]): Set[Set[T]] = {
-      s.foldLeft(Set.empty[Set[T]])((cum, cur) => {
-        val (hasCommon, rest) = cum.partition(_.nonEmpty & cur.nonEmpty)
-        rest + (cur ++ hasCommon.flatten)
-      })
+      @tailrec
+      def mergeSets(cum: Set[Set[T]], sets: Set[Set[T]]): Set[Set[T]] = {
+        import scala.language.postfixOps
+        if (sets.isEmpty) {
+          cum
+        } else {
+          val cur               = sets.head
+          val (hasCommon, rest) = cum.partition(_ & cur nonEmpty)
+          mergeSets(rest + (cur ++ hasCommon.flatten), sets.tail)
+        }
+      }
+      mergeSets(Set.empty[Set[T]], s)
     }
 
     def findGroupBySummoner(g: Set[Set[InGameSummoner]], s: InGameSummoner): Option[Set[InGameSummoner]] = {

@@ -106,7 +106,7 @@ function common(variables, mode) {
           ]
         },
         {
-          test: /\.(woff(2)?|ttf|eot|svg|png|jpg|txt|json)(\?v=\d+\.\d+\.\d+)?$/,
+          test: /\.(woff(2)?|ttf|eot|svg|png|jpg|ico|txt|json)(\?v=\d+\.\d+\.\d+)?$/,
           use: [{
             loader: 'file-loader',
             options: {

@@ -52,6 +52,10 @@ lazy val assemblySettings = Seq(assemblyJarName in assembly := projectCodename +
                                   case PathList("META-INF", xs @ _*) => MergeStrategy.discard
                                   case "module-info.class" => MergeStrategy.discard
                                   case "application.conf" => MergeStrategy.concat
+                                  case PathList("org", "reactivestreams", xs @ _*) =>
+                                    MergeStrategy.first
+                                  // remove when com.softwaremill.sttp
+                                  // .client3:httpclient-backend_2.13:3.0.0-RC13 fixes its dependencies
                                   case x =>
                                     val oldStrategy = (assemblyMergeStrategy in assembly).value
                                     oldStrategy(x)
@@ -63,10 +67,9 @@ lazy val settings = commonSettings ++ wartremoverSettings
 lazy val dependencies = new {
   val catsVersion       = "2.3.0"
   val http4sVersion     = "0.21.13"
-  val rhoVersion        = "0.21.0-RC1"
   val circeVersion      = "0.13.0"
   val enumeratumVersion = "1.6.1"
-  val sttpVersion       = "3.0.0-RC11"
+  val sttpVersion       = "3.0.0-RC13"
   val doobieVersion     = "0.8.7"
   val scribeVersion     = "3.1.7"
 

@@ -73,9 +73,12 @@ lazy val dependencies = new {
   val laminarVersion   = "0.11.0"
   val airstreamVersion = "0.11.1"
 
+  val zioVersion     = "1.0.3"
+  val zioCatsVersion = "2.2.0.1"
+
+  val tapirVersion = "0.17.1"
+
   val common = Def.setting(Seq(
-    "org.typelevel" %%% "cats-core" % catsVersion,
-    "org.typelevel" %%% "cats-effect" % catsVersion,
     "com.beachape" %%% "enumeratum" % enumeratumVersion,
     "com.beachape" %%% "enumeratum-circe" % "1.6.1",
     "io.circe" %%% "circe-generic" % circeVersion,
@@ -84,7 +87,12 @@ lazy val dependencies = new {
     "io.circe" %%% "circe-literal" % circeVersion,
     "com.outr" %%% "scribe" % scribeVersion,
     "com.softwaremill.sttp.client3" %%% "core" % sttpVersion,
-    "com.softwaremill.sttp.client3" %%% "circe" % sttpVersion))
+    "com.softwaremill.sttp.client3" %%% "circe" % sttpVersion,
+    "dev.zio" %%% "zio" % zioVersion,
+    "dev.zio" %%% "zio-interop-cats" % zioCatsVersion,
+    "com.softwaremill.sttp.tapir" %%% "tapir-core" % tapirVersion,
+    "com.softwaremill.sttp.tapir" %% "tapir-enumeratum" % tapirVersion,
+    "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirVersion))
 
   val jvm = Def.setting(common.value ++ Seq(
     "com.typesafe" % "config" % "1.4.1",
@@ -94,12 +102,17 @@ lazy val dependencies = new {
     "org.http4s" %% "http4s-blaze-server" % http4sVersion,
     "org.http4s" %% "http4s-blaze-client" % http4sVersion,
     "org.http4s" %% "http4s-circe" % http4sVersion,
-    "org.http4s" %% "rho-swagger" % rhoVersion,
     "com.softwaremill.sttp.client3" %% "http4s-backend" % sttpVersion,
-    "com.github.blemale" %% "scaffeine" % "4.0.2"
+    "com.softwaremill.sttp.client3" %% "httpclient-backend-zio" % sttpVersion,
+    "com.github.blemale" %% "scaffeine" % "4.0.2",
+    "com.softwaremill.sttp.tapir" %% "tapir-zio" % tapirVersion,
+    "com.softwaremill.sttp.tapir" %% "tapir-zio-http4s-server" % tapirVersion,
+    "dev.zio" %% "zio-macros" % zioVersion
     ))
 
   val js = Def.setting(common.value ++ Seq(
+    "org.typelevel" %%% "cats-core" % catsVersion,
+    "org.typelevel" %%% "cats-effect" % catsVersion,
     "com.raquo" %%% "laminar" % laminarVersion,
     "com.raquo" %%% "airstream" % airstreamVersion,
     "com.raquo" %%% "waypoint" % "0.2.0"

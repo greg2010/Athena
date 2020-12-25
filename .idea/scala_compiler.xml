@@ -3,7 +3,7 @@
   <component name="ScalaCompilerConfiguration">
     <option name="incrementalityType" value="SBT" />
     <profile name="sbt 1" modules="athena_4172,athena_4802" />
-    <profile name="sbt 2" modules="common(JS+JVM) (shared),common(JS+JVM)-test (shared),commonJS,frontend">
+    <profile name="sbt 2" modules="common(JS+JVM) (shared),common(JS+JVM)-test (shared)">
       <option name="postfixOps" value="true" />
       <option name="deprecationWarnings" value="true" />
       <option name="uncheckedWarnings" value="true" />
@@ -58,6 +58,21 @@
         <parameter value="utf8" />
       </parameters>
       <plugins>
+        <plugin path="target/compiler_plugins/wartremover_2.13.4-2.4.13.jar" />
+      </plugins>
+    </profile>
+    <profile name="sbt 6" modules="commonJS,frontend">
+      <option name="deprecationWarnings" value="true" />
+      <option name="uncheckedWarnings" value="true" />
+      <option name="featureWarnings" value="true" />
+      <parameters>
+        <parameter value="-Wunused:imports" />
+        <parameter value="-Ymacro-annotations" />
+        <parameter value="-encoding" />
+        <parameter value="utf8" />
+      </parameters>
+      <plugins>
+        <plugin path="target/compiler_plugins/scalajs-compiler_2.13.4-1.3.1.jar" />
         <plugin path="target/compiler_plugins/wartremover_2.13.4-2.4.13.jar" />
       </plugins>
     </profile>

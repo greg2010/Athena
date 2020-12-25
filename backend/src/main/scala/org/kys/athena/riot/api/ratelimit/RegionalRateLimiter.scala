@@ -1,29 +1,33 @@
 package org.kys.athena.riot.api.ratelimit
 
-import cats.data.NonEmptyList
-import cats.effect.{Concurrent, ConcurrentEffect, Resource, Timer}
-import cats.implicits._
+import cats.effect.Concurrent
+import org.kys.athena.config.ConfigModule
+import org.kys.athena.config.ConfigModule.ConfigModule
+import zio._
 import org.kys.athena.riot.api.dto.common.Platform
+import zio.clock.Clock
+import zio.console.Console
 
 
-class RegionalRateLimiter[F[_]](platformList: Map[Platform, RateLimiter[F]])(implicit F: Concurrent[F]) {
-
-  def executePlatform[A](platform: Platform, job: F[A]): F[A] = {
-    platformList(platform).execute(job)
-  }
+trait RegionalRateLimiter {
+  def executePlatform[E <: Throwable, A](platform: Platform, job: IO[E, A]): IO[E, A]
 }
 
 
 object RegionalRateLimiter {
-  // Just a nice constructor of RegionalRateLimiter
-  def start[F[_]](limitList: NonEmptyList[RateLimit])
-                 (implicit F: ConcurrentEffect[F], timer: Timer[F]): Resource[F, RegionalRateLimiter[F]] = {
-    val platforms = Platform.values
-      .map(p => RateLimiter.start(limitList).map(re => (p, re)))
-      .toList
-      .sequence
-      .map(_.toMap)
+  def make(ll: List[RateLimit]): ZManaged[Clock with Console, Throwable, RegionalRateLimiter] = {
+    ZManaged.foreach(Platform.values)(p => RateLimiter.make(ll).map(rl => (p, rl))).map(_.toMap).map { rlm =>
+      new RegionalRateLimiter {
+        override def executePlatform[E <: Throwable, A](platform: Platform, job: IO[E, A]): IO[E, A] = {
+          rlm(platform).execute(job)
+        }
+      }
+    }
+  }
 
-    platforms.map(new RegionalRateLimiter(_))
+  def layer: ZLayer[Clock with Console with ConfigModule, Throwable, Has[RegionalRateLimiter]] = {
+    ZLayer.fromServiceManyManaged[ConfigModule.Service, Clock with Console, Throwable, Has[RegionalRateLimiter]] { c =>
+      RegionalRateLimiter.make(c.loaded.rateLimitList).map(Has(_))
+    }
   }
 }

@@ -1,22 +1,31 @@
 package org.kys.athena
 
 
-import cats.data.Kleisli
-import cats.effect.{Blocker, ConcurrentEffect, ContextShift, ExitCode, IO, IOApp, Resource, Timer}
+import org.kys.athena.config.{ConfigModule, LoggerConfig, RiotRateLimits}
+import org.kys.athena.controllers.{CurrentGameController, GroupController}
+import org.kys.athena.http.routes.LogicEndpoints
+import org.kys.athena.meraki.api.MerakiApiClient
+import org.kys.athena.riot.api.backends.CombinedSttpBackend
+import org.kys.athena.riot.api.RiotApiClient
+import sttp.capabilities
+import sttp.capabilities.zio.ZioStreams
+import sttp.client3.SttpBackend
+import sttp.client3.httpclient.zio.HttpClientZioBackend
+import org.http4s._
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.CORS
-import org.http4s.{HttpApp, HttpRoutes, Request, Response}
-import org.kys.athena.controllers.{CurrentGameController, GroupController}
-import org.kys.athena.http.middleware.{ApacheLogging, ErrorHandler}
-import org.kys.athena.http.routes.Base
-import org.kys.athena.meraki.api.{MerakiApi, MerakiApiClient}
-import org.kys.athena.riot.api.backends.CombinedSttpBackend
-import org.kys.athena.riot.api.ratelimit.{RegionalRateLimiter, RiotRateLimits}
-import org.kys.athena.riot.api.{RiotApi, RiotApiClient}
-import org.kys.athena.util.ThreadPools
-import sttp.client3.http4s.Http4sBackend
+import org.kys.athena.config.ConfigModule.ConfigModule
+import org.kys.athena.http.middleware.ApacheLogging
+import org.kys.athena.riot.api.ratelimit.{RateLimit, RegionalRateLimiter}
+import scribe.filter.{level => flevel, _}
+import scribe.{Level, Logger}
+import scribe.format._
+import zio.clock.Clock
+import zio.interop.catz._
+import zio._
+import zio.console.Console
 
 import scala.concurrent.duration._
 
@@ -25,106 +34,43 @@ import scala.concurrent.duration._
   * Extending object StreamApp makes it runnable,
   * and .serve blocks the main thread until the JVM is shutdown.
   * Example is taken from [[https://http4s.org/v0.20/service/ HTTP4s documentation]] */
-object Server extends IOApp {
-  def run(args: List[String]): IO[ExitCode] = {
-    val resources = for {
-      http4sClient <- prepareClient
-      apiClients <- prepareApiClients(http4sClient)
-      controllers <- prepareControllers(apiClients._1, apiClients._2)
-      svc <- prepareSvc(controllers._1, controllers._2)
-      server <- prepareServer(svc)
+object Server extends App {
+  type AppRuntime = LogicEndpoints.Env with Clock
+  type AppTask[A] = RIO[AppRuntime, A]
 
-    } yield (server)
+  override def run(args: List[String]): URIO[ZEnv, ExitCode] = {
 
 
-    resources.use { server =>
-      server
-        .compile
-        .drain
-        .as(ExitCode.Success)
-        .map { c =>
-          System.exit(c.code)
-          c
-        }
-    }
+    val defaultZioBackend = ZLayer.fromManaged(HttpClientZioBackend.managed())
+
+    val config = ConfigModule.live
+    val logger = config >>> LoggerConfig.layer // TODO: figure out a better way to configure logger
+
+    val rrl          = (Console.live ++ Clock.live ++ config ++ logger) >>> RegionalRateLimiter.layer
+    val httpClient   = (config ++ defaultZioBackend ++ rrl) >>> CombinedSttpBackend.layer
+    val riotClient   = (config ++ httpClient) >>> RiotApiClient.live
+    val merakiClient = httpClient >>> MerakiApiClient.live
+    val gc           = riotClient >>> GroupController.live
+    val cgc          = (riotClient ++ merakiClient) >>> CurrentGameController.live
+
+    allocateHttpServer.provideCustomLayer(cgc ++ gc ++ config).exitCode
   }
 
-  // Stage 0 - allocate thread pool(s)
+  def allocateHttpServer: ZIO[AppRuntime with ConfigModule, Throwable, Unit] = {
+    ZIO.runtime[AppRuntime with ConfigModule]
+      .flatMap { implicit runtime =>
 
-  // Stage 1 - allocate client rate limiters
-  def allocateRateLimiters: Resource[IO, RegionalRateLimiter[IO]] = {
-    val rateLimits = LAConfig.riotApiIsProd match {
-      case true => RiotRateLimits.prodRateLimit
-      case false => RiotRateLimits.devRateLimit
-    }
+        val config = runtime.environment.get[ConfigModule.Service].loaded
 
-    RegionalRateLimiter.start(rateLimits)(ConcurrentEffect[IO], Timer[IO])
-  }
+        val routes: HttpRoutes[AppTask] = Router(config.http.prefix -> LogicEndpoints.routes)
+        val svc                         = ApacheLogging(CORS(routes)).orNotFound
 
-  // Stage 2 - allocate http client
-  def prepareClient: Resource[IO, CombinedSttpBackend[IO, Any]] = {
-    val res = for {
-      ec <- ThreadPools.allocateCached[IO](Some("client"))
-      rl <- allocateRateLimiters
-      bb <- Http4sBackend.usingDefaultClientBuilder[IO](Blocker.liftExecutionContext(ec._1), ec._1)(
-        ConcurrentEffect[IO],
-        IO.contextShift(ec._1))
-    } yield (ec._1, rl, bb)
-
-    res.evalMap { case (ec, rl, bb) =>
-      IO.pure {
-        new CombinedSttpBackend[IO, Any](rl,
-                                         bb,
-                                         LAConfig.cacheRiotRequestsFor.seconds,
-                                         LAConfig.cacheRiotRequestsMaxCount)(IO.contextShift(ec))
-      }
-    }
-  }
-
-  // Stage 3 - allocate http clients
-  def prepareApiClients(combinedSttpBackend: CombinedSttpBackend[IO, Any])
-  : Resource[IO, (RiotApiClient, MerakiApiClient)] = {
-    Resource.pure[IO, (RiotApiClient, MerakiApiClient)] {
-      val riotApi   = new RiotApi(LAConfig.riotApiKey)
-      val rac       = new RiotApiClient(riotApi)(combinedSttpBackend)
-      val merakiApi = new MerakiApi
-      val mac       = new MerakiApiClient(merakiApi)(combinedSttpBackend)
-      (rac, mac)
-    }
-  }
-
-  // Stage 4 - allocate logic controllers
-  def prepareControllers(riotApiClient: RiotApiClient,
-                         merakiApiClient: MerakiApiClient)
-  : Resource[IO, (CurrentGameController, GroupController)] = {
-    ThreadPools.allocateCached(Some("Controller"))(implicitly[ConcurrentEffect[IO]]).map { tp =>
-      val cgc = new CurrentGameController(riotApiClient, merakiApiClient)(implicitly[ContextShift[IO]])
-      val gc  = new GroupController(riotApiClient)(implicitly[ContextShift[IO]])
-      (cgc, gc)
-    }
-  }
-
-  // Stage 5 - allocate http routes (server)
-  def prepareSvc(cgc: CurrentGameController,
-                 gc: GroupController): Resource[IO, Kleisli[IO, Request[IO], Response[IO]]] = {
-    Resource.pure[IO, Kleisli[IO, Request[IO], Response[IO]]] {
-      val baseRoutes: HttpRoutes[IO] = Base(cgc, gc)
-      val httpApp   : HttpRoutes[IO] = Router(LAConfig.http.prefix -> baseRoutes)
-      ApacheLogging(CORS(ErrorHandler(httpApp))).orNotFound
-    }
-  }
-
-  // Stage 6 - allocate http server
-  def prepareServer(svc: HttpApp[IO]): Resource[IO, fs2.Stream[IO, ExitCode]] = {
-    ThreadPools.allocateCached[IO](Some("server")).map {
-      case (ec, _) =>
-        BlazeServerBuilder[IO](executionContext = ec)(
-          implicitly[ConcurrentEffect[IO]], IO.timer(ec))
-          .bindHttp(port = LAConfig.http.port, host = LAConfig.http.host)
+        BlazeServerBuilder[AppTask](runtime.platform.executor.asEC)
+          .bindHttp(port = config.http.port, host = config.http.host)
           .withIdleTimeout(6.minutes)
           .withResponseHeaderTimeout(5.minutes)
           .withHttpApp(svc)
-          .serve
-    }
+          .serve.compile.drain
+      }
   }
 }

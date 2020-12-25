@@ -1,32 +1,22 @@
 package org.kys.athena.riot.api.ratelimit
 
-import cats.data.NonEmptyList
-import cats.effect.{Concurrent, ConcurrentEffect, Resource, Timer}
-import cats.implicits._
+import zio._
+import zio.clock.Clock
+import zio.console.Console
 
 
-class RateLimiter[F[_]](limiterList: NonEmptyList[TokenBucket[F]])(implicit F: Concurrent[F]) {
-
-  def execute[A](job: F[A]): F[A] = {
-    limiterList match {
-      case NonEmptyList(head, tail) =>
-        val awaitF = tail.map { l =>
-          // Awaiting for all _other_ rate limiters
-          l.execute(F.unit)
-        }.sequence
-        F.flatMap(awaitF) { _ =>
-          // Finally, run our job
-          head.execute(job)
-        }
-    }
-  }
-
+trait RateLimiter {
+  def execute[E <: Throwable, A](job: IO[E, A]): IO[E, A]
 }
 
 object RateLimiter {
-  // Just a nice constructor of RateLimiter
-  def start[F[_]](limitList: NonEmptyList[RateLimit])
-                 (implicit F: ConcurrentEffect[F], timer: Timer[F]): Resource[F, RateLimiter[F]] = {
-    limitList.map(TokenBucket.start(_)).sequence.map(new RateLimiter(_))
+  def make(ll: List[RateLimit]): ZManaged[Clock with Console, Throwable, RateLimiter] = {
+    ZManaged.foreach(ll)(TokenBucket.make).map { rll =>
+      new RateLimiter {
+        override def execute[E <: Throwable, A](job: IO[E, A]): IO[E, A] = {
+          IO.bracket(IO.foreachPar_(rll)(rl => rl.acquire))(_ => IO.foreachPar_(rll)(rl => rl.release))(_ => job)
+        }
+      }
+    }
   }
 }

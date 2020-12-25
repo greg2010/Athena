@@ -1,4 +1,7 @@
-version: 2
+version: 2.1
+
+orbs:
+  discord: antonioned/discord@0.1.0
 jobs:
   build-scala:
     working_directory: ~/athena
@@ -71,7 +74,7 @@ jobs:
   deploy-backend:
     working_directory: ~/athena
     docker:
-      - image: docker:17.05.0-ce-git
+      - image: docker:stable-git
     steps:
       - checkout
       - setup_remote_docker
@@ -85,10 +88,14 @@ jobs:
       - run: docker tag greg2010/athena-backend greg2010/athena-backend:latest
       - run: docker login --username ${DOCKER_USER} --password ${DOCKER_PASSWORD}
       - run: docker push greg2010/athena-backend
+      - run: apk add -U curl bash
+      - discord/status:
+          fail_only: false
+          mentions: 'greg2010#3279'
   deploy-frontend:
     working_directory: ~/athena
     docker:
-      - image: docker:17.05.0-ce-git
+      - image: docker:stable-git
     steps:
       - checkout
       - setup_remote_docker
@@ -102,6 +109,10 @@ jobs:
       - run: docker tag greg2010/athena-frontend greg2010/athena-frontend:latest
       - run: docker login --username ${DOCKER_USER} --password ${DOCKER_PASSWORD}
       - run: docker push greg2010/athena-frontend
+      - run: apk add -U curl bash
+      - discord/status:
+          fail_only: false
+          mentions: 'greg2010#3279'
 workflows:
   version: 2
   build-and-deploy:
@@ -122,4 +133,3 @@ workflows:
           context: KYS-Primary
           requires:
             - build-scala
-

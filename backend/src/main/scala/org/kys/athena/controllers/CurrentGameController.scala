@@ -13,6 +13,8 @@ import org.kys.athena.http
 import zio._
 import zio.macros.accessible
 
+import scala.util.Try
+
 
 @accessible
 object CurrentGameController {
@@ -54,14 +56,15 @@ object CurrentGameController {
           def estimatePositions(gameQueueId: GameQueueTypeEnum,
                                 team: Set[InGameSummoner]): IO[MerakiApiError, Option[Map[PositionEnum, String]]] = {
             // When generating possible team permutations, apply this filter
+            // to remove permutations without at least one player with smite in jungle position
             // to force player(s) with smite to be in jungle position
             def summonersPred(arrangement: IndexedSeq[(PositionEnum, InGameSummoner)]): Boolean = {
-              arrangement.foldRight(true) { (entry, soFar) =>
-                soFar &&
+              arrangement.foldRight(false) { (entry, soFar) =>
+                soFar ||
                 ((entry._1, entry._2.summonerSpells.spell1Id, entry._2.summonerSpells.spell2Id) match {
-                  case (p, SummonerSpellsEnum.Smite, _) if p != PositionEnum.Jungle => false
-                  case (p, _, SummonerSpellsEnum.Smite) if p != PositionEnum.Jungle => false
-                  case _ => true
+                  case (p, SummonerSpellsEnum.Smite, _) if p != PositionEnum.Jungle => true
+                  case (p, _, SummonerSpellsEnum.Smite) if p != PositionEnum.Jungle => true
+                  case _ => false
                 })
               }
             }
@@ -74,12 +77,17 @@ object CurrentGameController {
                              GameQueueTypeEnum.SummonersRiftFlexRanked,
                              GameQueueTypeEnum.SummonersRiftClash) => {
                 merakiApiClient.playrates.map { playRate =>
-                  val posns = team
-                    .toList
-                    .permutations
-                    .map(PositionEnum.values.zip(_))
-                    .filter(summonersPred)
-                    .toList
+                  val posns    = team.toList.permutations
+                  val zipped   = posns.map(PositionEnum.values.zip(_)).toList
+                  val filtered = zipped.filterNot(summonersPred) match {
+                    case e if e.isEmpty => {
+                      // If heuristic removed all options (for example team without smite), ignore it
+                      zipped
+                    }
+                    case e => e
+                  }
+
+                  val processed = filtered
                     .map { perm =>
                       val score = perm.map {
                         case (posn, sum) =>
@@ -90,10 +98,8 @@ object CurrentGameController {
                       }.sum
                       (perm.toMap.view.mapValues(_.summonerId), score)
                     }
-                    .maxBy(_._2)
-                    ._1
-                    .toMap
-                  Some(posns)
+                  // `.maxBy` can throw. Wrap in Try to catch
+                  Try(processed.maxBy(_._2)._1.toMap).toOption
                 }
               }
               case _ => IO.none

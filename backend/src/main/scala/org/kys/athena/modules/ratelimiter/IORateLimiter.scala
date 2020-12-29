@@ -11,7 +11,6 @@ trait IORateLimiter {
 }
 
 object IORateLimiter {
-
   def make(ll: List[RateLimitInitial]): ZManaged[Clock with Console, Nothing, IORateLimiter] = {
     ZManaged.foreach(ll)(e => TokenBucket.make(e.rl, e.initial)).map { rll =>
       new IORateLimiter {

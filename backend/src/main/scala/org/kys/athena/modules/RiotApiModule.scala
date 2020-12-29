@@ -105,7 +105,6 @@ object RiotApiModule {
 
           def dispatchCached[T](r: RiotRequest[T])(implicit ev: ClassTag[T]): IO[RiotApiError, T] = {
             val cacheKey = r.r.uri.toString()
-            /*
             for {
               fromCache <- cacheController.get[T](cacheKey)
                 .catchAll { err =>
@@ -118,8 +117,6 @@ object RiotApiModule {
                 UIO.none
               }
             } yield res
-             */
-            dispatch(r)
           }
 
           def liftErrors[T](req: RiotRequest[T])(r: Response[Either[RequestError, T]]): IO[RiotApiError, T] = {

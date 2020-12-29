@@ -15,18 +15,20 @@ import sttp.model.StatusCode
 import java.util.UUID
 
 trait Endpoints {
-  private implicit val schemaForPlatform: Schema[Platform] = Schema.string
-  private implicit val schemaForGQTE: Schema[GameQueueTypeEnum] = Schema.string
-  private implicit val schemaForPE: Schema[PositionEnum] = Schema.string
-  private implicit val schemaForSSE: Schema[SummonerSpellsEnum] = Schema.string
-  private implicit val schemaForRQTE: Schema[RankedQueueTypeEnum] = Schema.string
-  private implicit val schemaForTE: Schema[TierEnum] = Schema.string
-  private implicit val schemaForPM: Schema[Map[PositionEnum, String]] = Schema.string //TODO fix schema
+  private implicit val schemaForPlatform: Schema[Platform]                  = Schema.string
+  private implicit val schemaForGQTE    : Schema[GameQueueTypeEnum]         = Schema.string
+  private implicit val schemaForPE      : Schema[PositionEnum]              = Schema.string
+  private implicit val schemaForSSE     : Schema[SummonerSpellsEnum]        = Schema.string
+  private implicit val schemaForRQTE    : Schema[RankedQueueTypeEnum]       = Schema.string
+  private implicit val schemaForTE      : Schema[TierEnum]                  = Schema.string
+  private implicit val schemaForPM      : Schema[Map[PositionEnum, String]] = Schema.string //TODO fix schema
 
   val defaultErrorCodes = oneOf[BackendApiError](
     statusMapping(StatusCode.NotFound, jsonBody[NotFoundError]),
     statusMapping(StatusCode.BadRequest, jsonBody[BadRequestError]),
     statusMapping(StatusCode.InternalServerError, jsonBody[InternalServerError]))
+
+  val healthz: Endpoint[Unit, Unit, String, Any] = endpoint.get.in("healthz").out(stringBody).summary("Health check")
 
   val currentGameByName: Endpoint[(Platform, String, Option[Boolean]), BackendApiError, OngoingGameResponse, Any] =
     endpoint.get

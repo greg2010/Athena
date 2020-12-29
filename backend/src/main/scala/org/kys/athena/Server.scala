@@ -52,7 +52,8 @@ object Server extends App {
 
         val config = runtime.environment.get[ConfigModule.Service].loaded
 
-        val routes: HttpRoutes[AppTask] = Router(config.http.prefix -> LogicEndpoints.routes)
+        val routes: HttpRoutes[AppTask] = Router(config.http.prefix -> LogicEndpoints.publicRoutes,
+                                                 "/" -> LogicEndpoints.internalRoutes)
         val svc                         = ApacheLogging(CORS(routes)).orNotFound
 
         BlazeServerBuilder[AppTask](runtime.platform.executor.asEC)

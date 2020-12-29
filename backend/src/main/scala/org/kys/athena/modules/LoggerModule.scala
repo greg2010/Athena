@@ -14,6 +14,8 @@ object LoggerModule {
         .clearModifiers()
         .withHandler(formatter = fmt, minimumLevel = Level.get(config.logLevel))
         .withModifier(select(packageName.startsWith("org.http4s")).exclude(flevel < Level.Info))
+        .withModifier(select(packageName.startsWith("sttp.tapir.server.http4s")).exclude(flevel < Level.Info))
+        .withModifier(select(packageName.startsWith("org.http4s.blaze.channel.nio1")).exclude(flevel < Level.Warn))
         .replace()
     }
   }.toLayer

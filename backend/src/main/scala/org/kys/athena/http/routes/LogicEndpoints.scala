@@ -41,7 +41,13 @@ object LogicEndpoints extends Endpoints {
     GroupModule.getGroupsByUUID(uuid)
   }
 
-  val routes = ZHttp4sServerInterpreter.from(List(currentGameByNameImpl.widen[Env],
-                                                  groupsByNameImpl.widen[Env],
-                                                  groupsByUUIDImpl.widen[Env])).toRoutes
+  val healthzImpl = this.healthz.zServerLogic { _ =>
+    UIO.succeed("Ok")
+  }
+
+  val publicRoutes = ZHttp4sServerInterpreter.from(List(currentGameByNameImpl.widen[Env],
+                                                        groupsByNameImpl.widen[Env],
+                                                        groupsByUUIDImpl.widen[Env])).toRoutes
+
+  val internalRoutes = ZHttp4sServerInterpreter.from(healthzImpl.widen[Env]).toRoutes
 }

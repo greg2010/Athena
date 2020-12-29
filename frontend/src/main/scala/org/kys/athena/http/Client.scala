@@ -74,7 +74,7 @@ object Client {
   def fetchOngoingGameByName(realm: Platform, name: String)(debug: Boolean = false): IO[OngoingGameResponse] = {
     val url = if (!debug)
                 uri"${Config.BACKEND_API_URL}/current/by-summoner-name/${realm.entryName}/$name?fetchGroups=true"
-              else uri"http://${window.location.hostname}/sampleongoing.json"
+              else uri"http://localhost:8080/sampleongoing.json"
     val q   = basicRequest
       .get(url)
       .response(asJson[OngoingGameResponse])
@@ -84,7 +84,7 @@ object Client {
   def fetchGroupsByUUID(uuid: UUID)(debug: Boolean = false): IO[PremadeResponse] = {
     val url = if (!debug)
                 uri"${Config.BACKEND_API_URL}/current/by-uuid/${uuid}/groups"
-              else uri"http://${window.location.hostname}/samplepremades.json"
+              else uri"http://localhost:8080/samplepremades.json"
     val q   = basicRequest.get(url)
       .response(asJson[PremadeResponse])
     fetchAndLift(q)
@@ -93,7 +93,7 @@ object Client {
   def fetchGroupsByName(realm: Platform, name: String)(debug: Boolean = false): IO[PremadeResponse] = {
     val url = if (!debug)
                 uri"${Config.BACKEND_API_URL}/current/by-summoner-name/${realm.entryName}/$name/groups"
-              else uri"http://${window.location.hostname}/samplepremades.json"
+              else uri"http://localhost:8080/samplepremades.json"
     val q   = basicRequest.get(url)
       .response(asJson[PremadeResponse])
     fetchAndLift(q)

@@ -1,6 +1,6 @@
 package org.kys.athena.http.routes
 
-import org.kys.athena.http.models.current.{OngoingGameResponse, OngoingGameTeam, PositionEnum}
+import org.kys.athena.http.models.current.{OngoingGameResponse, PositionEnum}
 import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform, SummonerSpellsEnum}
 import sttp.tapir._
 import sttp.tapir.codec.enumeratum._

@@ -1,13 +1,10 @@
-package org.kys.athena.controllers
+package org.kys.athena.modules
 
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import org.kys.athena.data.SummonerMatchHistory
 import org.kys.athena.http.models.current.OngoingGameResponse
 import org.kys.athena.http.models.premade.{PlayerGroup, PremadeResponse}
-import org.kys.athena.riot.api.RiotApiClient
-import org.kys.athena.riot.api.RiotApiClient.RiotApiClient
 import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform}
-import org.kys.athena.riot
 import org.kys.athena.http
 import zio.macros.accessible
 import zio._
@@ -17,8 +14,8 @@ import scala.concurrent.duration.DurationInt
 
 
 @accessible
-object GroupController {
-  type GroupController = Has[GroupController.Service]
+object GroupModule {
+  type GroupController = Has[GroupModule.Service]
 
   trait Service {
     def getGroupsForGame(platform: Platform,
@@ -32,10 +29,9 @@ object GroupController {
     def getGroupsByUUID(uuid: UUID): IO[http.errors.BackendApiError, PremadeResponse]
   }
 
-  val live = ZLayer.fromService[RiotApiClient.Service, GroupController.Service] { riotApiClient =>
+  val live = ZLayer.fromService[RiotApiModule.Service, GroupModule.Service] { riotApiClient =>
 
     new Service {
-
       case class TeamTupleWithHistory(blueTeam: Set[SummonerMatchHistory], redTeam: Set[SummonerMatchHistory])
 
       val uuidCache: Cache[UUID, Promise[Throwable, PremadeResponse]] = Scaffeine()
@@ -53,9 +49,11 @@ object GroupController {
       def getTeamHistory(ongoingGameInfo: OngoingGameResponse, gameQueryCount: Int)
                         (implicit platform: Platform): Task[TeamTupleWithHistory] = {
         for {
-          blueGames <- riotApiClient.matchHistoryByInGameSummonerSet(ongoingGameInfo.blueTeam.summoners, gameQueryCount,
+          blueGames <- riotApiClient.matchHistoryByInGameSummonerSet(ongoingGameInfo.blueTeam.summoners,
+                                                                     gameQueryCount,
                                                                      queues)
-          redGames <- riotApiClient.matchHistoryByInGameSummonerSet(ongoingGameInfo.redTeam.summoners, gameQueryCount,
+          redGames <- riotApiClient.matchHistoryByInGameSummonerSet(ongoingGameInfo.redTeam.summoners,
+                                                                    gameQueryCount,
                                                                     queues)
         } yield TeamTupleWithHistory(blueGames, redGames)
       }

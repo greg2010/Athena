@@ -6,17 +6,13 @@ import sttp.model.Uri
 
 
 abstract class BaseApi(apiKey: String) {
-  val pathPrefix: String
-
+  val pathPrefix: Seq[String]
 
   def getHost(p: Platform): String = {
     s"${p.entryName.toLowerCase}.api.riotgames.com"
   }
 
-  def getBaseUri(platform: Platform): Uri = {
-    val s = s"https://${getHost(platform)}/lol/${pathPrefix}"
-    uri"$s"
-  }
+  def getBaseUri(platform: Platform): Uri = uri"https://${getHost(platform)}/lol/${pathPrefix}"
 
-  val baseRequest = basicRequest.header("X-Riot-Token", apiKey)
+  val baseRequest: RequestT[Empty, Either[String, String], Any] = basicRequest.header("X-Riot-Token", apiKey)
 }

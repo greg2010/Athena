@@ -1,7 +1,8 @@
-package org.kys.athena.controllers
+package org.kys.athena.modules
 
 import org.kys.athena.{http, riot}
 import org.kys.athena.meraki.api.errors.MerakiApiError
+
 
 object Shared {
   def defaultErrorHandler(err: Throwable): http.errors.BackendApiError = {

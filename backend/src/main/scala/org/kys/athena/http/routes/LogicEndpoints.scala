@@ -1,8 +1,8 @@
 package org.kys.athena.http.routes
 
-import org.kys.athena.controllers.{CurrentGameController, GroupController}
-import org.kys.athena.controllers.CurrentGameController.CurrentGameController
-import org.kys.athena.controllers.GroupController.GroupController
+import org.kys.athena.modules.{CurrentGameModule, GroupModule}
+import org.kys.athena.modules.CurrentGameModule.CurrentGameController
+import org.kys.athena.modules.GroupModule.GroupController
 import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
 import sttp.tapir.ztapir._
 import zio._
@@ -19,10 +19,10 @@ object LogicEndpoints extends Endpoints {
       val fetchGroupsDefault = fetchGroups.getOrElse(false)
       val decodedName = URLDecoder.decode(name, "UTF-8")
       (for {
-        game <- CurrentGameController.getCurrentGame(platform, decodedName)
+        game <- CurrentGameModule.getCurrentGame(platform, decodedName)
         uuidAdded <-
           if (fetchGroupsDefault)
-            GroupController.getGroupsForGameAsync(platform, game).map(u => game.copy(groupUuid = Some(u)))
+            GroupModule.getGroupsForGameAsync(platform, game).map(u => game.copy(groupUuid = Some(u)))
           else IO.succeed(game)
       } yield uuidAdded)
   }
@@ -32,13 +32,13 @@ object LogicEndpoints extends Endpoints {
     case (platform, name) =>
       val decodedName = URLDecoder.decode(name, "UTF-8")
       (for {
-        game <- CurrentGameController.getCurrentGame(platform, decodedName)
-        groups <- GroupController.getGroupsForGame(platform, game)
+        game <- CurrentGameModule.getCurrentGame(platform, decodedName)
+        groups <- GroupModule.getGroupsForGame(platform, game)
       } yield groups)
   }
 
   val groupsByUUIDImpl = this.groupsByUUID.zServerLogic { uuid =>
-    GroupController.getGroupsByUUID(uuid)
+    GroupModule.getGroupsByUUID(uuid)
   }
 
   val routes = ZHttp4sServerInterpreter.from(List(currentGameByNameImpl.widen[Env],

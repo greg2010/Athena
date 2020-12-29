@@ -13,15 +13,9 @@ final case class InGameSummoner(name: String,
                                 runes: RunesSelected,
                                 summonerSpells: SummonerSpells,
                                 teamId: Long,
-                                rankedLeagues: List[RankedLeague]) {
-  override def equals(obj: Any): Boolean = {
-    obj match {
-      case s: InGameSummoner => s.summonerId == summonerId
-      case _ => false
-    }
-  }
-}
+                                rankedLeagues: List[RankedLeague])
 
+@SuppressWarnings(Array("org.wartremover.warts.TraversableOps"))
 object InGameSummoner {
   def apply(summoner: Summoner,
             currentGameParticipant: CurrentGameParticipant,

@@ -110,7 +110,8 @@ lazy val dependencies = new {
     "com.github.blemale" %% "scaffeine" % "4.0.2",
     "com.softwaremill.sttp.tapir" %% "tapir-zio" % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http4s-server" % tapirVersion,
-    "dev.zio" %% "zio-macros" % zioVersion
+    "dev.zio" %% "zio-macros" % zioVersion,
+    "dev.zio" %%% "zio-prelude" % "1.0.0-RC1"
     ))
 
   val js = Def.setting(common.value ++ Seq(

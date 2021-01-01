@@ -10,7 +10,6 @@ import zio._
 import zio.macros.accessible
 import org.kys.athena.riot
 
-import java.util.UUID
 import scala.collection.MapView
 
 
@@ -19,7 +18,7 @@ object CurrentGameModule {
 
   type CurrentGameController = Has[CurrentGameModule.Service]
   trait Service {
-    def getCurrentGame(platform: Platform, name: String)(implicit reqId: UUID): IO[Throwable, OngoingGameResponse]
+    def getCurrentGame(platform: Platform, name: String)(implicit reqId: String): IO[Throwable, OngoingGameResponse]
   }
 
   val live = ZLayer.fromServices[RiotApiModule.Service, MerakiApiClient.Service,
@@ -107,7 +106,8 @@ object CurrentGameModule {
       }
 
 
-      def getCurrentGame(platform: Platform, name: String)(implicit reqId: UUID): IO[Throwable, OngoingGameResponse] = {
+      def getCurrentGame(platform: Platform, name: String)
+                        (implicit reqId: String): IO[Throwable, OngoingGameResponse] = {
         for {
           summoner <- riotApiClient.summonerByName(name, platform)
           game <- riotApiClient.currentGameBySummonerId(summoner.id, platform).refineOrDie {

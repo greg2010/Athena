@@ -30,33 +30,33 @@ trait Endpoints {
 
   val healthz: Endpoint[Unit, Unit, String, Any] = endpoint.get.in("healthz").out(stringBody).summary("Health check")
 
-  val currentGameByName: Endpoint[(Platform, String, Option[Boolean], Option[UUID]), BackendApiError,
+  val currentGameByName: Endpoint[(Platform, String, Option[Boolean], Option[String]), BackendApiError,
     OngoingGameResponse, Any] =
     endpoint.get
       .in("current" / "by-summoner-name")
       .in(path[Platform]("platformId") / path[String]("summonerName"))
       .in(query[Option[Boolean]]("fetchGroups"))
-      .in(header[Option[UUID]]("X-Request-ID"))
+      .in(header[Option[String]]("X-Request-ID"))
       .out(jsonBody[OngoingGameResponse])
       .errorOut(defaultErrorCodes)
       .summary("Endpoint to get current game info for a player")
 
-  val groupsByName: Endpoint[(Platform, String, Option[UUID]), BackendApiError, PremadeResponse, Any] =
+  val groupsByName: Endpoint[(Platform, String, Option[String]), BackendApiError, PremadeResponse, Any] =
     endpoint.get
       .in("current" / "by-summoner-name")
       .in(path[Platform]("platformId") / path[String]("summonerName"))
       .in("groups")
-      .in(header[Option[UUID]]("X-Request-ID"))
+      .in(header[Option[String]]("X-Request-ID"))
       .out(jsonBody[PremadeResponse])
       .errorOut(defaultErrorCodes)
       .summary("Endpoint to get premades in a game for a player")
 
-  val groupsByUUID: Endpoint[(UUID, Option[UUID]), BackendApiError, PremadeResponse, Any] =
+  val groupsByUUID: Endpoint[(UUID, Option[String]), BackendApiError, PremadeResponse, Any] =
     endpoint.get
       .in("current" / "by-uuid")
       .in(path[UUID]("uuid"))
       .in("groups")
-      .in(header[Option[UUID]]("X-Request-ID"))
+      .in(header[Option[String]]("X-Request-ID"))
       .out(jsonBody[PremadeResponse])
       .errorOut(defaultErrorCodes)
       .summary("Endpoint to get premades in a game for a player by UUID")

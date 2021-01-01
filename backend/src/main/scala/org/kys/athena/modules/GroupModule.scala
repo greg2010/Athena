@@ -21,12 +21,12 @@ object GroupModule {
     def getGroupsForGame(platform: Platform,
                          ongoingGameInfo: OngoingGameResponse,
                          gamesQueryCount: Int = 5)
-                        (implicit reqId: UUID): IO[Throwable, PremadeResponse]
+                        (implicit reqId: String): IO[Throwable, PremadeResponse]
 
     def getGroupsForGameAsync(platform: Platform,
                               ongoingGameInfo: OngoingGameResponse,
                               gamesQueryCount: Int = 5)
-                             (implicit reqId: UUID): IO[Throwable, UUID]
+                             (implicit reqId: String): IO[Throwable, UUID]
 
     def getGroupsByUUID(uuid: UUID): IO[Throwable, PremadeResponse]
   }
@@ -49,7 +49,7 @@ object GroupModule {
                                                GameQueueTypeEnum.SummonersRiftClash)
 
       def getTeamHistory(ongoingGameInfo: OngoingGameResponse, gameQueryCount: Int, platform: Platform)
-                        (implicit reqId: UUID): Task[TeamTupleWithHistory] = {
+                        (implicit reqId: String): Task[TeamTupleWithHistory] = {
         for {
           blueGames <- riotApiClient.matchHistoryByInGameSummonerSet(ongoingGameInfo.blueTeam.summoners,
                                                                      gameQueryCount,
@@ -105,7 +105,7 @@ object GroupModule {
 
       def getGroupsForGame(platform: Platform,
                            ongoingGameInfo: OngoingGameResponse,
-                           gamesQueryCount: Int = 5)(implicit reqId: UUID): IO[Throwable, PremadeResponse] = {
+                           gamesQueryCount: Int = 5)(implicit reqId: String): IO[Throwable, PremadeResponse] = {
         for {
           teamHistory <- getTeamHistory(ongoingGameInfo, gamesQueryCount, platform)
           groupsTuple <- Task.succeed(determineGroups(teamHistory))
@@ -114,7 +114,7 @@ object GroupModule {
 
       def getGroupsForGameAsync(platform: Platform,
                                 ongoingGameInfo: OngoingGameResponse,
-                                gamesQueryCount: Int = 5)(implicit reqId: UUID): IO[Throwable, UUID] = {
+                                gamesQueryCount: Int = 5)(implicit reqId: String): IO[Throwable, UUID] = {
         val promise = Promise.make[Throwable, PremadeResponse]
         for {
           uuid <- Task.effect(UUID.randomUUID())

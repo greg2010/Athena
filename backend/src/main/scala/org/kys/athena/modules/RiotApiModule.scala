@@ -21,7 +21,6 @@ import zio.macros.accessible
 import zio._
 import zio.duration._
 
-import java.util.UUID
 import scala.reflect.ClassTag
 
 
@@ -31,31 +30,31 @@ object RiotApiModule {
 
   // All of these are exposed via ZIO's ZLayer
   trait Service {
-    def summonerByName(name: String, platform: Platform)(implicit reqId: UUID): IO[RiotApiError, Summoner]
+    def summonerByName(name: String, platform: Platform)(implicit reqId: String): IO[RiotApiError, Summoner]
 
-    def summonerBySummonerId(id: String, platform: Platform)(implicit reqId: UUID): IO[RiotApiError, Summoner]
+    def summonerBySummonerId(id: String, platform: Platform)(implicit reqId: String): IO[RiotApiError, Summoner]
 
-    def leaguesBySummonerId(id: String, platform: Platform)(implicit reqId: UUID): IO[RiotApiError, List[League]]
+    def leaguesBySummonerId(id: String, platform: Platform)(implicit reqId: String): IO[RiotApiError, List[League]]
 
     def currentGameBySummonerId(summonerId: String, platform: Platform)
-                               (implicit reqId: UUID): IO[RiotApiError, CurrentGameInfo]
+                               (implicit reqId: String): IO[RiotApiError, CurrentGameInfo]
 
-    def matchByMatchId(matchId: Long, platform: Platform)(implicit reqId: UUID): IO[RiotApiError, Match]
+    def matchByMatchId(matchId: Long, platform: Platform)(implicit reqId: String): IO[RiotApiError, Match]
 
     def matchHistoryBySummonerId(summonerId: String,
                                  gamesQueryCount: Int,
                                  queues: Set[GameQueueTypeEnum] = Set(),
                                  platform: Platform)
-                                (implicit reqId: UUID): IO[RiotApiError, List[Match]]
+                                (implicit reqId: String): IO[RiotApiError, List[Match]]
 
     def matchHistoryByInGameSummonerSet(inGameSummonerSet: Set[InGameSummoner],
                                         gamesQueryCount: Int, queues: Set[GameQueueTypeEnum] = Set(),
                                         platform: Platform)
-                                       (implicit reqId: UUID): IO[RiotApiError, Set[SummonerMatchHistory]]
+                                       (implicit reqId: String): IO[RiotApiError, Set[SummonerMatchHistory]]
 
     def inGameSummonerByParticipant(participant: CurrentGameParticipant,
                                     platform: Platform)
-                                   (implicit reqId: UUID): IO[RiotApiError, InGameSummoner]
+                                   (implicit reqId: String): IO[RiotApiError, InGameSummoner]
   }
 
   val live = {
@@ -67,7 +66,7 @@ object RiotApiModule {
 
           def retried[T](rio: IO[RiotApiError, T],
                          s: Option[Schedule[Any, RiotApiError, ((Duration, Long), RiotApiError)]],
-                         r: RiotRequest[T])(implicit reqId: UUID): IO[RiotApiError, T] = {
+                         r: RiotRequest[T])(implicit reqId: String): IO[RiotApiError, T] = {
             val defaultInitDelay    : Duration = 0.seconds
             val defaultRetryAttempts: Int      = 3
 
@@ -99,7 +98,7 @@ object RiotApiModule {
           }
 
 
-          def dispatchRatelimited[T](r: RiotRequest[T])(implicit reqId: UUID): IO[RiotApiError, T] = {
+          def dispatchRatelimited[T](r: RiotRequest[T])(implicit reqId: String): IO[RiotApiError, T] = {
             val key = requestKey(r)
             regionalRateLimiter
               .executePlatform(key, r.p, backend.send(r.r).orDie, RiotApi.extractRR[T])
@@ -109,11 +108,11 @@ object RiotApiModule {
 
           // Call these to run requests with or without caching
 
-          def dispatch[T](r: RiotRequest[T])(implicit reqId: UUID): IO[RiotApiError, T] = {
+          def dispatch[T](r: RiotRequest[T])(implicit reqId: String): IO[RiotApiError, T] = {
             retried(dispatchRatelimited(r), None, r)
           }
 
-          def dispatchCached[T](r: RiotRequest[T])(implicit ev: ClassTag[T], reqId: UUID): IO[RiotApiError, T] = {
+          def dispatchCached[T](r: RiotRequest[T])(implicit ev: ClassTag[T], reqId: String): IO[RiotApiError, T] = {
             val cacheKey = r.r.uri.toString()
             for {
               fromCache <- cacheController.get[T](cacheKey)
@@ -158,29 +157,30 @@ object RiotApiModule {
             }
           }
 
-          def summonerByName(name: String, platform: Platform)(implicit reqId: UUID): IO[RiotApiError, Summoner] = {
+          def summonerByName(name: String, platform: Platform)(implicit reqId: String): IO[RiotApiError, Summoner] = {
             scribe.debug(s"Querying summoner by name=$name platform=$platform requestId=$reqId")
             dispatchCached(riotApi.summoner.byName(platform, name))
           }
 
-          def summonerBySummonerId(id: String, platform: Platform)(implicit reqId: UUID): IO[RiotApiError, Summoner] = {
+          def summonerBySummonerId(id: String, platform: Platform)
+                                  (implicit reqId: String): IO[RiotApiError, Summoner] = {
             scribe.debug(s"Querying summoner by id=$id platform=$platform requestId=$reqId")
             dispatchCached(riotApi.summoner.bySummonerId(platform, id))
           }
 
           def leaguesBySummonerId(id: String, platform: Platform)
-                                 (implicit reqId: UUID): IO[RiotApiError, List[League]] = {
+                                 (implicit reqId: String): IO[RiotApiError, List[League]] = {
             scribe.debug(s"Querying leagues by id=$id platform=$platform requestId=$reqId")
             dispatchCached(riotApi.league.bySummonerId(platform, id))
           }
 
           def currentGameBySummonerId(summonerId: String, platform: Platform)
-                                     (implicit reqId: UUID): IO[RiotApiError, CurrentGameInfo] = {
+                                     (implicit reqId: String): IO[RiotApiError, CurrentGameInfo] = {
             scribe.debug(s"Querying current game by summonerId=$summonerId platform=$platform requestId=$reqId")
             dispatch(riotApi.spectator.activeGameBySummoner(platform, summonerId))
           }
 
-          def matchByMatchId(matchId: Long, platform: Platform)(implicit reqId: UUID): IO[RiotApiError, Match] = {
+          def matchByMatchId(matchId: Long, platform: Platform)(implicit reqId: String): IO[RiotApiError, Match] = {
             scribe.debug(s"Querying match by matchId=$matchId platform=$platform requestId=$reqId")
             dispatchCached(riotApi.`match`.matchByMatchId(platform, matchId))
           }
@@ -188,7 +188,7 @@ object RiotApiModule {
           def matchHistoryBySummonerId(summonerId: String,
                                        gamesQueryCount: Int,
                                        queues: Set[GameQueueTypeEnum] = Set(),
-                                       platform: Platform)(implicit reqId: UUID): IO[RiotApiError, List[Match]] = {
+                                       platform: Platform)(implicit reqId: String): IO[RiotApiError, List[Match]] = {
             scribe.debug(s"Querying match history by " +
                          s"summonerId=$summonerId " +
                          s"gamesQueryCount=$gamesQueryCount " +
@@ -209,7 +209,7 @@ object RiotApiModule {
           def matchHistoryByInGameSummonerSet(inGameSummonerSet: Set[InGameSummoner],
                                               gamesQueryCount: Int,
                                               queues: Set[GameQueueTypeEnum] = Set(),
-                                              platform: Platform)(implicit reqId: UUID)
+                                              platform: Platform)(implicit reqId: String)
           : IO[RiotApiError, Set[SummonerMatchHistory]] = {
             ZIO.foreachPar(inGameSummonerSet.toList) { inGameSummoner =>
               matchHistoryBySummonerId(inGameSummoner.summonerId, gamesQueryCount, queues, platform).map { history =>
@@ -221,7 +221,7 @@ object RiotApiModule {
           // Groups `Summoner`, `League`, and `CurrentGameParticipant`
           def inGameSummonerByParticipant(participant: CurrentGameParticipant,
                                           platform: Platform)
-                                         (implicit reqId: UUID): IO[RiotApiError, InGameSummoner] = {
+                                         (implicit reqId: String): IO[RiotApiError, InGameSummoner] = {
             for {
               summoner <- this.summonerBySummonerId(participant.summonerId, platform)
               leagues <- this.leaguesBySummonerId(participant.summonerId, platform)

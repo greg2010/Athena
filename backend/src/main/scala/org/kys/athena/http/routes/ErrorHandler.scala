@@ -6,11 +6,10 @@ import org.kys.athena.{http, riot}
 import scribe.Level
 import zio.UIO
 
-import java.util.UUID
 
 
 object ErrorHandler {
-  def defaultErrorHandler(err: Throwable)(implicit scopeRequestId: UUID): UIO[http.errors.BackendApiError] = {
+  def defaultErrorHandler(err: Throwable)(implicit scopeRequestId: String): UIO[http.errors.BackendApiError] = {
     UIO.effectTotal(err).tap {
       // Riot errors
       case OtherError(requestKey, responseBody, code, maybeReason) =>

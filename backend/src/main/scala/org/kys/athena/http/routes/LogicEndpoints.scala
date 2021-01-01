@@ -19,7 +19,7 @@ object LogicEndpoints extends Endpoints {
   val currentGameByNameImpl = this.currentGameByName.zServerLogic { case (platform, name, fetchGroups, requestId) =>
     val fetchGroupsDefault = fetchGroups.getOrElse(false)
     val decodedName        = URLDecoder.decode(name, "UTF-8")
-    implicit val getReqId: UUID = requestId.fold(UUID.randomUUID())(identity)
+    implicit val getReqId: String = requestId.fold(UUID.randomUUID().toString)(identity)
 
     (for {
       game <- CurrentGameModule.getCurrentGame(platform, decodedName)
@@ -32,7 +32,7 @@ object LogicEndpoints extends Endpoints {
 
   val groupsByNameImpl = this.groupsByName.zServerLogic { case (platform, name, requestId) =>
     val decodedName = URLDecoder.decode(name, "UTF-8")
-    implicit val getReqId: UUID = requestId.fold(UUID.randomUUID())(identity)
+    implicit val getReqId: String = requestId.fold(UUID.randomUUID().toString)(identity)
 
     (for {
       game <- CurrentGameModule.getCurrentGame(platform, decodedName)
@@ -41,7 +41,7 @@ object LogicEndpoints extends Endpoints {
   }
 
   val groupsByUUIDImpl = this.groupsByUUID.zServerLogic { case (uuid, requestId) =>
-    implicit val getReqId: UUID = requestId.fold(UUID.randomUUID())(identity)
+    implicit val getReqId: String = requestId.fold(UUID.randomUUID().toString)(identity)
 
     (for {
       gg <- GroupModule.getGroupsByUUID(uuid)

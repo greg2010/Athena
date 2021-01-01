@@ -20,11 +20,13 @@ object GroupModule {
   trait Service {
     def getGroupsForGame(platform: Platform,
                          ongoingGameInfo: OngoingGameResponse,
-                         gamesQueryCount: Int = 5): IO[Throwable, PremadeResponse]
+                         gamesQueryCount: Int = 5)
+                        (implicit reqId: UUID): IO[Throwable, PremadeResponse]
 
     def getGroupsForGameAsync(platform: Platform,
                               ongoingGameInfo: OngoingGameResponse,
-                              gamesQueryCount: Int = 5): IO[Throwable, UUID]
+                              gamesQueryCount: Int = 5)
+                             (implicit reqId: UUID): IO[Throwable, UUID]
 
     def getGroupsByUUID(uuid: UUID): IO[Throwable, PremadeResponse]
   }
@@ -46,15 +48,17 @@ object GroupModule {
                                                GameQueueTypeEnum.HowlingAbyss,
                                                GameQueueTypeEnum.SummonersRiftClash)
 
-      def getTeamHistory(ongoingGameInfo: OngoingGameResponse, gameQueryCount: Int)
-                        (implicit platform: Platform): Task[TeamTupleWithHistory] = {
+      def getTeamHistory(ongoingGameInfo: OngoingGameResponse, gameQueryCount: Int, platform: Platform)
+                        (implicit reqId: UUID): Task[TeamTupleWithHistory] = {
         for {
           blueGames <- riotApiClient.matchHistoryByInGameSummonerSet(ongoingGameInfo.blueTeam.summoners,
                                                                      gameQueryCount,
-                                                                     queues)
+                                                                     queues,
+                                                                     platform)
           redGames <- riotApiClient.matchHistoryByInGameSummonerSet(ongoingGameInfo.redTeam.summoners,
                                                                     gameQueryCount,
-                                                                    queues)
+                                                                    queues,
+                                                                    platform)
         } yield TeamTupleWithHistory(blueGames, redGames)
       }
 
@@ -101,17 +105,16 @@ object GroupModule {
 
       def getGroupsForGame(platform: Platform,
                            ongoingGameInfo: OngoingGameResponse,
-                           gamesQueryCount: Int = 5): IO[Throwable, PremadeResponse] = {
-        implicit val p: Platform = platform
+                           gamesQueryCount: Int = 5)(implicit reqId: UUID): IO[Throwable, PremadeResponse] = {
         for {
-          teamHistory <- getTeamHistory(ongoingGameInfo, gamesQueryCount)
+          teamHistory <- getTeamHistory(ongoingGameInfo, gamesQueryCount, platform)
           groupsTuple <- Task.succeed(determineGroups(teamHistory))
         } yield groupsTuple
       }
 
       def getGroupsForGameAsync(platform: Platform,
                                 ongoingGameInfo: OngoingGameResponse,
-                                gamesQueryCount: Int = 5): IO[Throwable, UUID] = {
+                                gamesQueryCount: Int = 5)(implicit reqId: UUID): IO[Throwable, UUID] = {
         val promise = Promise.make[Throwable, PremadeResponse]
         for {
           uuid <- Task.effect(UUID.randomUUID())

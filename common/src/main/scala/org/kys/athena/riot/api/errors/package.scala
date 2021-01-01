@@ -2,9 +2,6 @@ package org.kys.athena.riot.api
 
 import sttp.model.StatusCode
 
-import scala.util.control.NoStackTrace
-
-
 package object errors {
   sealed trait RiotApiError extends Throwable
 
@@ -38,6 +35,9 @@ package object errors {
     override val code: StatusCode = StatusCode.Forbidden
   }
 
-  case class OtherError(requestKey: String, responseBody: String, code: StatusCode, maybeReason: Option[String])
+  case class OtherError(requestKey: String,
+                        responseBody: String,
+                        code: StatusCode,
+                        maybeReason: Option[String])
     extends RiotHttpError with Retryable
 }

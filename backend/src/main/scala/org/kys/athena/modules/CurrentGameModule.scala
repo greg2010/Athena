@@ -10,6 +10,7 @@ import zio._
 import zio.macros.accessible
 import org.kys.athena.riot
 
+import java.util.UUID
 import scala.collection.MapView
 
 
@@ -18,7 +19,7 @@ object CurrentGameModule {
 
   type CurrentGameController = Has[CurrentGameModule.Service]
   trait Service {
-    def getCurrentGame(platform: Platform, name: String): IO[Throwable, OngoingGameResponse]
+    def getCurrentGame(platform: Platform, name: String)(implicit reqId: UUID): IO[Throwable, OngoingGameResponse]
   }
 
   val live = ZLayer.fromServices[RiotApiModule.Service, MerakiApiClient.Service,
@@ -106,17 +107,20 @@ object CurrentGameModule {
       }
 
 
-      def getCurrentGame(platform: Platform, name: String): IO[Throwable, OngoingGameResponse] = {
-        implicit val p: Platform = platform
+      def getCurrentGame(platform: Platform, name: String)(implicit reqId: UUID): IO[Throwable, OngoingGameResponse] = {
         for {
-          summoner <- riotApiClient.summonerByName(name)
-          game <- riotApiClient.currentGameBySummonerId(summoner.id).refineOrDie {
+          summoner <- riotApiClient.summonerByName(name, platform)
+          game <- riotApiClient.currentGameBySummonerId(summoner.id, platform).refineOrDie {
             case _: riot.api.errors.NotFoundError => http.errors.NotFoundError(s"Summoner $name is not in game")
           }
           summoners = splitPlayers(game)
           bans = splitBans(game)
-          blueSummoners <- ZIO.foreachPar(summoners.blue)(riotApiClient.inGameSummonerByParticipant(_)).map(_.toSet)
-          redSummoners <- ZIO.foreachPar(summoners.red)(riotApiClient.inGameSummonerByParticipant(_)).map(_.toSet)
+          blueSummoners <- {
+            ZIO.foreachPar(summoners.blue)(riotApiClient.inGameSummonerByParticipant(_, platform)).map(_.toSet)
+          }
+          redSummoners <- {
+            ZIO.foreachPar(summoners.red)(riotApiClient.inGameSummonerByParticipant(_, platform)).map(_.toSet)
+          }
           bluePositions <- estimatePositions(game.gameQueueConfigId, blueSummoners)
           redPositions <- estimatePositions(game.gameQueueConfigId, redSummoners)
         } yield OngoingGameResponse(game,

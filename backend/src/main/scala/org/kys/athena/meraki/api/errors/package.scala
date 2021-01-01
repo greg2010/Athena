@@ -1,7 +1,8 @@
 package org.kys.athena.meraki.api
 
-package object errors {
-  sealed trait MerakiApiError extends Throwable
+import sttp.client3.ResponseException
 
-  case object ServerError extends MerakiApiError
+
+package object errors {
+  case class MerakiApiError(cause: ResponseException[String, io.circe.Error]) extends Throwable
 }

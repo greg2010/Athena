@@ -1,7 +1,7 @@
 package org.kys.athena.meraki.api
 
 import org.kys.athena.meraki.api.dto.ChampionRates
-import org.kys.athena.meraki.api.errors.{MerakiApiError, ServerError}
+import org.kys.athena.meraki.api.errors.MerakiApiError
 import sttp.client3.httpclient.zio.SttpClient
 import zio._
 import zio.macros.accessible
@@ -23,7 +23,7 @@ object MerakiApiClient {
         backend.send(merakiApi.playRates).orDie.flatMap { r =>
           r.body match {
             case Right(re) => IO.succeed(re)
-            case Left(_) => IO.fail(ServerError)
+            case Left(ex) => IO.fail(MerakiApiError(ex))
           }
         }
       }

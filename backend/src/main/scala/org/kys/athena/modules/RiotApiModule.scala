@@ -11,6 +11,7 @@ import org.kys.athena.riot.api.dto.summoner.Summoner
 import org.kys.athena.riot.api.errors._
 import org.kys.athena.modules.ratelimiter.RateLimiter
 import org.kys.athena.riot.api.{RequestError, RiotApi, RiotRequest, errors}
+import scribe.Level
 import sttp.client3.httpclient.zio.SttpClient
 import sttp.client3.{DeserializationException, HttpError, Response}
 import sttp.model.StatusCode
@@ -122,42 +123,22 @@ object RiotApiModule {
           def liftErrors[T](req: RiotRequest[T])(r: Response[Either[RequestError, T]]): IO[RiotApiError, T] = {
             r.body match {
               case Left(HttpError(body, statusCode)) => {
+                val reqKey = requestKey(req)
                 statusCode match {
-                  case StatusCode.NotFound => {
-                    scribe.debug(s"Riot API responded with 404")
-                    IO.fail(NotFoundError)
-                  }
-                  case StatusCode.TooManyRequests => {
-                    scribe.warn(s"Riot API responded with 429 for requestKey=${requestKey(req)} " +
-                                s"rrStatus=${RiotApi.extractRR(r)}")
-                    IO.fail(RateLimitError)
-                  }
-                  case StatusCode.BadRequest => {
-                    scribe.error(s"Riot API responded with 400. Request was to ${r.request.toString()}")
-                    IO.fail(BadRequestError)
-                  }
-                  case StatusCode.Forbidden => {
-                    scribe.error(s"Riot API responded with 403 for url=${r.request.uri.toString()} body=${r.body}")
-                    scribe.error("")
-                    IO.fail(ForbiddenError)
-                  }
-                  case code if code.isServerError => {
-                    scribe.error(s"Riot API responded with 5xx: ${code.code}")
-                    IO.fail(ServerError)
-                  }
+                  case StatusCode.NotFound => IO.fail(NotFoundError(reqKey, body))
+                  case StatusCode.TooManyRequests => IO.fail(RateLimitError(reqKey, body, RiotApi.extractRR(r)))
+                  case StatusCode.BadRequest => IO.fail(BadRequestError(reqKey, body))
+                  case StatusCode.Forbidden => IO.fail(ForbiddenError(reqKey, body))
+                  case code if code.isServerError => IO.fail(ServerError(reqKey, body, code))
                   case code => {
                     val maybeReason: Option[String] = parse(body)
                       .flatMap(_.hcursor.downField("status").get[String]("message"))
                       .toOption
-                    scribe.warn(s"Got unknown error from Riot API: code=$code maybeReason=$maybeReason")
-                    IO.fail(OtherError(code.code, maybeReason))
+                    IO.fail(OtherError(reqKey, body, code, maybeReason))
                   }
                 }
               }
-              case Left(DeserializationException(errDesc, ex)) => {
-                scribe.error(s"Got parse error while parsing Riot API response. error=${errDesc}", ex)
-                IO.fail(ParseError)
-              }
+              case Left(DeserializationException(errDesc, ex)) => IO.fail(ParseError(ex, errDesc))
               case Right(resp) => IO.succeed(resp)
             }
           }

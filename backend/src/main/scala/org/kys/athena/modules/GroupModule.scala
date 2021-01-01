@@ -20,13 +20,13 @@ object GroupModule {
   trait Service {
     def getGroupsForGame(platform: Platform,
                          ongoingGameInfo: OngoingGameResponse,
-                         gamesQueryCount: Int = 5): IO[http.errors.BackendApiError, PremadeResponse]
+                         gamesQueryCount: Int = 5): IO[Throwable, PremadeResponse]
 
     def getGroupsForGameAsync(platform: Platform,
                               ongoingGameInfo: OngoingGameResponse,
-                              gamesQueryCount: Int = 5): IO[http.errors.BackendApiError, UUID]
+                              gamesQueryCount: Int = 5): IO[Throwable, UUID]
 
-    def getGroupsByUUID(uuid: UUID): IO[http.errors.BackendApiError, PremadeResponse]
+    def getGroupsByUUID(uuid: UUID): IO[Throwable, PremadeResponse]
   }
 
   val live = ZLayer.fromService[RiotApiModule.Service, GroupModule.Service] { riotApiClient =>
@@ -101,21 +101,19 @@ object GroupModule {
 
       def getGroupsForGame(platform: Platform,
                            ongoingGameInfo: OngoingGameResponse,
-                           gamesQueryCount: Int = 5): IO[http.errors.BackendApiError, PremadeResponse] = {
+                           gamesQueryCount: Int = 5): IO[Throwable, PremadeResponse] = {
         implicit val p: Platform = platform
-        val res = for {
+        for {
           teamHistory <- getTeamHistory(ongoingGameInfo, gamesQueryCount)
           groupsTuple <- Task.succeed(determineGroups(teamHistory))
         } yield groupsTuple
-
-        res.mapError(Shared.defaultErrorHandler)
       }
 
       def getGroupsForGameAsync(platform: Platform,
                                 ongoingGameInfo: OngoingGameResponse,
-                                gamesQueryCount: Int = 5): IO[http.errors.BackendApiError, UUID] = {
+                                gamesQueryCount: Int = 5): IO[Throwable, UUID] = {
         val promise = Promise.make[Throwable, PremadeResponse]
-        val res     = for {
+        for {
           uuid <- Task.effect(UUID.randomUUID())
           p <- promise
           _ <- Task.effect(uuidCache.put(uuid, p))
@@ -123,12 +121,10 @@ object GroupModule {
             .complete(getGroupsForGame(platform, ongoingGameInfo, gamesQueryCount))
             .forkDaemon
         } yield uuid
-
-        res.mapError(Shared.defaultErrorHandler)
       }
 
-      def getGroupsByUUID(uuid: UUID): IO[http.errors.BackendApiError, PremadeResponse] = {
-        val res = for {
+      def getGroupsByUUID(uuid: UUID): IO[Throwable, PremadeResponse] = {
+        for {
           entry <- IO.effect(uuidCache.getIfPresent(uuid))
           res <- entry match {
             case Some(v) => {
@@ -142,8 +138,6 @@ object GroupModule {
             case None => IO.fail(http.errors.NotFoundError("UUID not found"))
           }
         } yield res
-
-        res.mapError(Shared.defaultErrorHandler)
       }
     }
   }

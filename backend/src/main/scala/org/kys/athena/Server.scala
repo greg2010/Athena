@@ -30,7 +30,6 @@ object Server extends App {
 
   override def run(args: List[String]): URIO[ZEnv, ExitCode] = {
 
-
     val zioClient = HttpClientZioBackend.layer()
 
     val config = ConfigModule.live

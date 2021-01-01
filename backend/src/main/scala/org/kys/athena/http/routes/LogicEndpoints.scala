@@ -14,6 +14,7 @@ import java.net.URLDecoder
 object LogicEndpoints extends Endpoints {
   // TODO: do something about this mess
 
+  type Env = CurrentGameController with GroupController
   val currentGameByNameImpl = this.currentGameByName.zServerLogic {
     case (platform, name, fetchGroups) =>
       val fetchGroupsDefault = fetchGroups.getOrElse(false)
@@ -24,21 +25,22 @@ object LogicEndpoints extends Endpoints {
           if (fetchGroupsDefault)
             GroupModule.getGroupsForGameAsync(platform, game).map(u => game.copy(groupUuid = Some(u)))
           else IO.succeed(game)
-      } yield uuidAdded)
+      } yield uuidAdded).resurrect.flatMapError(ErrorHandler.defaultErrorHandler)
   }
 
-  type Env = CurrentGameController with GroupController
   val groupsByNameImpl = this.groupsByName.zServerLogic {
     case (platform, name) =>
       val decodedName = URLDecoder.decode(name, "UTF-8")
       (for {
         game <- CurrentGameModule.getCurrentGame(platform, decodedName)
         groups <- GroupModule.getGroupsForGame(platform, game)
-      } yield groups)
+      } yield groups).resurrect.flatMapError(ErrorHandler.defaultErrorHandler)
   }
 
   val groupsByUUIDImpl = this.groupsByUUID.zServerLogic { uuid =>
-    GroupModule.getGroupsByUUID(uuid)
+    (for {
+      gg <- GroupModule.getGroupsByUUID(uuid)
+    } yield gg).resurrect.flatMapError(ErrorHandler.defaultErrorHandler)
   }
 
   val healthzImpl = this.healthz.zServerLogic { _ =>

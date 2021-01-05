@@ -36,7 +36,7 @@ lazy val frontend = project
   .enablePlugins(ScalaJSPlugin)
   .dependsOn(common.js)
 
-// Settingssb
+// Settings
 lazy val compilerOptions = Seq("-unchecked", "-feature", "-deprecation", "-Wunused:imports", "-Ymacro-annotations",
                                "-encoding", "utf8")
 
@@ -93,9 +93,10 @@ lazy val dependencies = new {
     "com.softwaremill.sttp.client3" %%% "circe" % sttpVersion,
     "dev.zio" %%% "zio" % zioVersion,
     "dev.zio" %%% "zio-interop-cats" % zioCatsVersion,
+    "org.typelevel" %%% "cats-effect" % catsVersion,
     "com.softwaremill.sttp.tapir" %%% "tapir-core" % tapirVersion,
-    "com.softwaremill.sttp.tapir" %% "tapir-enumeratum" % tapirVersion,
-    "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirVersion))
+    "com.softwaremill.sttp.tapir" %%% "tapir-enumeratum" % tapirVersion,
+    "com.softwaremill.sttp.tapir" %%% "tapir-json-circe" % tapirVersion))
 
   val jvm = Def.setting(common.value ++ Seq(
     "com.typesafe" % "config" % "1.4.1",
@@ -114,8 +115,6 @@ lazy val dependencies = new {
     ))
 
   val js = Def.setting(common.value ++ Seq(
-    "org.typelevel" %%% "cats-core" % catsVersion,
-    "org.typelevel" %%% "cats-effect" % catsVersion,
     "com.raquo" %%% "laminar" % laminarVersion,
     "com.raquo" %%% "airstream" % airstreamVersion,
     "com.raquo" %%% "waypoint" % "0.2.0"

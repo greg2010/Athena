@@ -1,6 +1,7 @@
 package org.kys.athena.modules
 
 import com.github.blemale.scaffeine.Scaffeine
+import org.kys.athena.util.errors.{CacheError, CastError, UnknownError}
 import zio._
 import zio.macros.accessible
 
@@ -11,11 +12,6 @@ import scala.reflect.ClassTag
 @accessible
 object CacheModule {
   type CacheModule = Has[Service]
-
-  trait CacheError extends Throwable
-
-  case class CastError(message: String) extends CacheError
-  case class UnknownError(err: Throwable) extends CacheError
 
   trait Service {
     def put[T](key: String, v: T): IO[CacheError, Unit]

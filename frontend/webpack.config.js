@@ -150,7 +150,11 @@ const dev = {
   entry: [
     path.resolve(__dirname, `${scalaOutputPath}/frontend-fastopt.js`)
   ],
-  devtool: "eval-cheap-module-source-map"
+  devtool: "eval-cheap-module-source-map",
+  output: {
+    path: path.resolve(__dirname, 'build-dev')
+  },
+  watch: true
 };
 
 const prod = {

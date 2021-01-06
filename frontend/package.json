@@ -34,6 +34,7 @@
   },
   "scripts": {
     "build": "webpack --progress --bail",
+    "build:dev": "webpack --progress --bail",
     "start": "./env.sh && webpack serve --progress",
     "test": "jest"
   },

@@ -1,0 +1,23 @@
+version: '3'
+services:
+  frontend-builder:
+    build: docker-dev/builder
+    user: $UID:$GID
+    volumes:
+      - type: bind
+        source: ./../
+        target: /workspace/bindpoint
+      - /etc/group:/etc/group:ro
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/shadow:/etc/shadow:ro
+  frontend-runner:
+    build: docker-dev/runner
+    ports:
+      - 8080:80
+    volumes:
+      - type: bind
+        source: ./build-dev
+        target: /usr/share/nginx/html/
+      - type: bind
+        source: ./conf
+        target: /etc/nginx/conf/

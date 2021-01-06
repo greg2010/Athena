@@ -110,3 +110,8 @@ project/plugins/project/
 *.metals
 *.bsp
 # End of https://www.gitignore.io/api/sbt,scala,intellij
+
+.sbt/
+.ivy2/
+.cache/
+frontend/build-dev

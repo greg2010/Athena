@@ -1,9 +1,9 @@
-package org.kys.athena.views
-
+package org.kys.athena.views.currentGame
 
 import com.raquo.domtypes.generic.keys.{Style => CStyle}
 import com.raquo.laminar.api.L._
 import com.raquo.laminar.nodes.ReactiveHtmlElement
+import org.kys.athena.components.ImgSized
 import org.kys.athena.http.Client._
 import org.kys.athena.http.DData
 import org.kys.athena.http.errors.{BackendApiError, InternalServerError, NotFoundError}
@@ -14,6 +14,8 @@ import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform, Summoner
 import org.kys.athena.riot.api.dto.currentgameinfo.BannedChampion
 import org.kys.athena.riot.api.dto.ddragon.runes.Rune
 import org.kys.athena.riot.api.dto.league.{MiniSeries, RankedQueueTypeEnum, TierEnum}
+import org.kys.athena.util.Config
+import org.kys.athena.views.View
 import org.scalajs.dom
 import org.scalajs.dom.html
 import org.scalajs.dom.raw.HTMLElement
@@ -26,72 +28,8 @@ import scala.concurrent.duration.DurationInt
 object CurrentGameView extends View[CurrentGamePage] {
 
 
-  sealed trait DataState[T] {
-    def fold[T2](onLoading: => T2, onFailed: => T2, onReady: T => T2): T2
-
-    def map[T2](f: T => T2): DataState[T2]
-
-    def flatMap[T2](f: T => DataState[T2]): DataState[T2]
-
-    def zip[T2](other: DataState[T2]): DataState[(T, T2)]
-
-    def toOption: Option[T]
-  }
-
-  sealed trait Infallible[T] extends DataState[T] {
-    def map[T2](f: T => T2): Infallible[T2]
-
-    def flatMap[T2](f: T => Infallible[T2]): Infallible[T2]
-
-    def zip[T2](other: Infallible[T2]): Infallible[(T, T2)]
-  }
-
-  case class Loading[T]() extends Infallible[T] {
-    def fold[T2](onLoading: => T2, onFailed: => T2, onReady: T => T2): T2 = onLoading
-
-    def map[T2](f: T => T2): Infallible[T2] = Loading[T2]()
-
-    def flatMap[T2](f: T => DataState[T2]): DataState[T2] = Loading[T2]()
-
-    def flatMap[T2](f: T => Infallible[T2]): Infallible[T2] = Loading[T2]()
-
-    def zip[T2](other: DataState[T2]): DataState[(T, T2)] = Loading[(T, T2)]()
-
-    def zip[T2](other: Infallible[T2]): Infallible[(T, T2)] = Loading[(T, T2)]()
-
-    def toOption: Option[T] = None
-  }
-  case class Ready[T](data: T) extends Infallible[T] {
-    def fold[T2](onLoading: => T2, onFailed: => T2, onReady: T => T2): T2 = onReady(data)
-
-    def map[T2](f: T => T2): Infallible[T2] = Ready[T2](f(data))
-
-    def flatMap[T2](f: T => DataState[T2]): DataState[T2] = f(data)
-
-    def flatMap[T2](f: T => Infallible[T2]): Infallible[T2] = f(data)
-
-    def zip[T2](other: DataState[T2]): DataState[(T, T2)] = other.flatMap(ov => Ready(data, ov))
-
-    def zip[T2](other: Infallible[T2]): Infallible[(T, T2)] = other.flatMap(ov => Ready(data, ov))
-
-    def toOption: Option[T] = Some(data)
-  }
-  case class Failed[T](err: BackendApiError) extends DataState[T] {
-    def fold[T2](onLoading: => T2, onFailed: => T2, onReady: T => T2): T2 = onFailed
-
-    def map[T2](f: T => T2): DataState[T2] = Failed[T2](err)
-
-    def flatMap[T2](f: T => DataState[T2]): DataState[T2] = Failed[T2](err)
-
-    def zip[T2](other: DataState[T2]): DataState[(T, T2)] = Failed[(T, T2)](err)
-
-    def zip[T2](other: Infallible[T2]): Infallible[(T, T2)] = Loading[(T, T2)]()
-
-    def toOption: Option[T] = None
-  }
-
   // FETCH LOGIC
-  val debug = false
+  val debug = true
 
   lazy val ddVar      = Var[DataState[DData]](Loading[DData]())
   lazy val ongoingVar = Var[DataState[OngoingGameResponse]](Loading[OngoingGameResponse]())
@@ -391,22 +329,18 @@ object CurrentGameView extends View[CurrentGamePage] {
               cls := "mx-1",
               div(
                 position := "absolute",
-                img(
+                ImgSized(url, 64, Some(64)).amend(
                   position := "relative",
-                  width := "64px",
-                  height := "64px",
-                  src := url,
                   zIndex := 1,
                   new CStyle("filter", "filter") := "grayscale(50%)",
-                  cls := "rounded-lg"),
-                img(
+                  cls := "rounded-lg"
+                  ),
+                ImgSized(s"${Config.FRONTEND_URL}/slash_red_256.png", 64, Some(64)).amend(
                   position := "relative",
-                  width := "64px",
-                  height := "64px",
                   top := "-64px",
-                  src := "/slash_red_256.png",
                   zIndex := 2,
-                  cls := "rounded-lg")))
+                  cls := "rounded-lg"
+                  )))
           }.toList
         case Loading() =>
           Range(0, 5).map { _ =>
@@ -433,20 +367,22 @@ object CurrentGameView extends View[CurrentGamePage] {
 
     // HELPERS
 
-    def renderChampionIcon(championId: Long, size: String, clsAttrs: Option[String])
+    def renderChampionIcon(championId: Long, size: Int, clsAttrs: Option[String])
                           (implicit dd: DData) = {
-      img(src := dd.championUrl(dd.championById(championId)),
-          cls := clsAttrs.getOrElse(""), height := size, width := size)
+      val url = dd.championUrl(dd.championById(championId))
+      ImgSized(url, size, Some(size)).amend(
+        cls := clsAttrs.getOrElse(""))
     }
     def renderSummonerSpell(ss: SummonerSpellsEnum)(implicit dd: DData) = {
-      img(src := dd.summonerUrlById(ss.value).getOrElse(""), height := "32px", width := "32px", minWidth := "32px",
-          cls := "rounded-md")
+      val url = dd.summonerUrlById(ss.value).getOrElse("")
+      ImgSized(url, 32, Some(32)).amend(
+        minWidth := "32px", cls := "rounded-md")
     }
 
-    def renderRune(rune: Option[Rune], iconSize: String)(implicit dd: DData) = {
+    def renderRune(rune: Option[Rune], iconSize: Int)(implicit dd: DData) = {
       div(width := "32px", height := "32px",
           cls := "border border-gray-300 flex items-center justify-center rounded-md",
-          img(src := rune.map(dd.runeUrl).getOrElse(""), width := iconSize, height := iconSize))
+          ImgSized(rune.map(dd.runeUrl).getOrElse(""), 32, Some(32)))
     }
 
     def renderWinrateText(rl: Option[RankedLeague]) = {
@@ -507,9 +443,10 @@ object CurrentGameView extends View[CurrentGamePage] {
         cls := "flex flex-col items-center justify-center", width := "86px",
         rl match {
           case Some(l) => {
-            val t = l.tier.entryName.toLowerCase.capitalize
+            val t   = l.tier.entryName.toLowerCase.capitalize
+            val url = s"${Config.FRONTEND_URL}/Emblem_${t}.png"
             List(
-              img(src := s"/Emblem_${t}.png", width := "40px"),
+              ImgSized(url, 40, None),
               l.tier match {
                 case t if t.in(TierEnum.Master, TierEnum.Grandmaster, TierEnum.Challenger) => {
                   span(cls := "text-sm", s"${t}")
@@ -520,8 +457,9 @@ object CurrentGameView extends View[CurrentGamePage] {
               l.miniSeries.map(renderMiniSeries).getOrElse(div()))
           }
           case None => {
+            val url = s"${Config.FRONTEND_URL}/Emblem_Unranked.png"
             List(
-              img(src := "/Emblem_Unranked.png", width := "46px"),
+              ImgSized(url, 46, None),
               span("Unranked"))
           }
         })
@@ -536,7 +474,7 @@ object CurrentGameView extends View[CurrentGamePage] {
         pwData match {
           case Ready((Some(g), dd)) => {
             g.map { p =>
-              div(renderChampionIcon(p.championId, "36px", None)(dd), cls := "ml-1")
+              div(renderChampionIcon(p.championId, 36, None)(dd), cls := "ml-1")
             }.toList
           }
           case Ready((None, _)) => {
@@ -575,7 +513,7 @@ object CurrentGameView extends View[CurrentGamePage] {
       height := boxHeight,
       cls := boxCls,
       child <-- data.map {
-        case Ready((p, dd)) => renderChampionIcon(p.championId, "80px", Some("rounded-lg ml-1"))(dd)
+        case Ready((p, dd)) => renderChampionIcon(p.championId, 80, Some("rounded-lg ml-1"))(dd)
         case Loading() => div(cls := "animate-pulse bg-gray-500 rounded-lg ml-1",
                               width := "80px",
                               height := "80px")
@@ -595,8 +533,8 @@ object CurrentGameView extends View[CurrentGamePage] {
         children <-- data.map {
           case Ready((p, dd)) =>
             List(
-              renderRune(dd.keystoneById(p.runes.keystone), "32px")(dd),
-              renderRune(dd.treeById(p.runes.secondaryPathId), "26px")(dd))
+              renderRune(dd.keystoneById(p.runes.keystone), 32)(dd),
+              renderRune(dd.treeById(p.runes.secondaryPathId), 26)(dd))
           case Loading() => Range(0, 2).map(
             _ => div(width := "32px", height := "32px", cls := "animate-pulse bg-gray-500 rounded-md"))
         }),

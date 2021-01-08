@@ -7,7 +7,8 @@ import io.circe.syntax._
 import org.kys.athena.components.{AppBar, Footer}
 import org.kys.athena.pages._
 import org.kys.athena.riot.api.dto.common.Platform
-import org.kys.athena.views.{CurrentGameView, LandingView}
+import org.kys.athena.views.LandingView
+import org.kys.athena.views.currentGame.CurrentGameView
 import org.scalajs.dom
 import urldsl.errors.DummyError
 import urldsl.vocabulary.{FromString, Printer}

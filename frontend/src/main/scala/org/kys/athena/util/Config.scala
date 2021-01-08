@@ -14,4 +14,5 @@ object Config extends js.Object {
   val BACKEND_API_URL  : String = js.native
   val FRONTEND_URL     : String = js.native
   val LOGLEVEL         : String = js.native
+  val USE_FAKE_DATA    : String = js.native
 }

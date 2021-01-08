@@ -29,7 +29,12 @@ object CurrentGameView extends View[CurrentGamePage] {
 
 
   // FETCH LOGIC
-  val debug = true
+  val debug = Config.USE_FAKE_DATA match {
+    case "" => false
+    case "false" => false
+    case "true" => true
+    case _ => false
+  }
 
   lazy val ddVar      = Var[DataState[DData]](Loading[DData]())
   lazy val ongoingVar = Var[DataState[OngoingGameResponse]](Loading[OngoingGameResponse]())

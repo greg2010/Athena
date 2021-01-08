@@ -10,7 +10,7 @@ final case class InGameSummoner(name: String,
                                 summonerId: String,
                                 summonerLevel: Long,
                                 championId: Long,
-                                runes: RunesSelected,
+                                runes: Option[RunesSelected],
                                 summonerSpells: SummonerSpells,
                                 teamId: Long,
                                 rankedLeagues: List[RankedLeague])
@@ -20,10 +20,14 @@ object InGameSummoner {
   def apply(summoner: Summoner,
             currentGameParticipant: CurrentGameParticipant,
             rankedLeagues: List[League]): InGameSummoner = {
-    val runes          = RunesSelected(primaryPathId = currentGameParticipant.perks.perkStyle,
-                                       secondaryPathId = currentGameParticipant.perks.perkSubStyle,
-                                       keystone = currentGameParticipant.perks.perkIds.head,
-                                       runeIds = currentGameParticipant.perks.perkIds)
+
+    val runes: Option[RunesSelected] = currentGameParticipant.perks.map { p =>
+      RunesSelected(primaryPathId = p.perkStyle,
+                    secondaryPathId = p.perkSubStyle,
+                    keystone = p.perkIds.head,
+                    runeIds = p.perkIds)
+    }
+
     val summonerSpells = current.SummonerSpells(spell1Id = currentGameParticipant.spell1Id,
                                                 spell2Id = currentGameParticipant.spell2Id)
     InGameSummoner(name = currentGameParticipant.summonerName,

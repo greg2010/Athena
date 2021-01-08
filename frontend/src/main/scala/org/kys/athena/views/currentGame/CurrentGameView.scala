@@ -537,9 +537,14 @@ object CurrentGameView extends View[CurrentGamePage] {
         cls := runeCls,
         children <-- data.map {
           case Ready((p, dd)) =>
-            List(
-              renderRune(dd.keystoneById(p.runes.keystone), 32)(dd),
-              renderRune(dd.treeById(p.runes.secondaryPathId), 26)(dd))
+            p.runes match {
+              case Some(r) => {
+                List(
+                  renderRune(dd.keystoneById(r.keystone), 32)(dd),
+                  renderRune(dd.treeById(r.secondaryPathId), 26)(dd))
+              }
+              case None => List() // If riot api for some reason did not return runes, do not render
+            }
           case Loading() => Range(0, 2).map(
             _ => div(width := "32px", height := "32px", cls := "animate-pulse bg-gray-500 rounded-md"))
         }),

@@ -1,11 +1,10 @@
 package org.kys.athena.http.routes
 
 import org.kys.athena.meraki.api.errors.MerakiApiError
-import org.kys.athena.riot.api.errors.{NotFoundError, OtherError, ParseError, RiotHttpError}
+import org.kys.athena.riot.api.errors.{NotFoundError, OtherError, ParseError, RateLimitError, RiotHttpError}
 import org.kys.athena.{http, riot}
 import scribe.Level
 import zio.UIO
-
 
 
 object ErrorHandler {
@@ -19,6 +18,12 @@ object ErrorHandler {
                                      s"responseBody=$responseBody " +
                                      s"code=$code " +
                                      s"maybeReason=$maybeReason"))
+      case RateLimitError(reqKey, respBody, rrStatus) =>
+        UIO.effectTotal(scribe.error("Got ratelimit error from Riot API: " +
+                                     s"requestKey=${reqKey} " +
+                                     s"requestId=$scopeRequestId " +
+                                     s"responseBody=${respBody} " +
+                                     s"rrStatus=${rrStatus}"))
       case e: RiotHttpError =>
         val severity = e match {
           case _: NotFoundError => Level.Warn

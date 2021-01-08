@@ -12,7 +12,7 @@ object Imgproxy {
       url
     } else {
       val b64url     = new String(encoder.encode(url.getBytes))
-      uri"${Config.IMGPROXY_BASE_URL}//fill/$width/$height/ce/0/$b64url".toString()
+      uri"${Config.IMGPROXY_BASE_URL}/fill/$width/$height/ce/0/$b64url".toString()
     }
   }
 }

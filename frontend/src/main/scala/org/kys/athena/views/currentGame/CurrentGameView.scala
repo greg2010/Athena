@@ -30,8 +30,6 @@ object CurrentGameView extends View[CurrentGamePage] {
 
   // FETCH LOGIC
   val debug = Config.USE_FAKE_DATA match {
-    case "" => false
-    case "false" => false
     case "true" => true
     case _ => false
   }
@@ -173,8 +171,12 @@ object CurrentGameView extends View[CurrentGamePage] {
         child <-- playerName.map(n => span(cls := "text-center", s"Live game of $n", cls := "text-5xl p-2")),
         child <-- ongoingES.map {
           case Ready(g) =>
+            val startTime = if (g.gameStartTime > 0) g.gameStartTime else {
+              System.currentTimeMillis() + 3.minutes.toMillis
+            }
+
             val timeES = EventStream.periodic(1.seconds.toMillis.toInt).map { _ =>
-              val rawDiff = System.currentTimeMillis() - g.gameStartTime
+              val rawDiff = System.currentTimeMillis() - startTime
               val sign    = if (rawDiff > 0) "" else "-"
               val diff    = Math.abs(rawDiff)
               val h       = diff / (3600 * 1000)

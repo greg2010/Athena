@@ -11,8 +11,8 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - athena-backend-{{ checksum "build.sbt" }}
-            - athena-backend
+            - athena-backend-0-{{ checksum "build.sbt" }}
+            - athena-backend-0
       - run: sbt compile
       - run: sbt assembly
       - run: sbt frontend/fullOptJS
@@ -26,7 +26,7 @@ jobs:
           path: backend/target/scala-2.13/athena-backend.jar
           destination: jar
       - save_cache:
-          key: athena-backend-{{ checksum "build.sbt" }}
+          key: athena-backend-0-{{ checksum "build.sbt" }}
           paths:
             - backend/scala-2.13/target/resolution-cache
             - backend/scala-2.13/target/streams
@@ -36,7 +36,7 @@ jobs:
             - ~/.ivy2/cache
             - ~/.m2
       - save_cache:
-          key: athena-backend
+          key: athena-backend-0
           paths:
             - ~/.sbt
             - ~/.ivy2/cache
@@ -51,8 +51,8 @@ jobs:
           at: .
       - restore_cache:
           keys:
-            - athena-frontend-{{ checksum "frontend/package-lock.json" }}
-            - athena-frontend
+            - athena-frontend-0-{{ checksum "frontend/package-lock.json" }}
+            - athena-frontend-0
       - run:
           command: npm install
           working_directory: frontend
@@ -64,11 +64,11 @@ jobs:
           paths:
             - frontend/build
       - save_cache:
-          key: athena-frontend-{{ checksum "frontend/package-lock.json" }}
+          key: athena-frontend-0-{{ checksum "frontend/package-lock.json" }}
           paths:
             - frontend/node_modules
       - save_cache:
-          key: athena-frontend
+          key: athena-frontend-0
           paths:
             - frontend/node_modules
   deploy-backend:

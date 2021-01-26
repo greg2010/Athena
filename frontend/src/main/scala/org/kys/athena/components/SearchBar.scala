@@ -24,9 +24,13 @@ object SearchBar {
                inContext(thisNode => onChange.mapTo(thisNode.ref.value) --> summoner)),
          select(cls := "appearance-none px-1",
                 optGroup(cls := "text-md", Platform.values.map(renderPlatformOption)),
-                inContext(thisNode => onChange.mapTo(Platform.withNameOption(thisNode.ref.value).getOrElse(Platform.NA)) --> platform)),
+                inContext(
+                  thisNode => {
+                    onChange.mapTo(Platform.withNameOption(thisNode.ref.value).getOrElse(Platform.NA)) -->
+                    platform
+                  })),
          img(src := "/icons/search.svg", width := "24px", height := "auto", onClick --> formObserver),
-         onSubmit --> formObserver)
+         onSubmit.preventDefault --> formObserver)
   }
 
   private def renderPlatformOption(platform: Platform): HtmlElement = {

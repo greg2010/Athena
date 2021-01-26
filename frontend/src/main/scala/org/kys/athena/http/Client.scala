@@ -49,9 +49,13 @@ object Client {
 
   private def fetchAndLift[T](req: RequestT[Identity, Either[RequestError, T], Any])
   : IO[BackendApiError, T] = {
-    cb.send(req)
-      .mapError(err => InternalServerError(s"Failed to fetch response from server, error=${err.getMessage}"))
-      .flatMap(liftErrors)
+    UIO.effectTotal(scribe.info(s"Sending request to url=${req.uri}")).zipRight {
+      cb.send(req)
+        .mapError { err =>
+          InternalServerError(s"Failed to fetch response from server, error=${err.getMessage}")
+        }
+        .flatMap(liftErrors)
+    }
   }
 
   private def fetchCachedAndLift[T](req: RequestT[Identity, Either[RequestError, T], Any],
@@ -65,15 +69,12 @@ object Client {
       case Some(res) => IO.succeed(res)
       case _ =>
         for {
-          resp <- cb.send(req).mapError { err =>
-            InternalServerError(s"Failed to fetch response from server, error=${err.getMessage}")
-          }
-          lifted <- liftErrors(resp)
-          _ <- CacheManager.set(uri, lifted, cacheFor).catchAll { err =>
+          resp <- fetchAndLift(req)
+          _ <- CacheManager.set(uri, resp, cacheFor).catchAll { err =>
             scribe.warn(s"Failed to set in cache with error=${err}")
             UIO.unit
           }
-        } yield lifted
+        } yield resp
     }
   }
 

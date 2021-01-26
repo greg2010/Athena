@@ -6,7 +6,7 @@ jobs:
   build-scala:
     working_directory: ~/athena
     docker:
-      - image: circleci/openjdk:13-jdk-buster
+      - image: circleci/openjdk:15-jdk-buster
     steps:
       - checkout
       - restore_cache:

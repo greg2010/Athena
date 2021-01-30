@@ -55,7 +55,7 @@ lazy val assemblySettings = Seq(assemblyJarName in assembly := projectCodename +
                                   case PathList("org", "reactivestreams", xs @ _*) =>
                                     MergeStrategy.first
                                   // remove when com.softwaremill.sttp
-                                  // .client3:httpclient-backend_2.13:3.0.0-RC13 fixes its dependencies
+                                  // .client3:httpclient-backend_2.13:3.1.0 fixes its dependencies
                                   case x =>
                                     val oldStrategy = (assemblyMergeStrategy in assembly).value
                                     oldStrategy(x)
@@ -65,21 +65,21 @@ lazy val settings = commonSettings ++ wartremoverSettings
 
 // Dependencies repository
 lazy val dependencies = new {
-  val catsVersion       = "2.3.0"
-  val http4sVersion     = "0.21.13"
+  val catsVersion       = "2.3.1"
+  val http4sVersion     = "0.21.16"
   val circeVersion      = "0.13.0"
   val enumeratumVersion = "1.6.1"
-  val sttpVersion       = "3.0.0-RC13"
+  val sttpVersion       = "3.1.0"
   val doobieVersion     = "0.8.7"
-  val scribeVersion     = "3.1.7"
+  val scribeVersion     = "3.3.1"
 
   val laminarVersion   = "0.11.0"
   val airstreamVersion = "0.11.1"
 
-  val zioVersion     = "1.0.3"
+  val zioVersion     = "1.0.4"
   val zioCatsVersion = "2.2.0.1"
 
-  val tapirVersion = "0.17.1"
+  val tapirVersion = "0.17.8"
 
   val common = Def.setting(Seq(
     "com.beachape" %%% "enumeratum" % enumeratumVersion,

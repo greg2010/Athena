@@ -161,8 +161,8 @@ object CurrentGameView extends View[CurrentGamePage] {
       renderHeader(gameES, playerNameSignal),
       div(
         cls := "flex flex-col lg:flex-row",
-        renderTeam(gameES.map(_.map(_.blueTeam)), premadeES.map(_.map(_.blue)), ddES, "Blue"),
-        renderTeam(gameES.map(_.map(_.redTeam)), premadeES.map(_.map(_.red)), ddES, "Red")))
+        renderTeam(gameES.map(_.map(_.blueTeam)), premadeES.map(_.map(_.blue)), ddES, "Blue",p.realm),
+        renderTeam(gameES.map(_.map(_.redTeam)), premadeES.map(_.map(_.red)), ddES, "Red",p.realm)))
   }
 
   private def renderHeader(ongoingES: Signal[Infallible[OngoingGameResponse]], playerName: Signal[String]) = {
@@ -199,7 +199,7 @@ object CurrentGameView extends View[CurrentGamePage] {
   private def renderTeam(teamES: Signal[Infallible[OngoingGameTeam]],
                          groupsES: Signal[DataState[Set[PlayerGroup]]],
                          ddES: Signal[Infallible[DData]],
-                         color: String) = {
+                         color: String, platform: Platform) = {
 
     @SuppressWarnings(Array("org.wartremover.warts.TraversableOps"))
     def transitiveJoinSets[T](s: Set[Set[T]]): Set[Set[T]] = {
@@ -265,7 +265,7 @@ object CurrentGameView extends View[CurrentGamePage] {
                 case (sset, (sum, _)) => findGroupBySummoner(sset, sum)
               }
             })
-          renderPlayerCard(ss, gs)
+          renderPlayerCard(ss, gs, platform)
       }
 
     val bES = teamES.combineWith(ddES).map(r => r._1.zip(r._2)).map { e =>
@@ -374,7 +374,8 @@ object CurrentGameView extends View[CurrentGamePage] {
   def winrateColor(wr: Double): String = if (wr < 0.5D) "#761616" else "#094523"
 
   private def renderPlayerCard(data: Signal[Infallible[(InGameSummoner, DData)]],
-                               playsWith: Signal[DataState[Option[Set[InGameSummoner]]]]
+                               playsWith: Signal[DataState[Option[Set[InGameSummoner]]]],
+                               platform:Platform
                               ): ReactiveHtmlElement[HTMLElement] = {
 
     // HELPERS
@@ -560,7 +561,10 @@ object CurrentGameView extends View[CurrentGamePage] {
         width := textWidth,
         child <-- data.map {
           case Ready((p, _)) =>
-            span(cls := "text-center text-xl max-w-full truncate overflow-ellipsis font-medium", p.name)
+            //span(cls := "text-center text-xl max-w-full truncate overflow-ellipsis font-medium", p.name)
+            //<a href="https://REGION.op.gg/summoner/userName=p.name">p.name</a> triggers0 was here
+            a(cls := "text-center text-xl max-w-full truncate overflow-ellipsis font-medium",
+              href := s"https://${platform}.op.gg/summoner/userName=${p.name}", target :="_blank", p.name)
           case Loading => div(width := "120px", height := "14px", cls := "animate-pulse bg-gray-500")
         },
         child <-- data.map {

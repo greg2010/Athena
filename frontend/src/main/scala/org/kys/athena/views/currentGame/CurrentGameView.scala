@@ -14,6 +14,7 @@ import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform, Summoner
 import org.kys.athena.riot.api.dto.currentgameinfo.BannedChampion
 import org.kys.athena.riot.api.dto.ddragon.runes.Rune
 import org.kys.athena.riot.api.dto.league.{MiniSeries, RankedQueueTypeEnum, TierEnum}
+import org.kys.athena.util.CSSUtil._
 import org.kys.athena.util.{Config, Time}
 import org.kys.athena.views.View
 import org.scalajs.dom
@@ -79,8 +80,6 @@ object CurrentGameView extends View[CurrentGamePage] {
   val runtime: Runtime[zio.ZEnv] = Runtime.default
   // RENDER LOGIC
 
-  val paperCls = "bg-white border border-gray-300 shadow-lg rounded-lg"
-
   override def render(p: CurrentGamePage): HtmlElement = {
 
     lazy val ddVar      = Var[DataState[DData]](Loading)
@@ -96,7 +95,6 @@ object CurrentGameView extends View[CurrentGamePage] {
       ongoingVar.signal.combineWith(ddVar.signal).map {
         case (Failed(_: NotFoundError), _) => List(renderNotFound(p, ongoingVar.writer, groupsVar.writer))
         case (Failed(err), _) =>
-          scribe.error(s"huh? msg=${err.message}", err)
           List(renderError(p, ddVar.writer, ongoingVar.writer, groupsVar.writer))
         case (_, Failed(_)) => List(renderError(p, ddVar.writer, ongoingVar.writer, groupsVar.writer))
         case (a: Infallible[OngoingGameResponse], b: Infallible[DData]) =>
@@ -108,8 +106,8 @@ object CurrentGameView extends View[CurrentGamePage] {
       onMountCallback { _ =>
         runtime.unsafeRunAsync_(fetchAndWriteAll(p.realm, p.name, ddVar.writer, ongoingVar.writer, groupsVar.writer))
       },
-      cls := "flex flex-col items-center container-md flex-grow justify-center p-4 " +
-             s"$paperCls my-10 bg-opacity-50",
+      cls := s"flex flex-col items-center justify-center lg:px-12 mx-4 my-2 divide-y divide-gray-500 $paperCls",
+      backgroundColor := paletteContainer,
       children <-- bodySignal)
   }
 
@@ -117,7 +115,7 @@ object CurrentGameView extends View[CurrentGamePage] {
                              ongoingObs: Observer[DataState[OngoingGameResponse]],
                              groupsObs: Observer[DataState[PremadeResponse]]) = {
     div(
-      cls := s"flex flex-col container-md $paperCls items-center p-8",
+      cls := s"flex flex-col $paperCls items-center p-8",
       img(
         src := "/blitzcrank_logo.png"
         ),
@@ -160,9 +158,9 @@ object CurrentGameView extends View[CurrentGamePage] {
     List(
       renderHeader(gameES, playerNameSignal),
       div(
-        cls := "flex flex-col lg:flex-row",
-        renderTeam(gameES.map(_.map(_.blueTeam)), premadeES.map(_.map(_.blue)), ddES, "Blue",p.realm),
-        renderTeam(gameES.map(_.map(_.redTeam)), premadeES.map(_.map(_.red)), ddES, "Red",p.realm)))
+        cls := "flex flex-col lg:flex-row divide-y lg:divide-x lg:divide-y-0 divide-gray-500",
+        renderTeam(gameES.map(_.map(_.blueTeam)), premadeES.map(_.map(_.blue)), ddES, "Blue", p.realm),
+        renderTeam(gameES.map(_.map(_.redTeam)), premadeES.map(_.map(_.red)), ddES, "Red", p.realm)))
   }
 
   private def renderHeader(ongoingES: Signal[Infallible[OngoingGameResponse]], playerName: Signal[String]) = {
@@ -181,7 +179,7 @@ object CurrentGameView extends View[CurrentGamePage] {
       }
     }
 
-    div(cls := s"flex flex-col items-center $paperCls p-4 m-4",
+    div(cls := s"flex flex-col items-center m-1 mb-4",
         child <-- playerName.map(n => span(cls := "text-center", s"Live game of $n", cls := "text-5xl p-2")),
         child <-- ongoingES.map {
           case Ready(g) =>
@@ -191,8 +189,8 @@ object CurrentGameView extends View[CurrentGamePage] {
             val timeES    = EventStream
               .periodic(1.seconds.toMillis.toInt)
               .map(_ => Time.renderMsInterval(System.currentTimeMillis() - startTime))
-            span(s"${renderQueueName(g.gameQueueId)} | ", child.text <-- timeES, cls := "mt-4 text-md")
-          case Loading => span(height := "14px", width := "300px", cls := "animate-pulse bg-gray-500 mt-4")
+            span(s"${renderQueueName(g.gameQueueId)} | ", child.text <-- timeES, cls := "text-md")
+          case Loading => span(height := "14px", width := "300px", cls := "animate-pulse bg-gray-500")
         })
   }
 
@@ -265,7 +263,9 @@ object CurrentGameView extends View[CurrentGamePage] {
                 case (sset, (sum, _)) => findGroupBySummoner(sset, sum)
               }
             })
-          renderPlayerCard(ss, gs, platform)
+          div(
+            cls := "px-2 py-1",
+            renderPlayerCard(ss, gs, platform))
       }
 
     val bES = teamES.combineWith(ddES).map(r => r._1.zip(r._2)).map { e =>
@@ -274,12 +274,20 @@ object CurrentGameView extends View[CurrentGamePage] {
       }
     }
 
+    val teamWidth = "460px"
 
     div(
-      cls := "flex flex-col items-center justify-center mx-4 my-1",
+      cls := "flex flex-col items-center px-1 lg:px-8 my-1 " +
+             "divide-y divide-gray-500",
+      //width := teamWidth,
       renderTeamHeader(teamES, color),
       children <-- renderSignal,
-      renderBans(bES))
+      div(
+        cls := "flex justify-center w-full px-2 py-1",
+        renderBans(bES)),
+      div(
+        cls := "flex justify-center w-full",
+        renderPlaysWith(teamES, groupsES, ddES)))
   }
 
   private def renderTeamHeader(team: Signal[Infallible[OngoingGameTeam]], teamName: String) = {
@@ -297,16 +305,21 @@ object CurrentGameView extends View[CurrentGamePage] {
         }
       }
     }
-    val teamNameElem = span(cls := "text-3xl font-medium tracking-wider", s"${teamName} Team")
+    val teamNameElem = span(cls := "text-2xl font-medium text-center", s"${teamName} Team")
     div(
-      cls := s"flex justify-around items-center p-4 mb-4 w-full $paperCls",
+      cls := s"flex justify-around items-center p-1 my-1 w-full",
       children <-- summary.map {
         case Ready(Some(s)) =>
           List(
-            div(cls := "flex flex-col items-center", span("Average Winrate"),
-                span(color := winrateColor(s.average), s"${roundWinrate(s.average)}%")),
+            div(cls := "flex flex-col items-center",
+                span(cls := "text-center", "Average Winrate"),
+                span(cls := "text-center",
+                     color := winrateColor(s.average),
+                     s"${roundWinrate(s.average)}%")),
             teamNameElem,
-            div(cls := "flex flex-col items-center", span("Winrate Range"), span(s"${roundWinrate(s.range)}%")))
+            div(cls := "flex flex-col items-center",
+                span(cls := "text-center", "Winrate Range"),
+                span(cls := "text-center", s"${roundWinrate(s.range)}%")))
         case Ready(None) => List(teamNameElem)
         case Loading =>
           List(
@@ -325,7 +338,7 @@ object CurrentGameView extends View[CurrentGamePage] {
   private def renderBans(bansES: Signal[Infallible[(Option[Set[BannedChampion]], DData)]])
   : ReactiveHtmlElement[html.Div] = {
     div(
-      cls := s"flex inline-flex py-1 mt-2 $paperCls",
+      cls := s"flex inline-flex my-1",
       children <-- bansES.map {
         case Ready((None, _)) =>
           inContext { ctx: ReactiveHtmlElement[html.Div] =>
@@ -334,7 +347,7 @@ object CurrentGameView extends View[CurrentGamePage] {
           List()
         case Ready((Some(banned), dd)) =>
           banned.map { ch =>
-            val url = dd.championUrl(dd.championById(ch.championId))
+            val url         = dd.championUrl(dd.championById(ch.championId))
             val bannedChamp = div(
               width := "64px",
               height := "64px",
@@ -362,6 +375,45 @@ object CurrentGameView extends View[CurrentGamePage] {
       })
   }
 
+  private def renderPlaysWith(teamES: Signal[Infallible[OngoingGameTeam]],
+                              groupsES: Signal[DataState[Set[PlayerGroup]]],
+                              ddES: Signal[Infallible[DData]]) = {
+    def renderPlayerSet(s: Set[InGameSummoner], gamesPlayed: Int, dd: DData) = {
+      div(
+        cls := "inline-flex flex-col items-center justify-center mx-2",
+        div(
+          cls := "flex flex-row items-center mx-1",
+          s.map { ig =>
+            div(renderChampionIcon(ig.championId, 36, None)(dd), cls := "mx-1")
+          }.toList),
+        span(cls := "text-sm leading-tight", s"$gamesPlayed ${if (gamesPlayed == 1) "game" else "games"}")
+        )
+    }
+
+    val renderSignal = teamES
+      .combineWith(groupsES).map(lr => lr._1.zip(lr._2))
+      .combineWith(ddES).map(lr => lr._1.zip(lr._2)).map {
+      case Ready(((team, group), dd)) =>
+        group.map { g =>
+          val inGameSummoners = g.summoners.flatMap(ss => team.summoners.find(_.summonerId == ss))
+          renderPlayerSet(inGameSummoners, g.gamesPlayed, dd)
+        }.toList
+      case Failed(_) => List(div(height := "50px", width := "400px", cls := "animate-pulse bg-red-500 rounded-lg"))
+      case Loading => List(div(height := "50px", width := "400px", cls := "animate-pulse bg-gray-500 rounded-lg"))
+    }.map { elems =>
+      if (elems.isEmpty) {
+        List(span(cls := "text-lg", "No premades"))
+      } else {
+        elems
+      }
+    }
+    div(
+      cls := s"flex flex-initial w-full flex-wrap my-1 items-center justify-center",
+      minHeight := "64px",
+      minWidth := "0",
+      children <-- renderSignal)
+  }
+
   private def getRankedData(rd: List[RankedLeague]): Option[RankedLeague] = {
     rd.find(_.queueType == RankedQueueTypeEnum.SummonersRiftSoloRanked) match {
       case None => rd.find(_.queueType == RankedQueueTypeEnum.SummonersRiftFlexRanked)
@@ -374,24 +426,18 @@ object CurrentGameView extends View[CurrentGamePage] {
 
   def winrateColor(wr: Double): String = if (wr < 0.5D) "#761616" else "#094523"
 
+  def renderChampionIcon(championId: Long, size: Int, clsAttrs: Option[String])
+                        (implicit dd: DData): ReactiveHtmlElement[html.Image] = {
+    val url = dd.championUrl(dd.championById(championId))
+    ImgSized(url, size, Some(size)).amend(
+      cls := clsAttrs.getOrElse(""))
+  }
+
   private def renderPlayerCard(data: Signal[Infallible[(InGameSummoner, DData)]],
                                playsWith: Signal[DataState[Option[Set[InGameSummoner]]]],
-                               platform:Platform
+                               platform: Platform
                               ): ReactiveHtmlElement[HTMLElement] = {
-    /*
-    val summonerName = dd.
-
-
-    val opggSummonerURL = summonerName match {
-      case Some(value) => "https://${platform}.op.gg/summoner/userName=${p.name}"
-      case None => ""
-    }
-    */
-
-
     // HELPERS
-
-
     def renderSummonerSpell(ss: SummonerSpellsEnum)(implicit dd: DData) = {
       val url = dd.summonerUrlById(ss.value).getOrElse("")
       ImgSized(url, 32, Some(32)).amend(
@@ -401,7 +447,7 @@ object CurrentGameView extends View[CurrentGamePage] {
     def renderRune(rune: Option[Rune], iconSize: Int)(implicit dd: DData) = {
       div(width := "32px", height := "32px",
           cls := "border border-gray-300 flex items-center justify-center rounded-md",
-          ImgSized(rune.map(dd.runeUrl).getOrElse(""), 32, Some(32)))
+          ImgSized(rune.map(dd.runeUrl).getOrElse(""), iconSize, Some(iconSize)))
     }
 
     def renderWinrateText(rl: Option[RankedLeague]) = {
@@ -417,9 +463,9 @@ object CurrentGameView extends View[CurrentGamePage] {
         }
       }
       List(
-        span(cls := "text-center text-sm", qText),
+        span(cls := "text-center text-xs leading-tight mt-1", qText),
         rl match {
-          case Some(l) => span(cls := "text-center text-sm", s"(${l.wins + l.losses} Played)")
+          case Some(l) => span(cls := "text-center text-xs leading-tight", s"(${l.wins + l.losses} Played)")
           case None => span()
         })
     }
@@ -459,7 +505,7 @@ object CurrentGameView extends View[CurrentGamePage] {
       }
 
       div(
-        cls := "flex flex-col items-center justify-center", width := "86px",
+        cls := "flex flex-col items-center justify-center mr-1", width := "86px",
         rl match {
           case Some(l) => {
             val t   = l.tier.entryName.toLowerCase.capitalize
@@ -468,18 +514,18 @@ object CurrentGameView extends View[CurrentGamePage] {
               ImgSized(url, 40, None),
               l.tier match {
                 case t if t.in(TierEnum.Master, TierEnum.Grandmaster, TierEnum.Challenger) => {
-                  span(cls := "text-sm", s"${t}")
+                  span(cls := "text-xs leading-tight mt-1", s"${t}")
                 }
-                case _ => span(cls := "text-sm", s"${t} ${l.rank}")
+                case _ => span(cls := "text-xs leading-tight mt-1", s"${t} ${l.rank}")
               },
-              span(cls := "text-sm", s"${l.leaguePoints} LP"),
+              span(cls := "text-xs leading-tight", s"${l.leaguePoints} LP"),
               l.miniSeries.map(renderMiniSeries).getOrElse(div()))
           }
           case None => {
             val url = s"${Config.FRONTEND_URL}/Emblem_Unranked.png"
             List(
               ImgSized(url, 46, None),
-              span("Unranked"))
+              span(cls := "text-xs leading-tight mt-1", "Unranked"))
           }
         })
 
@@ -487,11 +533,11 @@ object CurrentGameView extends View[CurrentGamePage] {
 
     // BODY
 
-    val boxHeight = "108px"
-    val boxCls    = s"flex $paperCls mt-1 p-1 items-center justify-center"
-    val sumCls    = "flex flex-col justify-around h-5/6 px-1"
-    val runeCls   = "flex flex-col justify-around h-5/6"
-    val textWidth = "180px"
+    val boxHeight = "96px"
+    val boxCls    = s"flex items-center justify-center"
+    val sumCls    = "flex flex-col justify-around h-full mx-1"
+    val runeCls   = "flex flex-col justify-around h-full mr-1"
+    val textWidth = "140px"
 
     val rankedData: Signal[Infallible[Option[RankedLeague]]] = data.map {
       case Ready((p, _)) => Ready(getRankedData(p.rankedLeagues))
@@ -540,17 +586,14 @@ object CurrentGameView extends View[CurrentGamePage] {
         width := textWidth,
         child <-- data.map {
           case Ready((p, _)) =>
-            //span(cls := "text-center text-xl max-w-full truncate overflow-ellipsis font-medium", p.name)
-            //<a href="https://REGION.op.gg/summoner/userName=p.name">p.name</a> triggers0 was here
-            a(cls := "text-center text-xl max-w-full truncate overflow-ellipsis font-medium",
-              href := s"https://${platform}.op.gg/summoner/userName=${p.name}", target :="_blank", p.name)
-
-
+            a(cls := "text-center text-lg leading-tight max-w-full truncate overflow-ellipsis font-medium",
+              href := s"https://${platform}.op.gg/summoner/userName=${p.name}", target := "_blank", p.name)
           case Loading => div(width := "120px", height := "14px", cls := "animate-pulse bg-gray-500")
         },
         child <-- data.map {
           case Ready((p, dd)) =>
-            span(dd.championById(p.championId).map(_.name).getOrElse[String]("Unknown"), cls := "font-normal")
+            span(dd.championById(p.championId).map(_.name).getOrElse[String]("Unknown"),
+                 cls := "font-normal leading-tight mb-1")
           case Loading => div(width := "90px", height := "14px", cls := "animate-pulse bg-gray-500 mt-1")
         },
         children <-- rankedData.map {
@@ -564,7 +607,6 @@ object CurrentGameView extends View[CurrentGamePage] {
           div(cls := "flex flex-col items-center", width := "86px",
               div(width := "46px", height := "60px", cls := "animate-pulse bg-gray-500"),
               div(width := "46px", height := "14px", cls := "animate-pulse bg-gray-500 mt-1"))
-      }
-      )
+      })
   }
 }

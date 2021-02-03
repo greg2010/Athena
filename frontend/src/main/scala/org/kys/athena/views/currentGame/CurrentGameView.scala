@@ -199,26 +199,6 @@ object CurrentGameView extends View[CurrentGamePage] {
                          ddES: Signal[Infallible[DData]],
                          color: String, platform: Platform) = {
 
-    @SuppressWarnings(Array("org.wartremover.warts.TraversableOps"))
-    def transitiveJoinSets[T](s: Set[Set[T]]): Set[Set[T]] = {
-      @tailrec
-      def mergeSets(cum: Set[Set[T]], sets: Set[Set[T]]): Set[Set[T]] = {
-        import scala.language.postfixOps
-        if (sets.isEmpty) {
-          cum
-        } else {
-          val cur               = sets.head
-          val (hasCommon, rest) = cum.partition(_ & cur nonEmpty)
-          mergeSets(rest + (cur ++ hasCommon.flatten), sets.tail)
-        }
-      }
-      mergeSets(Set.empty[Set[T]], s)
-    }
-
-    def findGroupBySummoner(g: Set[Set[InGameSummoner]], s: InGameSummoner): Option[Set[InGameSummoner]] = {
-      g.find(_.contains(s)).map(_.filterNot(_.summonerId == s.summonerId))
-    }
-
     // Sort by position number, zip with index. Index serves as a key for rendering
     val sortedSummonersES = teamES.map { t =>
       t.map { tt =>
@@ -229,17 +209,6 @@ object CurrentGameView extends View[CurrentGamePage] {
               .toList.sortBy(_._2).map(_._1).zipWithIndex
           }
           case None => tt.summoners.toList.zipWithIndex
-        }
-      }
-    }
-
-
-    // Transitively expand sets. Guarantees each player occurs in at most one set.
-    val expandedGroupsES = teamES.combineWith(groupsES).map(r => r._1.zip(r._2)).map { e =>
-      e.map {
-        case (t, g) => {
-          val sums = g.map(_.summoners.flatMap(s => t.summoners.find(_.summonerId == s)))
-          transitiveJoinSets(sums)
         }
       }
     }
@@ -256,16 +225,7 @@ object CurrentGameView extends View[CurrentGamePage] {
       .split(_._2) {
         case (_, _, d) =>
           val ss = d.map(_._1)
-          val gs = ss
-            .combineWith(expandedGroupsES)
-            .map(r => {
-              r._2.zip(r._1).map {
-                case (sset, (sum, _)) => findGroupBySummoner(sset, sum)
-              }
-            })
-          div(
-            cls := "px-2 py-1",
-            renderPlayerCard(ss, platform))
+          div(cls := "px-2 py-1", renderPlayerCard(ss, platform))
       }
 
     val bES = teamES.combineWith(ddES).map(r => r._1.zip(r._2)).map { e =>

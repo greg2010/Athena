@@ -72,20 +72,21 @@ object GroupModule {
           gameParticipants.count(_.isEmpty) match {
             case 0 => ()
             case c => {
-              scribe.error("Got bad response from API: Some of the participants don't have corresponding player. " +
+              scribe.error("Got bad response from API: " +
+                           "Some of the participants don't have corresponding player. " +
                            "Flattening and proceeding. Please investigate " + curTeam)
-              ()
             }
           }
 
           // Split participants into separate teams
-          val uniqueGames = gameParticipants.flatten.flatMap(_.groupBy(_.teamId).values)
+          val uniqueGames = gameParticipants.flatten
+            .flatMap(_.groupBy(_.teamId).values)
+            .map(_.map(_.player.summonerId))
 
           uniqueGames.foldRight(Set[PlayerGroup]())((curGame, acc) => {
-            val cursorGameParticipantSummonerIds = curGame.map(_.player.summonerId)
 
             val cursorGamePlayersFromCurrentGame = curTeam.filter { curPlayer =>
-              cursorGameParticipantSummonerIds.contains(curPlayer.summonerId)
+              curGame.contains(curPlayer.summonerId)
             }
 
             acc.find(_.summoners == cursorGamePlayersFromCurrentGame.map(_.summonerId)) match {

@@ -3,7 +3,7 @@ package org.kys.athena.views.currentGame
 import com.raquo.domtypes.generic.keys.{Style => CStyle}
 import com.raquo.laminar.api.L._
 import com.raquo.laminar.nodes.ReactiveHtmlElement
-import org.kys.athena.components.ImgSized
+import org.kys.athena.components.{ChampionIcon, ImgSized, UggLink}
 import org.kys.athena.http.Client._
 import org.kys.athena.http.DData
 import org.kys.athena.http.errors.{BackendApiError, InternalServerError, NotFoundError}
@@ -335,13 +335,13 @@ object CurrentGameView extends View[CurrentGamePage] {
         case Ready((Some(banned), dd)) =>
           banned.map { ch =>
             val url = dd.championUrl(dd.championById(ch.championId))
-            div(
+            val bannedChamp = div(
               width := "64px",
               height := "64px",
               cls := "mx-1",
               div(
                 position := "absolute",
-                ImgSized(url, 64, Some(64)).amend(
+                ChampionIcon.render(ch.championId, 64, dd).amend(
                   position := "relative",
                   zIndex := 1,
                   new CStyle("filter", "filter") := "grayscale(50%)",
@@ -353,6 +353,7 @@ object CurrentGameView extends View[CurrentGamePage] {
                   zIndex := 2,
                   cls := "rounded-lg"
                   )))
+            UggLink(ch.championId, bannedChamp, dd)
           }.toList
         case Loading =>
           Range(0, 5).map { _ =>
@@ -377,15 +378,20 @@ object CurrentGameView extends View[CurrentGamePage] {
                                playsWith: Signal[DataState[Option[Set[InGameSummoner]]]],
                                platform:Platform
                               ): ReactiveHtmlElement[HTMLElement] = {
+    /*
+    val summonerName = dd.
+
+
+    val opggSummonerURL = summonerName match {
+      case Some(value) => "https://${platform}.op.gg/summoner/userName=${p.name}"
+      case None => ""
+    }
+    */
+
 
     // HELPERS
 
-    def renderChampionIcon(championId: Long, size: Int, clsAttrs: Option[String])
-                          (implicit dd: DData) = {
-      val url = dd.championUrl(dd.championById(championId))
-      ImgSized(url, size, Some(size)).amend(
-        cls := clsAttrs.getOrElse(""))
-    }
+
     def renderSummonerSpell(ss: SummonerSpellsEnum)(implicit dd: DData) = {
       val url = dd.summonerUrlById(ss.value).getOrElse("")
       ImgSized(url, 32, Some(32)).amend(
@@ -476,37 +482,7 @@ object CurrentGameView extends View[CurrentGamePage] {
               span("Unranked"))
           }
         })
-    }
 
-    def renderPlaysWith(pwData: DataState[(Option[Set[InGameSummoner]], DData)]) = {
-      div(
-        width := "80px",
-        minWidth := "80px",
-        height := "80px",
-        cls := "flex flex-wrap items-center justify-center mx-1",
-        pwData match {
-          case Ready((Some(g), dd)) => {
-            g.map { p =>
-              div(renderChampionIcon(p.championId, 36, None)(dd), cls := "ml-1")
-            }.toList
-          }
-          case Ready((None, _)) => {
-            List(
-              inContext { ctx: ReactiveHtmlElement[html.Div] =>
-                ctx.amend(cls := "flex-col border border-gray-300 rounded-lg")
-              },
-              span(cls := "font-semibold", "Plays"),
-              span(cls := "font-semibold", "solo"))
-          }
-          case Loading => {
-            Range(0, 4).map(
-              _ => div(width := "36px", height := "36px", cls := "animate-pulse bg-gray-500 mr-1"))
-          }
-          case Failed(_) => {
-            Range(0, 4).map(
-              _ => div(width := "36px", height := "36px", cls := "animate-pulse bg-red-500 mr-1"))
-          }
-        })
     }
 
     // BODY
@@ -526,7 +502,10 @@ object CurrentGameView extends View[CurrentGamePage] {
       height := boxHeight,
       cls := boxCls,
       child <-- data.map {
-        case Ready((p, dd)) => renderChampionIcon(p.championId, 80, Some("rounded-lg ml-1"))(dd)
+       // case Ready((p, dd)) => renderChampionIcon(p.championId, 80, Some("rounded-lg ml-1"))(dd)
+
+        case Ready((p, dd)) =>
+          UggLink(p.championId,ChampionIcon.render(p.championId, 80, dd).amend(cls :="rounded-lg ml-1"), dd)
         case Loading => div(cls := "animate-pulse bg-gray-500 rounded-lg ml-1",
                             width := "80px",
                             height := "80px")
@@ -565,6 +544,8 @@ object CurrentGameView extends View[CurrentGamePage] {
             //<a href="https://REGION.op.gg/summoner/userName=p.name">p.name</a> triggers0 was here
             a(cls := "text-center text-xl max-w-full truncate overflow-ellipsis font-medium",
               href := s"https://${platform}.op.gg/summoner/userName=${p.name}", target :="_blank", p.name)
+
+
           case Loading => div(width := "120px", height := "14px", cls := "animate-pulse bg-gray-500")
         },
         child <-- data.map {
@@ -583,9 +564,7 @@ object CurrentGameView extends View[CurrentGamePage] {
           div(cls := "flex flex-col items-center", width := "86px",
               div(width := "46px", height := "60px", cls := "animate-pulse bg-gray-500"),
               div(width := "46px", height := "14px", cls := "animate-pulse bg-gray-500 mt-1"))
-      },
-      child <-- data.map(_.map(_._2))
-        .combineWith(playsWith)
-        .map(r => r._2.zip(r._1)).map(renderPlaysWith))
+      }
+      )
   }
 }

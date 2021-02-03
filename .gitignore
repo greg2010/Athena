@@ -115,3 +115,5 @@ project/plugins/project/
 .ivy2/
 .cache/
 frontend/build-dev
+frontend/.config
+frontend/.npm

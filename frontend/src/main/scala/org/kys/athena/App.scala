@@ -7,6 +7,7 @@ import io.circe.syntax._
 import org.kys.athena.components.{AppBar, Footer}
 import org.kys.athena.pages._
 import org.kys.athena.riot.api.dto.common.Platform
+import org.kys.athena.util.CSSUtil
 import org.kys.athena.views.LandingView
 import org.kys.athena.views.currentGame.CurrentGameView
 import org.scalajs.dom
@@ -59,12 +60,14 @@ object App {
 
   def render(): HtmlElement = {
     div(cls := "root h-screen flex flex-col items-center",
-        div(cls := "bg-gradient-to-b h-full w-full from-white to-gray-400 fixed", zIndex := "-10"),
+        div(cls := "h-full w-full fixed",
+            backgroundColor := CSSUtil.paletteBackground,
+            zIndex := "-10"),
         AppBar.render(router.$currentPage.map {
           case LandingPage => false
           case _ => true
         }),
-        div(cls := "container justify-center flex flex-grow", child <-- splitter.$view),
+        div(cls := "container justify-center items-center flex flex-grow", child <-- splitter.$view),
         Footer.render())
   }
 

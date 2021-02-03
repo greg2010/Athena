@@ -265,7 +265,7 @@ object CurrentGameView extends View[CurrentGamePage] {
             })
           div(
             cls := "px-2 py-1",
-            renderPlayerCard(ss, gs, platform))
+            renderPlayerCard(ss, platform))
       }
 
     val bES = teamES.combineWith(ddES).map(r => r._1.zip(r._2)).map { e =>
@@ -274,12 +274,10 @@ object CurrentGameView extends View[CurrentGamePage] {
       }
     }
 
-    val teamWidth = "460px"
 
     div(
       cls := "flex flex-col items-center px-1 lg:px-8 my-1 " +
              "divide-y divide-gray-500",
-      //width := teamWidth,
       renderTeamHeader(teamES, color),
       children <-- renderSignal,
       div(
@@ -434,9 +432,7 @@ object CurrentGameView extends View[CurrentGamePage] {
   }
 
   private def renderPlayerCard(data: Signal[Infallible[(InGameSummoner, DData)]],
-                               playsWith: Signal[DataState[Option[Set[InGameSummoner]]]],
-                               platform: Platform
-                              ): ReactiveHtmlElement[HTMLElement] = {
+                               platform: Platform): ReactiveHtmlElement[HTMLElement] = {
     // HELPERS
     def renderSummonerSpell(ss: SummonerSpellsEnum)(implicit dd: DData) = {
       val url = dd.summonerUrlById(ss.value).getOrElse("")
@@ -548,8 +544,6 @@ object CurrentGameView extends View[CurrentGamePage] {
       height := boxHeight,
       cls := boxCls,
       child <-- data.map {
-       // case Ready((p, dd)) => renderChampionIcon(p.championId, 80, Some("rounded-lg ml-1"))(dd)
-
         case Ready((p, dd)) =>
           UggLink(p.championId,ChampionIcon.render(p.championId, 80, dd).amend(cls :="rounded-lg ml-1"), dd)
         case Loading => div(cls := "animate-pulse bg-gray-500 rounded-lg ml-1",

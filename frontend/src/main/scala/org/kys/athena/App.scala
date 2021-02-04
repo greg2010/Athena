@@ -63,12 +63,12 @@ object App {
         div(cls := "h-full w-full fixed",
             backgroundColor := CSSUtil.paletteBackground,
             zIndex := "-10"),
-        AppBar.render(router.$currentPage.map {
+        AppBar(router.$currentPage.map {
           case LandingPage => false
           case _ => true
         }),
         div(cls := "container justify-center items-center flex flex-grow", child <-- splitter.$view),
-        Footer.render())
+        Footer())
   }
 
   def pushState(page: Page): Unit = {

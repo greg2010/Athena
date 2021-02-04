@@ -6,14 +6,10 @@ import org.scalajs.dom.html.Image
 
 
 object ChampionIcon {
-  def render(id:Long, size:Int, dd:DData): ReactiveHtmlElement[Image] ={
-
+  def apply(id: Long, size: Int, dd: DData): ReactiveHtmlElement[Image] = {
     val champObj = dd.championById(id)
-    val url = dd.championUrl(champObj)
-
-    ImgSized.apply(url, size, Some(size))
-
-
+    val url      = dd.championUrl(champObj)
+    ImgSized(url, size, Some(size))
 
   }
 

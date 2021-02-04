@@ -10,7 +10,7 @@ object Footer {
     "anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated " +
     "properties are trademarks or registered trademarks of Riot Games, Inc."
 
-  def render(): HtmlElement = {
+  def apply(): HtmlElement = {
     footer(cls := "max-w-md mb-2", p(cls := "text-center text-xs text-gray-800 ", disclaimer))
   }
 }

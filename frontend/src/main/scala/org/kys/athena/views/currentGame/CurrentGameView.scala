@@ -244,7 +244,7 @@ object CurrentGameView extends View[CurrentGamePage] {
         cls := "flex justify-center w-full px-2 py-1",
         renderBans(bES)),
       div(
-        cls := "w-full",
+        cls := "w-full py-1",
         renderPlaysWith(color, teamES, groupsES, ddES)))
   }
 
@@ -311,7 +311,8 @@ object CurrentGameView extends View[CurrentGamePage] {
               cls := "mx-1",
               div(
                 position := "absolute",
-                ChampionIcon.render(ch.championId, 64, dd).amend(
+                height := "64px",
+                ChampionIcon(ch.championId, 64, dd).amend(
                   position := "relative",
                   zIndex := 1,
                   new CStyle("filter", "filter") := "grayscale(50%)",
@@ -338,11 +339,11 @@ object CurrentGameView extends View[CurrentGamePage] {
                               ddES: Signal[Infallible[DData]]) = {
     def renderPlayerSet(s: Set[InGameSummoner], gamesPlayed: Int, dd: DData) = {
       div(
-        cls := "inline-flex flex-col items-center justify-center mx-2",
+        cls := "inline-flex flex-col items-center justify-center mx-2 mb-1",
         div(
           cls := "flex flex-row items-center mx-1",
           s.map { ig =>
-            div(renderChampionIcon(ig.championId, 36, None)(dd), cls := "mx-1")
+            UggLink(ig.championId, ChampionIcon(ig.championId, 36, dd).amend(cls := "mx-1"), dd)
           }.toList),
         span(cls := "text-sm leading-tight", s"$gamesPlayed ${if (gamesPlayed == 1) "game" else "games"}")
         )
@@ -361,17 +362,16 @@ object CurrentGameView extends View[CurrentGamePage] {
       case Loading => List(div(height := "50px", width := "400px", cls := "animate-pulse bg-gray-500 rounded-lg"))
     }.map { elems =>
       if (elems.isEmpty) {
-        List(span(cls := "text-lg", "No player groups"))
+        List(span(cls := "text-lg", "No groups"))
       } else {
         elems
       }
     }
     div(
       cls := "flex flex-col justify-center",
-      span(cls := "text-xl font-medium text-center", s"$color team groups"),
+      span(cls := "text-xl font-medium leading-tight text-center my-1", s"$color team groups"),
       div(
-        cls := s"flex flex-wrap my-1 items-center justify-center",
-        minHeight := "64px",
+        cls := s"flex flex-wrap items-center justify-center",
         maxWidth := "400px", // TODO: this is smelly
         children <-- renderSignal))
   }
@@ -387,13 +387,6 @@ object CurrentGameView extends View[CurrentGamePage] {
   def roundWinrate(wr: Double): Double = Math.round(wr * 1000D) / 10D
 
   def winrateColor(wr: Double): String = if (wr < 0.5D) "#761616" else "#094523"
-
-  def renderChampionIcon(championId: Long, size: Int, clsAttrs: Option[String])
-                        (implicit dd: DData): ReactiveHtmlElement[html.Image] = {
-    val url = dd.championUrl(dd.championById(championId))
-    ImgSized(url, size, Some(size)).amend(
-      cls := clsAttrs.getOrElse(""))
-  }
 
   private def renderPlayerCard(data: Signal[Infallible[(InGameSummoner, DData)]],
                                platform: Platform): ReactiveHtmlElement[HTMLElement] = {
@@ -411,19 +404,24 @@ object CurrentGameView extends View[CurrentGamePage] {
     }
 
     def renderWinrateText(rl: Option[RankedLeague]) = {
-      val qText = rl match {
+      val commonCls   = "text-center leading-tight mt-1"
+      val rankedCls   = commonCls + " text-xs"
+      val unrankedCls = commonCls + " text-base"
+
+      val qSpan = rl match {
         case Some(v) if v.queueType == RankedQueueTypeEnum.SummonersRiftSoloRanked => {
-          s"Solo/Duo WR: ${roundWinrate(v.winRate)}%"
+          span(cls := rankedCls, s"Solo/Duo WR: ${roundWinrate(v.winRate)}%")
         }
         case Some(v) => {
-          s"Flex WR:  ${roundWinrate(v.winRate)}%"
+          span(cls := rankedCls, s"Flex WR:  ${roundWinrate(v.winRate)}%")
         }
         case None => {
-          "Unranked"
+          span(cls := unrankedCls, "Unranked")
+
         }
       }
       List(
-        span(cls := "text-center text-xs leading-tight mt-1", qText),
+        qSpan,
         rl match {
           case Some(l) => span(cls := "text-center text-xs leading-tight", s"(${l.wins + l.losses} Played)")
           case None => span()
@@ -485,7 +483,7 @@ object CurrentGameView extends View[CurrentGamePage] {
             val url = s"${Config.FRONTEND_URL}/Emblem_Unranked.png"
             List(
               ImgSized(url, 46, None),
-              span(cls := "text-xs leading-tight mt-1", "Unranked"))
+              span(cls := "text-sm leading-tight mt-1", "Unranked"))
           }
         })
 
@@ -495,8 +493,8 @@ object CurrentGameView extends View[CurrentGamePage] {
 
     val boxHeight = "96px"
     val boxCls    = s"flex items-center justify-center"
-    val sumCls    = "flex flex-col justify-around h-full mx-1"
-    val runeCls   = "flex flex-col justify-around h-full mr-1"
+    val sumCls    = "flex flex-col justify-around h-5/6 mx-1"
+    val runeCls   = "flex flex-col justify-around h-5/6 mr-1"
     val textWidth = "140px"
 
     val rankedData: Signal[Infallible[Option[RankedLeague]]] = data.map {
@@ -509,7 +507,32 @@ object CurrentGameView extends View[CurrentGamePage] {
       cls := boxCls,
       child <-- data.map {
         case Ready((p, dd)) =>
-          UggLink(p.championId,ChampionIcon.render(p.championId, 80, dd).amend(cls :="rounded-lg ml-1"), dd)
+          val champImg = div(
+            width := "80px",
+            height := "80px",
+            cls := "ml-1",
+            div(
+              position := "absolute",
+              height := "80px",
+              div(ChampionIcon(p.championId, 80, dd).amend(
+                cls := "rounded-lg",
+                zIndex := 1)),
+              div(
+                position := "relative",
+                top := "-30px",
+                left := "50px",
+                zIndex := 2,
+                cls := "rounded-lg flex items-center justify-center",
+                width := "26px",
+                height := "26px",
+                backgroundColor := "rgba(0, 0, 0, 0.7)",
+                span(
+                  cls := "text-center text-xs",
+                  color := "white",
+                  p.summonerLevel.toString))))
+
+
+          UggLink(p.championId, champImg, dd)
         case Loading => div(cls := "animate-pulse bg-gray-500 rounded-lg ml-1",
                             width := "80px",
                             height := "80px")

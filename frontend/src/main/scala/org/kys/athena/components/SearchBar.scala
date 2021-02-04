@@ -17,7 +17,7 @@ object SearchBar {
       case (p, s) => App.pushState(CurrentGamePage(p, s))
     })
 
-  def render(widthClasses: String, heightClasses: String = "h-12", textClasses: String = "text-xl"): HtmlElement = {
+  def apply(widthClasses: String, heightClasses: String = "h-12", textClasses: String = "text-xl"): HtmlElement = {
     form(cls := "appearance-none border shadow-lg border-gray-300 text-gray-darker " +
                 s"$textClasses border rounded-md px-3 py-1 flex items-center bg-white $widthClasses",
          input(placeholder := "Enter a summoner name", cls := s"flex-grow min-w-0 $heightClasses",

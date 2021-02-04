@@ -244,8 +244,8 @@ object CurrentGameView extends View[CurrentGamePage] {
         cls := "flex justify-center w-full px-2 py-1",
         renderBans(bES)),
       div(
-        cls := "flex justify-center w-full",
-        renderPlaysWith(teamES, groupsES, ddES)))
+        cls := "w-full",
+        renderPlaysWith(color, teamES, groupsES, ddES)))
   }
 
   private def renderTeamHeader(team: Signal[Infallible[OngoingGameTeam]], teamName: String) = {
@@ -305,7 +305,6 @@ object CurrentGameView extends View[CurrentGamePage] {
           List()
         case Ready((Some(banned), dd)) =>
           banned.map { ch =>
-            val url         = dd.championUrl(dd.championById(ch.championId))
             val bannedChamp = div(
               width := "64px",
               height := "64px",
@@ -333,7 +332,8 @@ object CurrentGameView extends View[CurrentGamePage] {
       })
   }
 
-  private def renderPlaysWith(teamES: Signal[Infallible[OngoingGameTeam]],
+  private def renderPlaysWith(color: String,
+                              teamES: Signal[Infallible[OngoingGameTeam]],
                               groupsES: Signal[DataState[Set[PlayerGroup]]],
                               ddES: Signal[Infallible[DData]]) = {
     def renderPlayerSet(s: Set[InGameSummoner], gamesPlayed: Int, dd: DData) = {
@@ -356,20 +356,24 @@ object CurrentGameView extends View[CurrentGamePage] {
           val inGameSummoners = g.summoners.flatMap(ss => team.summoners.find(_.summonerId == ss))
           renderPlayerSet(inGameSummoners, g.gamesPlayed, dd)
         }.toList
-      case Failed(_) => List(div(height := "50px", width := "400px", cls := "animate-pulse bg-red-500 rounded-lg"))
+      case Failed(_) =>
+        List(span(cls := "text-lg", "Error fetching player groups"))
       case Loading => List(div(height := "50px", width := "400px", cls := "animate-pulse bg-gray-500 rounded-lg"))
     }.map { elems =>
       if (elems.isEmpty) {
-        List(span(cls := "text-lg", "No premades"))
+        List(span(cls := "text-lg", "No player groups"))
       } else {
         elems
       }
     }
     div(
-      cls := s"flex flex-initial w-full flex-wrap my-1 items-center justify-center",
-      minHeight := "64px",
-      minWidth := "0",
-      children <-- renderSignal)
+      cls := "flex flex-col justify-center",
+      span(cls := "text-xl font-medium text-center", s"$color team groups"),
+      div(
+        cls := s"flex flex-wrap my-1 items-center justify-center",
+        minHeight := "64px",
+        maxWidth := "400px", // TODO: this is smelly
+        children <-- renderSignal))
   }
 
   private def getRankedData(rd: List[RankedLeague]): Option[RankedLeague] = {

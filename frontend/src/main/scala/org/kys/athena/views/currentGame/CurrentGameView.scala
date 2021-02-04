@@ -115,7 +115,7 @@ object CurrentGameView extends View[CurrentGamePage] {
                              ongoingObs: Observer[DataState[OngoingGameResponse]],
                              groupsObs: Observer[DataState[PremadeResponse]]) = {
     div(
-      cls := s"flex flex-col $paperCls items-center p-8",
+      cls := s"flex flex-col items-center p-8",
       img(
         src := "/blitzcrank_logo.png"
         ),
@@ -125,7 +125,7 @@ object CurrentGameView extends View[CurrentGamePage] {
         b(s"${p.realm.toString}/${p.name}"),
         " is not currently in game."),
       button(
-        cls := "bg-gray-300, border border-gray-300 rounded-lg p-2 mt-4",
+        cls := "bg-gray-300, border border-gray-500 rounded-lg p-2 mt-4",
         "Retry",
         onClick --> Observer[dom.MouseEvent](
           onNext = _ => runtime.unsafeRunAsync_(fetchAndWriteGameInfo(p.realm, p.name, ongoingObs, groupsObs)))))
@@ -136,7 +136,7 @@ object CurrentGameView extends View[CurrentGamePage] {
                           ongoingObs: Observer[DataState[OngoingGameResponse]],
                           groupsObs: Observer[DataState[PremadeResponse]]) = {
     div(
-      cls := s"flex flex-col container-md $paperCls items-center p-8",
+      cls := s"flex flex-col items-center p-8",
       img(
         src := "/amumu_error.png"
         ),
@@ -144,7 +144,7 @@ object CurrentGameView extends View[CurrentGamePage] {
         cls := "text-xl mt-4",
         "Server error occurred."),
       button(
-        cls := "bg-gray-300, border border-gray-300 rounded-lg p-2 mt-4",
+        cls := "bg-gray-300, border border-gray-500 rounded-lg p-2 mt-4",
         "Retry",
         onClick --> Observer[dom.MouseEvent](
           onNext = _ => runtime.unsafeRunAsync_(fetchAndWriteAll(p.realm, p.name, ddObs, ongoingObs, groupsObs)))))

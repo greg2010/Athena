@@ -3,25 +3,32 @@ version: 2.1
 orbs:
   discord: antonioned/discord@0.1.0
 jobs:
-  build-scala:
+  build:
     working_directory: ~/athena
     docker:
-      - image: circleci/openjdk:15-jdk-buster
+      - image: circleci/openjdk:15-jdk-buster-node
     steps:
       - checkout
       - restore_cache:
           keys:
             - athena-backend-0-{{ checksum "build.sbt" }}
             - athena-backend-0
-      - run: sbt compile
-      - run: sbt assembly
-      - run: sbt frontend/fullOptJS
+      - restore_cache:
+          keys:
+            - athena-frontend-0-{{ checksum "frontend/package-lock.json" }}
+            - athena-frontend-0
+      - run: sbt ";compile; assembly; frontend/fullOptJS"
+      - run:
+          command: npm install
+          working_directory: frontend
+      - run:
+          command: CI=false npm run build
+          working_directory: frontend
       - persist_to_workspace:
           root: .
           paths:
             - backend/target/scala-2.13/athena-backend.jar
-            - frontend/target/scala-2.13/frontend-opt.js
-            - frontend/target/scala-2.13/frontend-opt.js.map
+            - frontend/build
       - store_artifacts:
           path: backend/target/scala-2.13/athena-backend.jar
           destination: jar
@@ -41,28 +48,6 @@ jobs:
             - ~/.sbt
             - ~/.ivy2/cache
             - ~/.m2
-  build-js:
-    working_directory: ~/athena
-    docker:
-      - image: cimg/node:15.2.0
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - restore_cache:
-          keys:
-            - athena-frontend-0-{{ checksum "frontend/package-lock.json" }}
-            - athena-frontend-0
-      - run:
-          command: npm install
-          working_directory: frontend
-      - run:
-          command: CI=false npm run build
-          working_directory: frontend
-      - persist_to_workspace:
-          root: .
-          paths:
-            - frontend/build
       - save_cache:
           key: athena-frontend-0-{{ checksum "frontend/package-lock.json" }}
           paths:
@@ -117,19 +102,16 @@ workflows:
   version: 2
   build-and-deploy:
     jobs:
-      - build-scala:
+      - build:
           filters:
             branches:
               ignore:
                 - gh-pages
-      - build-js:
-          requires:
-            - build-scala
       - deploy-frontend:
           context: KYS-Primary
           requires:
-            - build-js
+            - build
       - deploy-backend:
           context: KYS-Primary
           requires:
-            - build-scala
+            - build

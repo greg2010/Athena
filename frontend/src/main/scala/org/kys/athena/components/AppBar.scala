@@ -16,7 +16,7 @@ object AppBar {
           a(cls := "mx-2", href := "https://github.com/greg2010/Athena", target := "_blank",
             ImgSized(s"${Config.FRONTEND_URL}/gh_logo.png", 40, Some(40))),
           child <-- showSearch.map {
-            case true => SearchBar("", "h-8", "text-md")
+            case true => SearchBar()
             case false => div()
           })
         )

@@ -9,32 +9,33 @@ import org.scalajs.dom.Event
 
 
 object SearchBar {
-  private val summoner: Var[String]   = Var[String]("")
-  private val platform: Var[Platform] = Var[Platform](Platform.NA)
-  private val formObserver: Observer[Event] =
-    Observer[dom.Event](onNext = _ => (platform.now(), summoner.now()) match {
-      case (_, "") => ()
-      case (p, s) => App.pushState(CurrentGamePage(p, s))
-    })
+  def apply(): HtmlElement = {
 
-  def apply(widthClasses: String, heightClasses: String = "h-12", textClasses: String = "text-xl"): HtmlElement = {
-    form(cls := "appearance-none border shadow-lg border-gray-300 text-gray-darker " +
-                s"$textClasses border rounded-md px-3 py-1 flex items-center bg-white $widthClasses",
-         input(placeholder := "Enter a summoner name", cls := s"flex-grow min-w-0 $heightClasses",
+    val summoner    : Var[String]     = Var[String]("")
+    val platform    : Var[Platform]   = Var[Platform](Platform.NA)
+    val formObserver: Observer[Event] =
+      Observer[dom.Event](onNext = _ => {
+        (platform.now(), summoner.now()) match {
+          case (_, "") => ()
+          case (p, s) => App.pushState(CurrentGamePage(p, s))
+        }
+      })
+
+
+    form(cls := "border shadow-lg border-gray-500 text-gray-darker " +
+                s"rounded-lg px-3 py-1 flex items-center bg-white",
+         input(placeholder := "Enter a summoner name",
+               cls := s"flex-grow min-w-0 focus:outline-none appearance-none",
                inContext(thisNode => onChange.mapTo(thisNode.ref.value) --> summoner)),
-         select(cls := "appearance-none px-1",
-                optGroup(cls := "text-md", Platform.values.map(renderPlatformOption)),
-                inContext(
-                  thisNode => {
-                    onChange.mapTo(Platform.withNameOption(thisNode.ref.value).getOrElse(Platform.NA)) -->
-                    platform
-                  })),
+         DropdownMenu[Platform](platform.signal.map(_.toString),
+                                Platform.values.toList,
+                                platform.writer,
+                                Some("focus:outline-none text-md"),
+                                Some(s"border shadow-lg border-gray-500 p-1 rounded-sm bg-white"),
+                                Some("focus:outline-none text-md")).amend(
+           cls := s"focus:outline-none appearance-none px-1"
+           ),
          img(src := "/icons/search.svg", width := "24px", height := "auto", onClick --> formObserver),
          onSubmit.preventDefault --> formObserver)
-  }
-
-  private def renderPlatformOption(platform: Platform): HtmlElement = {
-    val optionName = platform.entryName.filterNot(_.isDigit)
-    option(value := platform.entryName, optionName)
   }
 }

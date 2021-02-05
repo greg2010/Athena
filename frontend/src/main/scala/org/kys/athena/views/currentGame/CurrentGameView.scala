@@ -15,14 +15,13 @@ import org.kys.athena.riot.api.dto.currentgameinfo.BannedChampion
 import org.kys.athena.riot.api.dto.ddragon.runes.Rune
 import org.kys.athena.riot.api.dto.league.{MiniSeries, RankedQueueTypeEnum, TierEnum}
 import org.kys.athena.util.CSSUtil._
-import org.kys.athena.util.{Config, Time}
+import org.kys.athena.util.{Config, DataState, Failed, Infallible, Loading, Ready, Time}
 import org.kys.athena.views.View
 import org.scalajs.dom
 import org.scalajs.dom.html
 import org.scalajs.dom.raw.HTMLElement
 import zio._
 
-import scala.annotation.tailrec
 import scala.concurrent.duration.DurationInt
 
 

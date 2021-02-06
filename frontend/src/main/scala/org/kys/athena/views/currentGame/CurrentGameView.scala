@@ -174,7 +174,13 @@ object CurrentGameView extends View[CurrentGamePage] {
         case GameQueueTypeEnum.SummonersRiftBotIntermediate => "Intermediate Bots | Summoner's Rift"
         case GameQueueTypeEnum.SummonersRiftClash => "Clash | Summoner's Rift"
         case GameQueueTypeEnum.HowlingAbyss => "ARAM"
-        case GameQueueTypeEnum.Other => "Other"
+        case GameQueueTypeEnum.HowlingAbyssPoroKing => "Legend Of Poro King | ARAM"
+        case GameQueueTypeEnum.SummonersRiftDoomBotsStandard => "Doom Bots | Summoner's Rift"
+        case GameQueueTypeEnum.SummonersRiftDoomBotsVoting => "Doom Bots | Summoner's Rift"
+        case GameQueueTypeEnum.SummonersRiftNexusBlitz => "Nexus Blitz | Summoner's Rift"
+        case GameQueueTypeEnum.SummonersRiftNexusSiege => "Nexus Siege | Summoner's Rift"
+        case GameQueueTypeEnum.SummonersRiftOneForAll => "One for All | Summoner's Rift"
+        case GameQueueTypeEnum.SummonersRiftURF => "URF | Summoner's Rift"
       }
     }
 

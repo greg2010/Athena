@@ -17,13 +17,12 @@ object GameQueueTypeEnum extends IntEnum[GameQueueTypeEnum] with IntCirceEnum[Ga
   case object SummonersRiftBotBeginner extends GameQueueTypeEnum(840)
   case object SummonersRiftBotIntermediate extends GameQueueTypeEnum(850)
   case object SummonersRiftClash extends GameQueueTypeEnum(700)
+  case object SummonersRiftURF extends GameQueueTypeEnum(900)
+  case object SummonersRiftNexusSiege extends GameQueueTypeEnum(940)
+  case object SummonersRiftDoomBotsVoting extends GameQueueTypeEnum(950)
+  case object SummonersRiftDoomBotsStandard extends GameQueueTypeEnum(960)
+  case object SummonersRiftOneForAll extends GameQueueTypeEnum(1020)
+  case object SummonersRiftNexusBlitz extends GameQueueTypeEnum(1300)
   case object HowlingAbyss extends GameQueueTypeEnum(450)
-  case object Other extends GameQueueTypeEnum(-1)
-
-  // Adds a default value (Other)
-  def withValueDefault(i: Int): GameQueueTypeEnum =
-    super.withValueOpt(i) match {
-      case Some(v) => v
-      case None => this.Other
-    }
+  case object HowlingAbyssPoroKing extends GameQueueTypeEnum(920)
 }

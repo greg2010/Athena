@@ -78,8 +78,12 @@ object Client {
     }
   }
 
-  def fetchOngoingGameByName(realm: Platform, name: String)
-                            (debug: Boolean = false): IO[BackendApiError, OngoingGameResponse] = {
+  private val debug = Config.USE_FAKE_DATA match {
+    case "true" => true
+    case _ => false
+  }
+
+  def fetchOngoingGameByName(realm: Platform, name: String): IO[BackendApiError, OngoingGameResponse] = {
     val url = if (!debug)
                 uri"${Config.BACKEND_API_URL}/current/by-summoner-name/${realm.entryName}/$name?fetchGroups=true"
               else uri"http://localhost:8080/sampleongoing.json"
@@ -89,7 +93,7 @@ object Client {
     fetchAndLift(q)
   }
 
-  def fetchGroupsByUUID(uuid: UUID)(debug: Boolean = false): IO[BackendApiError, PremadeResponse] = {
+  def fetchGroupsByUUID(uuid: UUID): IO[BackendApiError, PremadeResponse] = {
     val url = if (!debug)
                 uri"${Config.BACKEND_API_URL}/current/by-uuid/${uuid}/groups"
               else uri"http://localhost:8080/samplepremades.json"
@@ -98,7 +102,7 @@ object Client {
     fetchAndLift(q)
   }
 
-  def fetchGroupsByName(realm: Platform, name: String)(debug: Boolean = false): IO[BackendApiError, PremadeResponse] = {
+  def fetchGroupsByName(realm: Platform, name: String): IO[BackendApiError, PremadeResponse] = {
     val url = if (!debug)
                 uri"${Config.BACKEND_API_URL}/current/by-summoner-name/${realm.entryName}/$name/groups"
               else uri"http://localhost:8080/samplepremades.json"

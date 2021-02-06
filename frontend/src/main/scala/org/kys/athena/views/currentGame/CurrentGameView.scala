@@ -29,10 +29,6 @@ object CurrentGameView extends View[CurrentGamePage] {
 
 
   // FETCH LOGIC
-  val debug = Config.USE_FAKE_DATA match {
-    case "true" => true
-    case _ => false
-  }
 
   def fetchAndWriteDDragon(ddObs: Observer[DataState[DData]]): IO[BackendApiError, Unit] = {
     for {
@@ -51,7 +47,7 @@ object CurrentGameView extends View[CurrentGamePage] {
                             ongoingObs: Observer[DataState[OngoingGameResponse]],
                             groupsObs: Observer[DataState[PremadeResponse]]): IO[BackendApiError, Unit] = {
     for {
-      o <- fetchOngoingGameByName(platform, name)(debug)
+      o <- fetchOngoingGameByName(platform, name)
         .map(r => Ready(r))
         .catchAll(err => UIO.succeed(Failed(err)))
       _ <- UIO.effectTotal(ongoingObs.onNext(o))
@@ -60,7 +56,7 @@ object CurrentGameView extends View[CurrentGamePage] {
         case Failed(_) => IO.fail(InternalServerError("Fetch for players failed, not fetching groups"))
         case _ => {
           o.map(_.groupUuid).toOption.flatten
-            .fold(fetchGroupsByName(platform, name)(debug))(uuid => fetchGroupsByUUID(uuid)(debug))
+            .fold(fetchGroupsByName(platform, name))(uuid => fetchGroupsByUUID(uuid))
         }
       }).map(r => Ready(r))
         .catchAll(err => UIO.succeed(Failed(err)))

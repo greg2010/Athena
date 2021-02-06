@@ -4,11 +4,9 @@ import zio._
 import zio.clock.Clock
 import zio.stream.ZStream
 import zio.duration._
-import cats.effect.concurrent.Semaphore
 import org.kys.athena.riot.api.RateLimit
 import org.kys.athena.util.ZCatsSemaphore
 import zio.console.Console
-import zio.interop.catz._
 
 import scala.language.reflectiveCalls
 

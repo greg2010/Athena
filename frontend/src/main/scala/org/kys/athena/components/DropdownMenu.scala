@@ -11,24 +11,29 @@ object DropdownMenu {
                dropdownButtonCls: Option[String] = None,
                dropdownContainerCls: Option[String] = None,
                dropdownElemCls: Option[String] = None): ReactiveHtmlElement[html.Div] = {
+
     val isHidden: Var[Boolean] = Var(true)
-    val hiddenObs = isHidden.writer.contramap[Event](_ => !isHidden.now())
+    val hiddenObs              = isHidden.writer.contramap[Event](_ => !isHidden.now())
+
     div(
       button(
         cls := s"${dropdownButtonCls.fold("")(identity)}",
-        onClick --> hiddenObs,
+        `type` := "button",
+        onClick.preventDefault --> hiddenObs,
         child.text <-- titleSignal),
-        div(
-          cls := s"py-1 absolute z-1 ${dropdownContainerCls.fold("")(identity)}",
-          display <-- isHidden.signal.map {
-            case true => "none"
-            case false => "block"
-          },
-          dropdownElements.map { elem =>
-            button(elem.toString, onClick.mapTo(elem) --> dropdownObserver, onClick --> hiddenObs,
-                   cls := s"block ${dropdownElemCls.fold("")(identity)}")
-          })
-    )
+      div(
+        cls := s"py-1 absolute z-1 ${dropdownContainerCls.fold("")(identity)}",
+        display <-- isHidden.signal.map {
+          case true => "none"
+          case false => "block"
+        },
+        dropdownElements.map { elem =>
+          button(elem.toString,
+                 `type` := "button",
+                 onClick.preventDefault.mapTo(elem) --> dropdownObserver,
+                 onClick.preventDefault --> hiddenObs,
+                 cls := s"block ${dropdownElemCls.fold("")(identity)}")
+        }))
   }
 
 }

@@ -24,17 +24,18 @@ object App {
       decode = a => CurrentGamePage(a._1, a._2),
       pattern = {
         implicit val fs = new FromString[Platform, DummyError] {
-          override def fromString(str: String): Either[DummyError, Platform] =
+          override def fromString(str: String): Either[DummyError, Platform] = {
             Platform.withNameEither(str).left.map(_ => DummyError.dummyError)
+          }
         }
         implicit val pr = new Printer[Platform] {
           override def print(t: Platform): String = t.entryName
         }
         root / segment[Platform] / segment[String] / endOfSegments
       }
+      )
     )
-  )
-  private val router = new Router[Page](
+  private val router                            = new Router[Page](
     initialUrl = dom.document.location.href,
     origin = dom.document.location.origin.get,
     routes = routes,
@@ -42,20 +43,25 @@ object App {
     $popStateEvent = windowEvents.onPopState,
     getPageTitle = _.title, // mock page title (displayed in the browser tab next to favicon)
     serializePage = page => page.asJson.noSpaces, // serialize page data for storage in History API log
-    deserializePage = pageStr => decode[Page](pageStr).fold(e => ErrorPage(e.getMessage), identity) // deserialize the above
-  )
+    deserializePage = pageStr => {
+      decode[Page](pageStr).fold(e => ErrorPage(e.getMessage),
+                                 identity)
+    } // deserialize the above
+    )
+
+  private val hideSearchBar = Var(false)
 
 
   private val splitter: SplitRender[Page, HtmlElement] =
     SplitRender[Page, HtmlElement](router.$currentPage)
-    .collectStatic(LandingPage) {
-      LandingView.render()
-    }.collectStatic(PageNotFound) {
+      .collectStatic(LandingPage) {
+        LandingView.render()
+      }.collectStatic(PageNotFound) {
       LandingView.render()
     }.collectStatic(PlayerNotFound) {
       LandingView.render()
     }.collect[CurrentGamePage] { page =>
-      CurrentGameView.render(page)
+      CurrentGameView.render(page, hideSearchBar.writer)
     }
 
   def render(): HtmlElement = {
@@ -63,9 +69,11 @@ object App {
         div(cls := "h-full w-full fixed",
             backgroundColor := CSSUtil.paletteBackground,
             zIndex := "-10"),
-        AppBar(router.$currentPage.map {
-          case LandingPage => false
+        AppBar(router.$currentPage.combineWith(hideSearchBar.signal).map {
+          case (LandingPage, _) => false
+          case (_: CurrentGamePage, sig) => !sig
           case _ => true
+
         }),
         div(cls := "container justify-center items-center flex flex-grow", child <-- splitter.$view),
         Footer())

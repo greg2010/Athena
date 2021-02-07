@@ -9,10 +9,10 @@ import org.scalajs.dom.Event
 
 
 object SearchBar {
-  def apply(): HtmlElement = {
+  def apply(initialSummoner: String = "", initialPlatform: Platform = Platform.NA): HtmlElement = {
 
-    val summoner    : Var[String]     = Var[String]("")
-    val platform    : Var[Platform]   = Var[Platform](Platform.NA)
+    val summoner    : Var[String]     = Var[String](initialSummoner)
+    val platform    : Var[Platform]   = Var[Platform](initialPlatform)
     val formObserver: Observer[Event] =
       Observer[dom.Event](onNext = _ => {
         (platform.now(), summoner.now()) match {
@@ -26,6 +26,7 @@ object SearchBar {
                 s"rounded-lg px-3 py-1 flex items-center bg-white",
          input(placeholder := "Enter a summoner name",
                cls := s"flex-grow min-w-0 focus:outline-none appearance-none",
+               value <-- summoner.signal,
                inContext(thisNode => onChange.mapTo(thisNode.ref.value) --> summoner)),
          DropdownMenu[Platform](platform.signal.map(_.toString),
                                 Platform.values.toList,

@@ -16,8 +16,6 @@ import org.kys.athena.riot.api.dto.ddragon.runes.Rune
 import org.kys.athena.riot.api.dto.league.{MiniSeries, RankedQueueTypeEnum, TierEnum}
 import org.kys.athena.util.CSSUtil._
 import org.kys.athena.util.{Config, DataState, Failed, Infallible, Loading, Ready, Time}
-import org.kys.athena.views.View
-import org.scalajs.dom
 import org.scalajs.dom.html
 import org.scalajs.dom.raw.HTMLElement
 import zio._
@@ -25,9 +23,7 @@ import zio._
 import scala.concurrent.duration.DurationInt
 
 
-object CurrentGameView extends View[CurrentGamePage] {
-
-
+object CurrentGameView {
   // FETCH LOGIC
 
   def fetchAndWriteDDragon(ddObs: Observer[DataState[DData]]): IO[BackendApiError, Unit] = {
@@ -75,7 +71,7 @@ object CurrentGameView extends View[CurrentGamePage] {
   val runtime: Runtime[zio.ZEnv] = Runtime.default
   // RENDER LOGIC
 
-  override def render(p: CurrentGamePage): HtmlElement = {
+  def render(p: CurrentGamePage, hideSearchBar: Observer[Boolean]): HtmlElement = {
 
     lazy val ddVar      = Var[DataState[DData]](Loading)
     lazy val ongoingVar = Var[DataState[OngoingGameResponse]](Loading)
@@ -86,71 +82,45 @@ object CurrentGameView extends View[CurrentGamePage] {
       case _ => p.name
     }
 
-    def bodySignal = {
-      ongoingVar.signal.combineWith(ddVar.signal).map {
-        case (Failed(_: NotFoundError), _) => List(renderNotFound(p, ongoingVar.writer, groupsVar.writer))
-        case (Failed(err), _) =>
-          List(renderError(p, ddVar.writer, ongoingVar.writer, groupsVar.writer))
-        case (_, Failed(_)) => List(renderError(p, ddVar.writer, ongoingVar.writer, groupsVar.writer))
-        case (a: Infallible[OngoingGameResponse], b: Infallible[DData]) =>
-          renderNoError(ongoingVar.signal.map(_ => a),
-                        groupsVar.signal, ddVar.signal.map(_ => b), playerNameSignal, p)
-      }
+    def refreshGame: Unit = {
+      runtime.unsafeRunAsync_(fetchAndWriteGameInfo(p.realm,
+                                                    p.name,
+                                                    ongoingVar.writer,
+                                                    groupsVar.writer))
     }
+    def refreshAll: Unit = {
+      runtime.unsafeRunAsync_(fetchAndWriteAll(p.realm,
+                                               p.name,
+                                               ddVar.writer,
+                                               ongoingVar.writer,
+                                               groupsVar.writer))
+    }
+    val localStateCombinator = ongoingVar.signal.combineWith(ddVar.signal).map {
+      case (Failed(_: NotFoundError), _) =>
+        hideSearchBar.onNext(true)
+        CurrentNotFoundView.render(p, refreshGame _)
+      case (_, Failed(_)) =>
+        CurrentErrorView.render(p, refreshAll _)
+      case (Failed(_), _) =>
+        CurrentErrorView.render(p, refreshAll _)
+      case (a: Infallible[OngoingGameResponse], b: Infallible[DData]) =>
+        hideSearchBar.onNext(false)
+        renderGame(ongoingVar.signal.map(_ => a), groupsVar.signal, ddVar.signal.map(_ => b), playerNameSignal, p)
+    }
+
     div(
-      onMountCallback { _ =>
-        runtime.unsafeRunAsync_(fetchAndWriteAll(p.realm, p.name, ddVar.writer, ongoingVar.writer, groupsVar.writer))
-      },
+      onMountCallback(_ => refreshAll),
       cls := s"flex flex-col items-center justify-center lg:px-12 mx-4 my-2 divide-y divide-gray-500 $paperCls",
       backgroundColor := paletteContainer,
-      children <-- bodySignal)
+      child <-- localStateCombinator)
   }
 
-  private def renderNotFound(p: CurrentGamePage,
-                             ongoingObs: Observer[DataState[OngoingGameResponse]],
-                             groupsObs: Observer[DataState[PremadeResponse]]) = {
+  private def renderGame(gameES: Signal[Infallible[OngoingGameResponse]],
+                         premadeES: Signal[DataState[PremadeResponse]],
+                         ddES: Signal[Infallible[DData]],
+                         playerNameSignal: Signal[String], p: CurrentGamePage) = {
+
     div(
-      cls := s"flex flex-col items-center p-8",
-      img(
-        src := "/blitzcrank_logo.png"
-        ),
-      span(
-        cls := "text-xl mt-4",
-        "Summoner ",
-        b(s"${p.realm.toString}/${p.name}"),
-        " is not currently in game."),
-      button(
-        cls := "bg-gray-300, border border-gray-500 rounded-lg p-2 mt-4",
-        "Retry",
-        onClick --> Observer[dom.MouseEvent](
-          onNext = _ => runtime.unsafeRunAsync_(fetchAndWriteGameInfo(p.realm, p.name, ongoingObs, groupsObs)))))
-  }
-
-  private def renderError(p: CurrentGamePage,
-                          ddObs: Observer[DataState[DData]],
-                          ongoingObs: Observer[DataState[OngoingGameResponse]],
-                          groupsObs: Observer[DataState[PremadeResponse]]) = {
-    div(
-      cls := s"flex flex-col items-center p-8",
-      img(
-        src := "/amumu_error.png"
-        ),
-      span(
-        cls := "text-xl mt-4",
-        "Server error occurred."),
-      button(
-        cls := "bg-gray-300, border border-gray-500 rounded-lg p-2 mt-4",
-        "Retry",
-        onClick --> Observer[dom.MouseEvent](
-          onNext = _ => runtime.unsafeRunAsync_(fetchAndWriteAll(p.realm, p.name, ddObs, ongoingObs, groupsObs)))))
-  }
-
-  private def renderNoError(gameES: Signal[Infallible[OngoingGameResponse]],
-                            premadeES: Signal[DataState[PremadeResponse]],
-                            ddES: Signal[Infallible[DData]],
-                            playerNameSignal: Signal[String], p: CurrentGamePage) = {
-
-    List(
       renderHeader(gameES, p.realm, playerNameSignal),
       div(
         cls := "flex flex-col lg:flex-row divide-y lg:divide-x lg:divide-y-0 divide-gray-500",
@@ -158,7 +128,9 @@ object CurrentGameView extends View[CurrentGamePage] {
         renderTeam(gameES.map(_.map(_.redTeam)), premadeES.map(_.map(_.red)), ddES, "Red", p.realm)))
   }
 
-  private def renderHeader(ongoingES: Signal[Infallible[OngoingGameResponse]], platform:Platform, playerName: Signal[String]) = {
+  private def renderHeader(ongoingES: Signal[Infallible[OngoingGameResponse]],
+                           platform: Platform,
+                           playerName: Signal[String]) = {
     def renderQueueName(q: GameQueueTypeEnum): String = {
       q match {
         case GameQueueTypeEnum.SummonersRiftBlind => "Blind | Summoner's Rift"

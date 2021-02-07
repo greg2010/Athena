@@ -3,7 +3,7 @@ package org.kys.athena.views.currentGame
 import com.raquo.domtypes.generic.keys.{Style => CStyle}
 import com.raquo.laminar.api.L._
 import com.raquo.laminar.nodes.ReactiveHtmlElement
-import org.kys.athena.components.{ChampionIcon, ImgSized, UggLink}
+import org.kys.athena.components.{ChampionIcon, ImgSized, SummonerLink, UggLink}
 import org.kys.athena.http.Client._
 import org.kys.athena.http.DData
 import org.kys.athena.http.errors.{BackendApiError, InternalServerError, NotFoundError}
@@ -151,14 +151,14 @@ object CurrentGameView extends View[CurrentGamePage] {
                             playerNameSignal: Signal[String], p: CurrentGamePage) = {
 
     List(
-      renderHeader(gameES, playerNameSignal),
+      renderHeader(gameES, p.realm, playerNameSignal),
       div(
         cls := "flex flex-col lg:flex-row divide-y lg:divide-x lg:divide-y-0 divide-gray-500",
         renderTeam(gameES.map(_.map(_.blueTeam)), premadeES.map(_.map(_.blue)), ddES, "Blue", p.realm),
         renderTeam(gameES.map(_.map(_.redTeam)), premadeES.map(_.map(_.red)), ddES, "Red", p.realm)))
   }
 
-  private def renderHeader(ongoingES: Signal[Infallible[OngoingGameResponse]], playerName: Signal[String]) = {
+  private def renderHeader(ongoingES: Signal[Infallible[OngoingGameResponse]], platform:Platform, playerName: Signal[String]) = {
     def renderQueueName(q: GameQueueTypeEnum): String = {
       q match {
         case GameQueueTypeEnum.SummonersRiftBlind => "Blind | Summoner's Rift"
@@ -181,7 +181,12 @@ object CurrentGameView extends View[CurrentGamePage] {
     }
 
     div(cls := s"flex flex-col items-center m-1 mb-4",
-        child <-- playerName.map(n => span(cls := "text-center", s"Live game of $n", cls := "text-5xl p-2")),
+        child <-- playerName.map{ n =>
+          val nameCls = "text-5xl p-2 text-center"
+          span(cls := nameCls, s"Live game of",SummonerLink(n, platform,span(n, cls := nameCls) )
+          )
+
+        },
         child <-- ongoingES.map {
           case Ready(g) =>
             val startTime = if (g.gameStartTime > 0) g.gameStartTime else {
@@ -568,14 +573,17 @@ object CurrentGameView extends View[CurrentGamePage] {
         width := textWidth,
         child <-- data.map {
           case Ready((p, _)) =>
-            a(cls := "text-center text-lg leading-tight max-w-full truncate overflow-ellipsis font-medium",
-              href := s"https://${platform}.op.gg/summoner/userName=${p.name}", target := "_blank", p.name)
+            val nameCls = "text-center text-lg leading-tight max-w-full truncate overflow-ellipsis font-medium"
+            SummonerLink(p.name, platform,span(p.name, cls := nameCls))
+
           case Loading => div(width := "120px", height := "14px", cls := "animate-pulse bg-gray-500")
         },
         child <-- data.map {
           case Ready((p, dd)) =>
-            span(dd.championById(p.championId).map(_.name).getOrElse[String]("Unknown"),
-                 cls := "font-normal leading-tight mb-1")
+            val champSpan = span(dd.championById(p.championId).map(_.name).getOrElse[String]("Unknown"),
+                 cls := "font-normal leading-tight")
+            UggLink(p.championId, champSpan, dd).amend(cls := "mb-1")
+
           case Loading => div(width := "90px", height := "14px", cls := "animate-pulse bg-gray-500 mt-1")
         },
         children <-- rankedData.map {

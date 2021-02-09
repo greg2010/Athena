@@ -1,6 +1,5 @@
 package org.kys.athena.components.ongoing
 
-
 import com.raquo.laminar.api.L._
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import org.kys.athena.http.backend.BackendDataHelpers
@@ -14,8 +13,8 @@ import org.kys.athena.riot.api.dto.league.{MiniSeries, RankedQueueTypeEnum, Tier
 import org.kys.athena.util.{Config, Infallible, Loading, Ready}
 import org.scalajs.dom.html
 
-
 object OngoingPlayerCard {
+
   private def renderSummonerSpell(ss: SummonerSpellsEnum)(implicit dd: CombinedDD) = {
     val url = dd.summonerUrlById(ss.value).getOrElse("")
     ImgSized(url, 32, Some(32), minWidth := "32px", cls := "rounded-md")
@@ -64,7 +63,7 @@ object OngoingPlayerCard {
     }
   }
 
-  def renderRankedIcon(rl: Option[RankedLeague]) = {
+  private def renderRankedIcon(rl: Option[RankedLeague]) = {
     def renderMiniSeries(miniSeries: MiniSeries) = {
       def renderTargetChar(c: Char) = {
         val color = c match {
@@ -115,7 +114,7 @@ object OngoingPlayerCard {
   def apply(data: Signal[Infallible[(InGameSummoner, CombinedDD)]],
             platform: Platform,
             mods: Modifier[HtmlElement]*): ReactiveHtmlElement[html.Div] = {
-    val boxHeight = "96px"
+    val boxHeight = "104px"
     val boxCls    = s"flex items-center justify-center"
     val sumCls    = "flex flex-col justify-around h-5/6 mx-1"
     val runeCls   = "flex flex-col justify-around h-5/6 mr-1"
@@ -199,7 +198,7 @@ object OngoingPlayerCard {
             common.UggLink(p.championId,
                            dd,
                            dd.championById(p.championId).map(_.name).getOrElse[String]("Unknown"),
-                    cls := "font-normal leading-tight mb-1")
+                           cls := "font-normal leading-tight mb-1")
           case Loading => div(width := "90px", height := "14px", cls := "animate-pulse bg-gray-500 mt-1")
         },
         children <-- rankedData.map {

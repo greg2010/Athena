@@ -23,6 +23,9 @@ import scala.concurrent.duration.DurationInt
 
 
 object OngoingPage {
+
+  private case class GroupHoverEvent(groupIds: List[String], isHovering: Boolean)
+
   // FETCH LOGIC
 
   @SuppressWarnings(Array("org.wartremover.warts.Product", "org.wartremover.warts.Serializable"))
@@ -124,6 +127,7 @@ object OngoingPage {
                          playerNameSignal: Signal[String], p: OngoingRoute) = {
 
     div(
+      cls := s"flex flex-col items-center justify-center divide-y divide-gray-500",
       renderHeader(gameES, p.realm, playerNameSignal),
       div(
         cls := "flex flex-col lg:flex-row divide-y lg:divide-x lg:divide-y-0 divide-gray-500",
@@ -144,8 +148,8 @@ object OngoingPage {
         case GameQueueTypeEnum.SummonersRiftBotBeginner => "Beginner Bots | Summoner's Rift"
         case GameQueueTypeEnum.SummonersRiftBotIntermediate => "Intermediate Bots | Summoner's Rift"
         case GameQueueTypeEnum.SummonersRiftClash => "Clash | Summoner's Rift"
-        case GameQueueTypeEnum.HowlingAbyss => "ARAM"
-        case GameQueueTypeEnum.HowlingAbyssPoroKing => "Legend Of Poro King | ARAM"
+        case GameQueueTypeEnum.HowlingAbyss => "ARAM | Howling Abyss"
+        case GameQueueTypeEnum.HowlingAbyssPoroKing => "Legend Of Poro King | Howling Abyss"
         case GameQueueTypeEnum.SummonersRiftDoomBotsStandard => "Doom Bots | Summoner's Rift"
         case GameQueueTypeEnum.SummonersRiftDoomBotsVoting => "Doom Bots | Summoner's Rift"
         case GameQueueTypeEnum.SummonersRiftNexusBlitz => "Nexus Blitz | Summoner's Rift"
@@ -178,6 +182,7 @@ object OngoingPage {
                          groupsES: Signal[DataState[Set[PlayerGroup]]],
                          ddES: Signal[Infallible[CombinedDD]],
                          color: String, platform: Platform) = {
+    val hoverEventBus = new EventBus[GroupHoverEvent]
 
     // Sort by position number, zip with index. Index serves as a key for rendering
     val sortedSummonersES = teamES.map { t =>
@@ -193,7 +198,7 @@ object OngoingPage {
       }
     }
 
-    // Convert to signal with `None` guard value, to render loading state
+    // Convert to signal with `Loading` guard value, to render loading state
     val maybeSummoners: Signal[Seq[(Infallible[(InGameSummoner, CombinedDD)], Int)]] = sortedSummonersES
       .combineWith(ddES).map(r => r._1.zip(r._2)).map {
       case Ready((l, d)) => l.map(si => (Ready((si._1, d)), si._2))
@@ -205,8 +210,14 @@ object OngoingPage {
       .split(_._2) {
         case (_, _, d) =>
           val ss = d.map(_._1)
-          OngoingPlayerCard(ss, platform, cls := "px-2 py-1")
-
+          OngoingPlayerCard(ss,
+                            platform,
+                            cls := "px-2 py-1",
+                            cls <-- hoverEventBus.events.toWeakSignal.combineWith(ss).map {
+                              case (Some(GroupHoverEvent(ids, true)), Ready((sum, _))) if ids.contains(
+                                sum.summonerId) => "bg-yellow-100"
+                              case _ => ""
+                            })
       }
 
     val bES = teamES.combineWith(ddES).map(r => r._1.zip(r._2)).map { e =>
@@ -220,7 +231,7 @@ object OngoingPage {
       renderTeamHeader(teamES, color),
       children <-- renderSignal,
       div(cls := "flex justify-center w-full px-2 py-1", renderBans(bES)),
-      div(cls := "w-full py-1", renderPlaysWith(color, teamES, groupsES, ddES)))
+      div(cls := "w-full py-1", renderPlaysWith(color, teamES, groupsES, ddES, hoverEventBus.writer)))
   }
 
   private def renderTeamHeader(team: Signal[Infallible[OngoingGameTeam]], teamName: String) = {
@@ -318,7 +329,8 @@ object OngoingPage {
   private def renderPlaysWith(color: String,
                               teamES: Signal[Infallible[OngoingGameTeam]],
                               groupsES: Signal[DataState[Set[PlayerGroup]]],
-                              ddES: Signal[Infallible[CombinedDD]]) = {
+                              ddES: Signal[Infallible[CombinedDD]],
+                              hoverObserver: Observer[GroupHoverEvent]) = {
     def renderPlayerSet(s: Set[InGameSummoner], gamesPlayed: Int, dd: CombinedDD) = {
       div(
         cls := "inline-flex flex-col items-center justify-center mx-2 mb-1",
@@ -327,8 +339,9 @@ object OngoingPage {
           s.map { ig =>
             common.UggLink(ig.championId, dd, ChampionIcon(ig.championId, 36, dd, cls := "mx-1"))
           }.toList),
-        span(cls := "text-sm leading-tight", s"$gamesPlayed ${if (gamesPlayed == 1) "game" else "games"}")
-        )
+        span(cls := "text-sm leading-tight", s"$gamesPlayed ${if (gamesPlayed == 1) "game" else "games"}"),
+        onMouseOver.mapTo(GroupHoverEvent(s.map(_.summonerId).toList, isHovering = true)) --> hoverObserver,
+        onMouseOut.mapTo(GroupHoverEvent(s.map(_.summonerId).toList, isHovering = false)) --> hoverObserver)
     }
 
     val renderSignal = teamES

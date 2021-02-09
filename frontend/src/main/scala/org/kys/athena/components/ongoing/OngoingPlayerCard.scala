@@ -189,7 +189,7 @@ object OngoingPlayerCard {
         child <-- data.map {
           case Ready((p, _)) =>
             val nameCls = "text-center text-lg leading-tight max-w-full truncate overflow-ellipsis font-medium"
-            OpggLink(p.name, platform, span(p.name, cls := nameCls))
+            OpggLink(p.name, platform, p.name, cls := nameCls)
 
           case Loading => div(width := "120px", height := "14px", cls := "animate-pulse bg-gray-500")
         },

@@ -8,7 +8,7 @@ object LandingPage {
 
   def render: HtmlElement = {
     div(cls := "flex flex-col items-center container-md flex-grow justify-center",
-        img(src := "/blitzcrank_logo.png", width := "256px", height := "256px"),
+        img(src := "/aleph256.png", width := "256px", height := "256px"),
         common.SearchBar("", Platform.NA,
                          cls := "border shadow-lg border-gray-500 rounded-lg bg-white w-11/12 lg:w-8/12 h-12"))
   }

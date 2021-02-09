@@ -8,16 +8,10 @@ import org.scalajs.dom.raw.HTMLElement
 
 
 object UggLink {
-  def apply(id: Long, child: ReactiveHtmlElement[HTMLElement], dd: DData): ReactiveHtmlElement[HTMLElement] = {
+  def apply(id: Long, dd: DData, mods: Modifier[HtmlElement]*): ReactiveHtmlElement[HTMLElement] = {
     dd.championById(id) match {
-      case Some(value) =>
-        // <a href=link> <img src=img.jpg> </a>
-      {
-        a(href := s"https://u.gg/lol/champions/${value.name}", target := "_blank", child)
-      }
-      case None => child
+      case Some(value) => a(href := s"https://u.gg/lol/champions/${value.name}", target := "_blank", mods)
+      case None => div(mods)
     }
-
   }
-
 }

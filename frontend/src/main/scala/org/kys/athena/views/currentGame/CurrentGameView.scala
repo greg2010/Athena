@@ -3,7 +3,7 @@ package org.kys.athena.views.currentGame
 import com.raquo.domtypes.generic.keys.{Style => CStyle}
 import com.raquo.laminar.api.L._
 import com.raquo.laminar.nodes.ReactiveHtmlElement
-import org.kys.athena.components.{ChampionIcon, ImgSized, SummonerLink, UggLink}
+import org.kys.athena.components.{ChampionIcon, ImgSized, OpggLink, UggLink}
 import org.kys.athena.http.Client._
 import org.kys.athena.http.DData
 import org.kys.athena.http.errors.{BackendApiError, InternalServerError, NotFoundError}
@@ -43,6 +43,7 @@ object CurrentGameView {
                             ongoingObs: Observer[DataState[OngoingGameResponse]],
                             groupsObs: Observer[DataState[PremadeResponse]]): IO[BackendApiError, Unit] = {
     for {
+      _ <- UIO.succeed(ongoingObs.onNext(Loading))
       o <- fetchOngoingGameByName(platform, name)
         .map(r => Ready(r))
         .catchAll(err => UIO.succeed(Failed(err)))
@@ -98,11 +99,11 @@ object CurrentGameView {
     val localStateCombinator = ongoingVar.signal.combineWith(ddVar.signal).map {
       case (Failed(_: NotFoundError), _) =>
         hideSearchBar.onNext(true)
-        CurrentNotFoundView.render(p, refreshGame _)
+        CurrentNotFoundView.render(p, () => refreshGame)
       case (_, Failed(_)) =>
-        CurrentErrorView.render(p, refreshAll _)
+        CurrentErrorView.render(p, () => refreshAll)
       case (Failed(_), _) =>
-        CurrentErrorView.render(p, refreshAll _)
+        CurrentErrorView.render(p, () => refreshAll)
       case (a: Infallible[OngoingGameResponse], b: Infallible[DData]) =>
         hideSearchBar.onNext(false)
         renderGame(ongoingVar.signal.map(_ => a), groupsVar.signal, ddVar.signal.map(_ => b), playerNameSignal, p)
@@ -155,8 +156,7 @@ object CurrentGameView {
     div(cls := s"flex flex-col items-center m-1 mb-4",
         child <-- playerName.map{ n =>
           val nameCls = "text-5xl p-2 text-center"
-          span(cls := nameCls, s"Live game of",SummonerLink(n, platform,span(n, cls := nameCls) )
-          )
+          span(cls := nameCls, s"Live game of", OpggLink(n, platform, span(n, cls := nameCls)))
 
         },
         child <-- ongoingES.map {
@@ -168,7 +168,7 @@ object CurrentGameView {
               .periodic(1.seconds.toMillis.toInt)
               .map(_ => Time.renderMsInterval(System.currentTimeMillis() - startTime))
             span(s"${renderQueueName(g.gameQueueId)} | ", child.text <-- timeES, cls := "text-md")
-          case Loading => span(height := "14px", width := "300px", cls := "animate-pulse bg-gray-500")
+          case Loading => span(height := "14px", width := "300px", cls := "animate-pulse bg-gray-500 mt-1")
         })
   }
 
@@ -290,19 +290,22 @@ object CurrentGameView {
               div(
                 position := "absolute",
                 height := "64px",
-                ChampionIcon(ch.championId, 64, dd).amend(
+                ChampionIcon(
+                  ch.championId,
+                  size = 64,
+                  dd,
                   position := "relative",
                   zIndex := 1,
                   new CStyle("filter", "filter") := "grayscale(50%)",
-                  cls := "rounded-lg"
-                  ),
-                ImgSized(s"${Config.FRONTEND_URL}/slash_red_256.png", 64, Some(64)).amend(
-                  position := "relative",
-                  top := "-64px",
-                  zIndex := 2,
-                  cls := "rounded-lg"
-                  )))
-            UggLink(ch.championId, bannedChamp, dd)
+                  cls := "rounded-lg"),
+                ImgSized(s"${Config.FRONTEND_URL}/slash_red_256.png",
+                         imgWidth = 64,
+                         imgHeight = Some(64),
+                         position := "relative",
+                         top := "-64px",
+                         zIndex := 2,
+                         cls := "rounded-lg")))
+            UggLink(ch.championId, dd, bannedChamp)
           }.toList
         case Loading =>
           Range(0, 5).map { _ =>
@@ -321,7 +324,7 @@ object CurrentGameView {
         div(
           cls := "flex flex-row items-center mx-1",
           s.map { ig =>
-            UggLink(ig.championId, ChampionIcon(ig.championId, 36, dd).amend(cls := "mx-1"), dd)
+            UggLink(ig.championId, dd, ChampionIcon(ig.championId, 36, dd, cls := "mx-1"))
           }.toList),
         span(cls := "text-sm leading-tight", s"$gamesPlayed ${if (gamesPlayed == 1) "game" else "games"}")
         )
@@ -371,8 +374,7 @@ object CurrentGameView {
     // HELPERS
     def renderSummonerSpell(ss: SummonerSpellsEnum)(implicit dd: DData) = {
       val url = dd.summonerUrlById(ss.value).getOrElse("")
-      ImgSized(url, 32, Some(32)).amend(
-        minWidth := "32px", cls := "rounded-md")
+      ImgSized(url, 32, Some(32), minWidth := "32px", cls := "rounded-md")
     }
 
     def renderRune(rune: Option[Rune], iconSize: Int)(implicit dd: DData) = {
@@ -492,9 +494,7 @@ object CurrentGameView {
             div(
               position := "absolute",
               height := "80px",
-              div(ChampionIcon(p.championId, 80, dd).amend(
-                cls := "rounded-lg",
-                zIndex := 1)),
+              div(ChampionIcon(p.championId, 80, dd, cls := "rounded-lg", zIndex := 1)),
               div(
                 position := "relative",
                 top := "-30px",
@@ -510,7 +510,7 @@ object CurrentGameView {
                   p.summonerLevel.toString))))
 
 
-          UggLink(p.championId, champImg, dd)
+          UggLink(p.championId, dd, champImg)
         case Loading => div(cls := "animate-pulse bg-gray-500 rounded-lg ml-1",
                             width := "80px",
                             height := "80px")
@@ -546,16 +546,16 @@ object CurrentGameView {
         child <-- data.map {
           case Ready((p, _)) =>
             val nameCls = "text-center text-lg leading-tight max-w-full truncate overflow-ellipsis font-medium"
-            SummonerLink(p.name, platform,span(p.name, cls := nameCls))
+            OpggLink(p.name, platform, span(p.name, cls := nameCls))
 
           case Loading => div(width := "120px", height := "14px", cls := "animate-pulse bg-gray-500")
         },
         child <-- data.map {
           case Ready((p, dd)) =>
-            val champSpan = span(dd.championById(p.championId).map(_.name).getOrElse[String]("Unknown"),
-                 cls := "font-normal leading-tight")
-            UggLink(p.championId, champSpan, dd).amend(cls := "mb-1")
-
+            UggLink(p.championId,
+                    dd,
+                    dd.championById(p.championId).map(_.name).getOrElse[String]("Unknown"),
+                    cls := "font-normal leading-tight mb-1")
           case Loading => div(width := "90px", height := "14px", cls := "animate-pulse bg-gray-500 mt-1")
         },
         children <-- rankedData.map {

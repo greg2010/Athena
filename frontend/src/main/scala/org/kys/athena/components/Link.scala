@@ -11,9 +11,7 @@ object Link {
       href := App.relativeUrlForPage(page),
       onClick.preventDefault --> { _ =>
         App.pushState(page)
-      },
-      mods
-    )
+      }, mods)
   }
 
 }

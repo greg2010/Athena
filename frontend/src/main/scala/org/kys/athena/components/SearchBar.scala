@@ -9,7 +9,7 @@ import org.scalajs.dom.Event
 
 
 object SearchBar {
-  def apply(initialSummoner: String = "", initialPlatform: Platform = Platform.NA): HtmlElement = {
+  def apply(initialSummoner: String, initialPlatform: Platform, mods: Modifier[HtmlElement]*): HtmlElement = {
 
     val summoner    : Var[String]     = Var[String](initialSummoner)
     val platform    : Var[Platform]   = Var[Platform](initialPlatform)
@@ -21,9 +21,7 @@ object SearchBar {
         }
       })
 
-
-    form(cls := "border shadow-lg border-gray-500 text-gray-darker " +
-                s"rounded-lg px-3 py-1 flex items-center bg-white",
+    form(cls := s"px-3 py-1 flex items-center",
          input(placeholder := "Enter a summoner name",
                cls := s"flex-grow min-w-0 focus:outline-none appearance-none",
                value <-- summoner.signal,
@@ -33,10 +31,10 @@ object SearchBar {
                                 platform.writer,
                                 Some("focus:outline-none text-md"),
                                 Some(s"border shadow-lg border-gray-500 p-1 rounded-sm bg-white"),
-                                Some("focus:outline-none text-md")).amend(
-           cls := s"focus:outline-none appearance-none px-1"
-           ),
-         img(src := "/icons/search.svg", width := "24px", height := "auto", onClick --> formObserver),
-         onSubmit.preventDefault --> formObserver)
+                                Some("focus:outline-none text-md"),
+                                cls := s"px-1 focus:outline-none appearance-none"),
+         button(`type` := "submit", img(src := "/icons/search.svg", width := "24px", height := "auto")),
+         onSubmit.preventDefault --> formObserver,
+         mods)
   }
 }

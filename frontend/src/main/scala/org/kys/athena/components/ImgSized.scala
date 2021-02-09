@@ -6,7 +6,10 @@ import org.kys.athena.util.Imgproxy
 import org.scalajs.dom.html
 
 object ImgSized {
-  def apply(url: String, imgWidth: Int, imgHeight: Option[Int]): ReactiveHtmlElement[html.Image] = {
+  def apply(url: String,
+            imgWidth: Int,
+            imgHeight: Option[Int],
+            mods: Modifier[HtmlElement]*): ReactiveHtmlElement[html.Image] = {
     val resizedImgUrl = Imgproxy.resizeUrl(url, imgWidth, imgHeight.getOrElse(0))
     img(
       src := resizedImgUrl,
@@ -14,7 +17,6 @@ object ImgSized {
       imgHeight match {
         case Some(v) => height := s"${v}px"
         case None => None
-      }
-    )
+      }, mods)
   }
 }

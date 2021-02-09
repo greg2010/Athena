@@ -8,7 +8,7 @@ import org.scalajs.dom
 object CurrentErrorView {
   def render(p: CurrentGamePage, refreshCb: () => Unit) = {
     div(
-      cls := s"flex flex-col items-center p-8",
+      cls := s"flex flex-col items-center p-4",
       img(
         src := "/amumu_error.png"
         ),

@@ -1,9 +1,11 @@
-package org.kys.athena.components
+package org.kys.athena.components.common
+
 
 import com.raquo.laminar.api.L._
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import org.kys.athena.util.Imgproxy
 import org.scalajs.dom.html
+
 
 object ImgSized {
   def apply(url: String,

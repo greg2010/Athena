@@ -1,13 +1,13 @@
-package org.kys.athena.views.currentGame
+package org.kys.athena.components.ongoing
 
-import org.kys.athena.pages.CurrentGamePage
+import org.kys.athena.routes.OngoingRoute
 import com.raquo.laminar.api.L._
-import org.kys.athena.components.SearchBar
+import org.kys.athena.components.common.SearchBar
 import org.scalajs.dom
 
 
-object CurrentNotFoundView {
-  def render(p: CurrentGamePage, refreshCb: () => Unit) = {
+object OngoingNotFound {
+  def render(p: OngoingRoute, refreshCb: () => Unit) = {
     div(
       cls := s"flex flex-col items-center p-4",
       img(src := "/blitzcrank_logo.png"),

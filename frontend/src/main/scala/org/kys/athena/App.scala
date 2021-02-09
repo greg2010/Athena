@@ -4,12 +4,12 @@ import com.raquo.laminar.api.L._
 import com.raquo.waypoint._
 import io.circe.parser._
 import io.circe.syntax._
-import org.kys.athena.components.{AppBar, Footer}
-import org.kys.athena.pages._
+import org.kys.athena.routes._
 import org.kys.athena.riot.api.dto.common.Platform
 import org.kys.athena.util.CSSUtil
-import org.kys.athena.views.LandingView
-import org.kys.athena.views.currentGame.CurrentGameView
+import org.kys.athena.components.LandingPage
+import org.kys.athena.components.common.{AppBar, Footer}
+import org.kys.athena.components.ongoing.OngoingPage
 import org.scalajs.dom
 import urldsl.errors.DummyError
 import urldsl.vocabulary.{FromString, Printer}
@@ -17,11 +17,11 @@ import urldsl.vocabulary.{FromString, Printer}
 
 object App {
 
-  private val routes: List[Route[_ <: Page, _]] = List(
-    Route.static(LandingPage, root / endOfSegments),
-    Route[CurrentGamePage, (Platform, String)](
+  private val routes: List[Route[_ <: PageRoute, _]] = List(
+    Route.static(LandingRoute, root / endOfSegments),
+    Route[OngoingRoute, (Platform, String)](
       encode = p => (p.realm, p.name),
-      decode = a => CurrentGamePage(a._1, a._2),
+      decode = a => OngoingRoute(a._1, a._2),
       pattern = {
         implicit val fs = new FromString[Platform, DummyError] {
           override def fromString(str: String): Either[DummyError, Platform] = {
@@ -32,10 +32,10 @@ object App {
           override def print(t: Platform): String = t.entryName
         }
         root / segment[Platform] / segment[String] / endOfSegments
-      }
-      )
+      })
     )
-  private val router                            = new Router[Page](
+
+  private val router = new Router[PageRoute](
     initialUrl = dom.document.location.href,
     origin = dom.document.location.origin.get,
     routes = routes,
@@ -44,24 +44,21 @@ object App {
     getPageTitle = _.title, // mock page title (displayed in the browser tab next to favicon)
     serializePage = page => page.asJson.noSpaces, // serialize page data for storage in History API log
     deserializePage = pageStr => {
-      decode[Page](pageStr).fold(e => ErrorPage(e.getMessage),
-                                 identity)
+      decode[PageRoute](pageStr).fold(e => ErrorRoute(e.getMessage), identity)
     } // deserialize the above
     )
 
   private val hideSearchBar = Var(false)
 
 
-  private val splitter: SplitRender[Page, HtmlElement] =
-    SplitRender[Page, HtmlElement](router.$currentPage)
-      .collectStatic(LandingPage) {
-        LandingView.render()
-      }.collectStatic(PageNotFound) {
-      LandingView.render()
-    }.collectStatic(PlayerNotFound) {
-      LandingView.render()
-    }.collect[CurrentGamePage] { page =>
-      CurrentGameView.render(page, hideSearchBar.writer)
+  private val splitter: SplitRender[PageRoute, HtmlElement] =
+    SplitRender[PageRoute, HtmlElement](router.$currentPage)
+      .collectStatic(LandingRoute) {
+        LandingPage.render
+      }.collectStatic(RouteNotFound) {
+      LandingPage.render
+    }.collect[OngoingRoute] { page =>
+      OngoingPage.render(page, hideSearchBar.writer)
     }
 
   def render(): HtmlElement = {
@@ -70,8 +67,8 @@ object App {
             backgroundColor := CSSUtil.paletteBackground,
             zIndex := "-10"),
         AppBar(router.$currentPage.combineWith(hideSearchBar.signal).map {
-          case (LandingPage, _) => false
-          case (_: CurrentGamePage, sig) => !sig
+          case (LandingRoute, _) => false
+          case (_: OngoingRoute, sig) => !sig
           case _ => true
 
         }),
@@ -79,15 +76,15 @@ object App {
         Footer())
   }
 
-  def pushState(page: Page): Unit = {
+  def pushState(page: PageRoute): Unit = {
     router.pushState(page)
   }
 
-  def replaceState(page: Page): Unit = {
+  def replaceState(page: PageRoute): Unit = {
     router.replaceState(page)
   }
 
-  def relativeUrlForPage(page: Page): String = {
+  def relativeUrlForPage(page: PageRoute): String = {
     router.relativeUrlForPage(page)
   }
 }

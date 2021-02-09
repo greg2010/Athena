@@ -1,12 +1,12 @@
-package org.kys.athena.views.currentGame
+package org.kys.athena.components.ongoing
 
 import com.raquo.laminar.api.L._
-import org.kys.athena.pages.CurrentGamePage
+import org.kys.athena.routes.OngoingRoute
 import org.scalajs.dom
 
 
-object CurrentErrorView {
-  def render(p: CurrentGamePage, refreshCb: () => Unit) = {
+object OngoingError {
+  def render(p: OngoingRoute, refreshCb: () => Unit) = {
     div(
       cls := s"flex flex-col items-center p-4",
       img(

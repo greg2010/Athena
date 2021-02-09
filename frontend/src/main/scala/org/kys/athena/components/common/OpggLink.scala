@@ -1,4 +1,4 @@
-package org.kys.athena.components
+package org.kys.athena.components.common
 
 
 import com.raquo.laminar.api.L._

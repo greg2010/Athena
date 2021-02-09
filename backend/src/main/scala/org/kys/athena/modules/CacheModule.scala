@@ -18,6 +18,7 @@ object CacheModule {
     def get[T](key: String)(implicit evT: ClassTag[T]): IO[CacheError, Option[T]]
   }
 
+  @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf", "org.wartremover.warts.Serializable"))
   val live = (for {
       config <- ConfigModule.loaded
       cache <- Task.effect {

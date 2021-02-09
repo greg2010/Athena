@@ -1,4 +1,4 @@
-package org.kys.athena.http
+package org.kys.athena.http.dd
 
 import org.kys.athena.riot.api.dto.ddragon.champions.{ChampionEntry, Champions}
 import org.kys.athena.riot.api.dto.ddragon.runes.{Rune, RuneTree, RunesEntry}
@@ -6,7 +6,7 @@ import org.kys.athena.riot.api.dto.ddragon.summonerspells.{SummonerSpells, Summo
 import org.kys.athena.util.Config
 
 
-case class DData(c: Champions, r: List[RuneTree], s: SummonerSpells) {
+case class CombinedDD(c: Champions, r: List[RuneTree], s: SummonerSpells) {
   private lazy val flatRunes: List[RunesEntry] = r.flatMap(t => t.slots.flatMap(_.runes))
 
   def championById(id: Long): Option[ChampionEntry] = c.data.values.find(_.key == id)
@@ -30,5 +30,4 @@ case class DData(c: Champions, r: List[RuneTree], s: SummonerSpells) {
   def summonerUrlById(id: Int): Option[String] = summonerById(id).map(summonerUrl)
 
   def runeUrl(rune: Rune) = s"${Config.DDRAGON_BASE_URL}img/${rune.icon}"
-
 }

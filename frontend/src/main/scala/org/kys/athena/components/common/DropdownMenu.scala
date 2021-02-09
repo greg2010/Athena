@@ -1,8 +1,9 @@
-package org.kys.athena.components
+package org.kys.athena.components.common
 
 import com.raquo.laminar.api.L._
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import org.scalajs.dom.{Event, html}
+
 
 object DropdownMenu {
   def apply[T](titleSignal: Signal[String],

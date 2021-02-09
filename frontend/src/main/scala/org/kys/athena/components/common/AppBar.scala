@@ -8,10 +8,15 @@ import org.kys.athena.util.{CSSUtil, Config}
 
 object AppBar {
 
-  def apply(showSearch: Signal[Boolean]): HtmlElement = {
+  def apply(showSearch: Signal[Boolean], showTitleUrl: Signal[Boolean]): HtmlElement = {
     nav(cls := "shadow-lg w-full px-3 py-2 flex items-center justify-between h-14",
         backgroundColor := CSSUtil.paletteHeader,
-        Link(LandingRoute, span(cls := "font-medium text-white", "Athena")),
+        child <-- showTitleUrl.map {
+          case true =>
+            Link(LandingRoute,
+                 span(cls := "font-medium text-white tracking-wider", fontFamily := "heorotregular", "Athena"))
+          case false => div()
+        },
         div(
           cls := "flex flex-row h-full",
           a(cls := "mx-2", href := "https://github.com/greg2010/Athena", target := "_blank",

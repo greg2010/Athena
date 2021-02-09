@@ -1,3 +1,11 @@
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
+
+@font-face {
+    font-family: 'heorotregular';
+    src: url('fonts/heorot-4rlk-webfont.woff2') format('woff2'),
+    url('fonts/heorot-4rlk-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}

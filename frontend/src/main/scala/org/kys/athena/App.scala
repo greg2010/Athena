@@ -70,7 +70,9 @@ object App {
           case (LandingRoute, _) => false
           case (_: OngoingRoute, sig) => !sig
           case _ => true
-
+        }, router.$currentPage.map {
+          case LandingRoute => false
+          case _ => true
         }),
         div(cls := "container justify-center items-center flex flex-grow", child <-- splitter.$view),
         Footer())

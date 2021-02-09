@@ -1,0 +1,40 @@
+kind: pipeline
+type: kubernetes
+name: default
+
+steps:
+  - name: build
+    image: circleci/openjdk:15-jdk-buster-node
+    user: 0 # root
+    commands:
+      - sbt ";compile; assembly; frontend/fullOptJS"
+      - cd frontend
+      - npm install
+      - CI=false npm run build
+      - cd ../
+  - name: push-frontend
+    image: docker:dind
+    volumes:
+      - name: dockersock
+        path: /var/run/
+    commands:
+      - cd frontend
+      - docker build -t greg2010/athena-frontend .
+      - docker tag greg2010/athena-frontend greg2010/athena-frontend:${DRONE_COMMIT_BRANCH}_${DRONE_COMMIT_SHA:0:7}
+      - docker tag greg2010/athena-frontend greg2010/athena-frontend:${DRONE_COMMIT_BRANCH}_latest
+      - docker tag greg2010/athena-frontend greg2010/athena-frontend:latest
+  - name: push-backend
+    image: docker:dind
+    volumes:
+      - name: dockersock
+        path: /var/run/
+    commands:
+      - cd backend
+      - docker build -t greg2010/athena-backend .
+      - docker tag greg2010/athena-backend greg2010/athena-backend:${DRONE_COMMIT_BRANCH}_${DRONE_COMMIT_SHA:0:7}
+      - docker tag greg2010/athena-backend greg2010/athena-backend:${DRONE_COMMIT_BRANCH}_latest
+      - docker tag greg2010/athena-backend greg2010/athena-backend:latest
+volumes:
+  - name: dockersock
+    host:
+      path: /var/run/

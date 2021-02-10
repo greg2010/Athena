@@ -29,8 +29,9 @@ steps:
       - cd ../
     depends_on:
       - restore
+
   - name: push-frontend
-    image: docker:19-dind
+    image: docker:dind
     environment:
       DOCKER_USER:
         from_secret: ghcr_login
@@ -46,12 +47,14 @@ steps:
       - docker tag ghcr.io/greg2010/athena-frontend ghcr.io/greg2010/athena-frontend:${DRONE_COMMIT_BRANCH}_latest
       - docker tag ghcr.io/greg2010/athena-frontend ghcr.io/greg2010/athena-frontend:latest
       - docker login ghcr.io -u $DOCKER_USER -p $DOCKER_PASSWORD
-      - docker push --all-tags ghcr.io/greg2010/athena-frontend
+      - docker push ghcr.io/greg2010/athena-frontend:${DRONE_COMMIT_BRANCH}_${DRONE_COMMIT_SHA:0:7}
+      - docker push ghcr.io/greg2010/athena-frontend:${DRONE_COMMIT_BRANCH}_latest
+      - docker push ghcr.io/greg2010/athena-frontend:latest
     depends_on:
       - build
 
   - name: push-backend
-    image: docker:19-dind
+    image: docker:dind
     environment:
       DOCKER_USER:
         from_secret: ghcr_login
@@ -67,7 +70,9 @@ steps:
       - docker tag ghcr.io/greg2010/athena-backend ghcr.io/greg2010/athena-backend:${DRONE_COMMIT_BRANCH}_latest
       - docker tag ghcr.io/greg2010/athena-backend ghcr.io/greg2010/athena-backend:latest
       - docker login ghcr.io -u $DOCKER_USER -p $DOCKER_PASSWORD
-      - docker push --all-tags ghcr.io/greg2010/athena-backend
+      - docker push ghcr.io/greg2010/athena-backend:${DRONE_COMMIT_BRANCH}_${DRONE_COMMIT_SHA:0:7}
+      - docker push ghcr.io/greg2010/athena-backend:${DRONE_COMMIT_BRANCH}_latest
+      - docker push ghcr.io/greg2010/athena-backend:latest
     depends_on:
       - build
 
@@ -134,15 +139,7 @@ steps:
       - push-frontend
       - push-backend
 
-
-services:
-  - name: docker
-    image: docker:19-dind
-    privileged: true
-    volumes:
-      - name: dockersock
-        path: /var/run
-
 volumes:
   - name: dockersock
-    temp: { }
+    host:
+      path: /var/run/

@@ -3,11 +3,24 @@ type: kubernetes
 name: default
 
 steps:
+  - name: restore
+    image: plugins/s3-cache
+    settings:
+      pull: true
+      endpoint:
+        from_secret: s3_cache_endpoint
+      access_key:
+        from_secret: s3_access_key
+      secret_key:
+        from_secret: s3_secret_key
+      root:
+        from_secret: s3_bucket
+      restore: true
   - name: build
     image: circleci/openjdk:15-jdk-buster-node
     user: 0 # root
     commands:
-      - sbt ";compile; assembly; frontend/fullOptJS"
+      - sbt -Duser.home=. -Dsbt.global.base=.sbt -Dsbt.boot.directory=.sbt -Dsbt.ivy.home=.ivy2 ";compile; assembly; frontend/fullOptJS"
       - cd frontend
       - npm install
       - CI=false npm run build
@@ -34,6 +47,46 @@ steps:
       - docker tag greg2010/athena-backend greg2010/athena-backend:${DRONE_COMMIT_BRANCH}_${DRONE_COMMIT_SHA:0:7}
       - docker tag greg2010/athena-backend greg2010/athena-backend:${DRONE_COMMIT_BRANCH}_latest
       - docker tag greg2010/athena-backend greg2010/athena-backend:latest
+  - name: rebuild
+    image: plugins/s3-cache
+    settings:
+      pull: true
+      endpoint:
+        from_secret: s3_cache_endpoint
+      access_key:
+        from_secret: s3_access_key
+      secret_key:
+        from_secret: s3_secret_key
+      root:
+        from_secret: s3_bucket
+      rebuild: true
+      mount:
+        - frontend/node_modules
+        - .sbt
+        - .cache
+        - .ivy2/cache
+        - backend/target
+        - frontend/target
+        - common/.js
+        - common/.jvm
+        - common/target
+        - project/target
+      when:
+        event: push
+  - name: flush
+    image: plugins/s3-cache
+    settings:
+      pull: true
+      endpoint:
+        from_secret: s3_cache_endpoint
+      access_key:
+        from_secret: s3_access_key
+      secret_key:
+        from_secret: s3_secret_key
+      root:
+        from_secret: s3_bucket
+      flush: true
+      flush_age: 14
 volumes:
   - name: dockersock
     host:

@@ -66,12 +66,12 @@ lazy val settings = commonSettings ++ wartremoverSettings
 // Dependencies repository
 lazy val dependencies = new {
   val catsVersion       = "2.3.1"
-  val http4sVersion     = "0.21.16"
+  val http4sVersion     = "0.21.18"
   val circeVersion      = "0.13.0"
   val enumeratumVersion = "1.6.1"
   val sttpVersion       = "3.1.0"
   val doobieVersion     = "0.8.7"
-  val scribeVersion     = "3.3.1"
+  val scribeVersion     = "3.3.3"
 
   val laminarVersion   = "0.11.0"
   val airstreamVersion = "0.11.1"
@@ -79,7 +79,7 @@ lazy val dependencies = new {
   val zioVersion     = "1.0.4"
   val zioCatsVersion = "2.2.0.1"
 
-  val tapirVersion = "0.17.8"
+  val tapirVersion = "0.17.9"
 
   val common = Def.setting(Seq(
     "com.beachape" %%% "enumeratum" % enumeratumVersion,

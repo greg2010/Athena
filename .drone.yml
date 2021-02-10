@@ -113,7 +113,15 @@ steps:
       flush_age: 14
     depends_on:
       - rebuild
+
+services:
+  - name: docker
+    image: docker:dind
+    privileged: true
+    volumes:
+      - name: dockersock
+        path: /var/run
+
 volumes:
   - name: dockersock
-    host:
-      path: /var/run/
+    temp: { }

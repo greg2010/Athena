@@ -16,6 +16,7 @@ steps:
       root:
         from_secret: s3_bucket
       restore: true
+      filename: cache.tar.gz # Use compression
   - name: build
     image: circleci/openjdk:15-jdk-buster-node
     user: 0 # root
@@ -25,28 +26,48 @@ steps:
       - npm install
       - CI=false npm run build
       - cd ../
+    depends_on:
+      - restore
   - name: push-frontend
     image: docker:dind
+    environment:
+      DOCKER_USER:
+        from_secret: ghcr_login
+      DOCKER_PASSWORD:
+        from_secret: ghcr_password
     volumes:
       - name: dockersock
         path: /var/run/
     commands:
       - cd frontend
-      - docker build -t greg2010/athena-frontend .
-      - docker tag greg2010/athena-frontend greg2010/athena-frontend:${DRONE_COMMIT_BRANCH}_${DRONE_COMMIT_SHA:0:7}
-      - docker tag greg2010/athena-frontend greg2010/athena-frontend:${DRONE_COMMIT_BRANCH}_latest
-      - docker tag greg2010/athena-frontend greg2010/athena-frontend:latest
+      - docker build -t ghcr.io/greg2010/athena-frontend .
+      - docker tag ghcr.io/greg2010/athena-frontend ghcr.io/greg2010/athena-frontend:${DRONE_COMMIT_BRANCH}_${DRONE_COMMIT_SHA:0:7}
+      - docker tag ghcr.io/greg2010/athena-frontend ghcr.io/greg2010/athena-frontend:${DRONE_COMMIT_BRANCH}_latest
+      - docker tag ghcr.io/greg2010/athena-frontend ghcr.io/greg2010/athena-frontend:latest
+      - docker login ghcr.io -u $DOCKER_USER -p $DOCKER_PASSWORD
+      - docker push --all-tags ghcr.io/greg2010/athena-frontend
+    depends_on:
+      - build
   - name: push-backend
     image: docker:dind
+    environment:
+      DOCKER_USER:
+        from_secret: ghcr_login
+      DOCKER_PASSWORD:
+        from_secret: ghcr_password
     volumes:
       - name: dockersock
         path: /var/run/
     commands:
       - cd backend
-      - docker build -t greg2010/athena-backend .
-      - docker tag greg2010/athena-backend greg2010/athena-backend:${DRONE_COMMIT_BRANCH}_${DRONE_COMMIT_SHA:0:7}
-      - docker tag greg2010/athena-backend greg2010/athena-backend:${DRONE_COMMIT_BRANCH}_latest
-      - docker tag greg2010/athena-backend greg2010/athena-backend:latest
+      - docker build -t ghcr.io/greg2010/athena-backend .
+      - docker tag ghcr.io/greg2010/athena-backend ghcr.io/greg2010/athena-backend:${DRONE_COMMIT_BRANCH}_${DRONE_COMMIT_SHA:0:7}
+      - docker tag ghcr.io/greg2010/athena-backend ghcr.io/greg2010/athena-backend:${DRONE_COMMIT_BRANCH}_latest
+      - docker tag ghcr.io/greg2010/athena-backend ghcr.io/greg2010/athena-backend:latest
+      - docker login ghcr.io -u $DOCKER_USER -p $DOCKER_PASSWORD
+      - docker push --all-tags ghcr.io/greg2010/athena-backend
+    depends_on:
+      - build
   - name: rebuild
     image: plugins/s3-cache
     settings:
@@ -60,6 +81,7 @@ steps:
       root:
         from_secret: s3_bucket
       rebuild: true
+      filename: cache.tar.gz # Use compression
       mount:
         - frontend/node_modules
         - .sbt
@@ -69,10 +91,11 @@ steps:
         - frontend/target
         - common/.js
         - common/.jvm
-        - common/target
         - project/target
       when:
         event: push
+    depends_on:
+      - build
   - name: flush
     image: plugins/s3-cache
     settings:
@@ -86,7 +109,10 @@ steps:
       root:
         from_secret: s3_bucket
       flush: true
+      filename: cache.tar.gz # Use compression
       flush_age: 14
+    depends_on:
+      - rebuild
 volumes:
   - name: dockersock
     host:

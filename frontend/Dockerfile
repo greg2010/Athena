@@ -22,5 +22,8 @@ COPY .env .
 # Make our shell script executable
 RUN chmod +x env.sh
 
+# Link image source
+LABEL org.opencontainers.image.source https://github.com/greg2010/Athena
+
 # Start Nginx server
 CMD ["/bin/bash", "-c", "/usr/share/nginx/html/env.sh && nginx -g \"daemon off;\""]

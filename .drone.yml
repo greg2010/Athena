@@ -17,6 +17,7 @@ steps:
         from_secret: s3_bucket
       restore: true
       filename: cache.tar.gz # Use compression
+
   - name: build
     image: circleci/openjdk:15-jdk-buster-node
     user: 0 # root
@@ -29,7 +30,7 @@ steps:
     depends_on:
       - restore
   - name: push-frontend
-    image: docker:dind
+    image: docker:19-dind
     environment:
       DOCKER_USER:
         from_secret: ghcr_login
@@ -48,8 +49,9 @@ steps:
       - docker push --all-tags ghcr.io/greg2010/athena-frontend
     depends_on:
       - build
+
   - name: push-backend
-    image: docker:dind
+    image: docker:19-dind
     environment:
       DOCKER_USER:
         from_secret: ghcr_login
@@ -68,6 +70,7 @@ steps:
       - docker push --all-tags ghcr.io/greg2010/athena-backend
     depends_on:
       - build
+
   - name: rebuild
     image: plugins/s3-cache
     settings:
@@ -114,9 +117,27 @@ steps:
     depends_on:
       - rebuild
 
+  - name: discord-notify
+    image: appleboy/drone-discord
+    settings:
+      webhook_id:
+        from_secret: discord_webhook_id
+      webhook_token:
+        from_secret: discord_webhook_token
+      message: >
+        {{#success build.status}}
+          Build {{build.number}} for {{repo.name}} triggered by {{build.author}}@{{build.branch}}/{{build.commit}} succeeded. Build took {{since build.started}}.
+        {{else}}
+          Build {{build.number}} for {{repo.name}} triggered by {{build.author}}@{{build.branch}}/{{build.commit}} failed. Build took {{since build.started}}.
+        {{/success}}
+    depends_on:
+      - push-frontend
+      - push-backend
+
+
 services:
   - name: docker
-    image: docker:dind
+    image: docker:19-dind
     privileged: true
     volumes:
       - name: dockersock

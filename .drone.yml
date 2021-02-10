@@ -18,17 +18,21 @@ steps:
       restore: true
       filename: cache.tar.gz # Use compression
 
-  - name: build
-    image: circleci/openjdk:15-jdk-buster-node
-    user: 0 # root
+  - name: build-scala
+    image: danieletorelli/sbt-alpine:15-slim
     commands:
       - sbt -Duser.home=. -Dsbt.global.base=.sbt -Dsbt.boot.directory=.sbt -Dsbt.ivy.home=.ivy2 ";compile; assembly; frontend/fullOptJS"
+    depends_on:
+      - restore
+
+  - name: build-js
+    image: node:current-alpine
+    commands:
       - cd frontend
       - npm install
       - CI=false npm run build
-      - cd ../
     depends_on:
-      - restore
+      - build-scala
 
   - name: push-frontend
     image: docker:dind
@@ -51,7 +55,8 @@ steps:
       - docker push ghcr.io/greg2010/athena-frontend:${DRONE_COMMIT_BRANCH}_latest
       - docker push ghcr.io/greg2010/athena-frontend:latest
     depends_on:
-      - build
+      - build-js
+      - build-scala
 
   - name: push-backend
     image: docker:dind
@@ -74,7 +79,7 @@ steps:
       - docker push ghcr.io/greg2010/athena-backend:${DRONE_COMMIT_BRANCH}_latest
       - docker push ghcr.io/greg2010/athena-backend:latest
     depends_on:
-      - build
+      - build-scala
 
   - name: rebuild
     image: plugins/s3-cache
@@ -103,7 +108,9 @@ steps:
       when:
         event: push
     depends_on:
-      - build
+      - build-js
+      - build-scala
+
   - name: flush
     image: plugins/s3-cache
     settings:

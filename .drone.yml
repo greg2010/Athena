@@ -29,8 +29,8 @@ steps:
     image: node:current-alpine
     commands:
       - cd frontend
-      - npm install
-      - CI=false npm run build
+      - yarn install
+      - CI=false yarn run build
     depends_on:
       - build-scala
 

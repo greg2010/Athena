@@ -8,7 +8,7 @@ object LandingPage {
 
   def render: HtmlElement = {
     div(cls := "flex flex-col items-center container-md flex-grow justify-center",
-        img(src := "/aleph256.png", width := "256px", height := "256px"),
+        img(src := "/images/aleph256.png", width := "256px", height := "256px"),
         span(fontFamily := "heorotregular",
              fontSize := "6rem",
              color := "#780522",

@@ -10,7 +10,7 @@ object OngoingError {
     div(
       cls := s"flex flex-col items-center p-4",
       img(
-        src := "/amumu_error.png"
+        src := "/images/amumu_error.png"
         ),
       span(
         cls := "text-xl mt-4",

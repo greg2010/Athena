@@ -5,12 +5,11 @@ rm -rf ./env-config.js
 touch ./env-config.js
 
 # Add assignment
-echo "window._env_ = {" >> ./env-config.js
+echo "window._env_ = {" >>./env-config.js
 
 # Read each line in .env file
 # Each line represents key=value pairs
-while read -r line || [[ -n "$line" ]];
-do
+while read -r line || [[ -n "$line" ]]; do
   # Split env variables by character `=`
   if printf '%s\n' "$line" | grep -q -e '='; then
     varname=$(printf '%s\n' "$line" | sed -e 's/=.*//')
@@ -23,11 +22,10 @@ do
   [[ -z $value ]] && value=${varvalue}
 
   # Append configuration property to JS file
-  echo "  $varname: \"$value\"," >> ./env-config.js
-done < .env
+  echo "  $varname: \"$value\"," >>./env-config.js
+done <.env
 if test -f ".env.local"; then
-  while read -r line || [[ -n "$line" ]];
-  do
+  while read -r line || [[ -n "$line" ]]; do
     # Split env variables by character `=`
     if printf '%s\n' "$line" | grep -q -e '='; then
       varname=$(printf '%s\n' "$line" | sed -e 's/=.*//')
@@ -40,11 +38,11 @@ if test -f ".env.local"; then
     [[ -z $value ]] && value=${varvalue}
 
     # Append configuration property to JS file
-    echo "  $varname: \"$value\"," >> ./env-config.js
-  done < .env.local
+    echo "  $varname: \"$value\"," >>./env-config.js
+  done <.env.local
 fi
 
-echo "}" >> ./env-config.js
+echo "}" >>./env-config.js
 
-[ -d "src/main/resources" ] && mv ./env-config.js src/main/resources
+[ -d "src/main/resources" ] && mv ./env-config.js src/main/resources/static/
 exit 0

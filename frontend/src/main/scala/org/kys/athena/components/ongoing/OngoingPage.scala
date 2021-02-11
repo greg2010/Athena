@@ -310,7 +310,7 @@ object OngoingPage {
                   zIndex := 1,
                   new CStyle("filter", "filter") := "grayscale(50%)",
                   cls := "rounded-lg"),
-                ImgSized(s"${Config.FRONTEND_URL}/slash_red_256.png",
+                ImgSized(s"${Config.FRONTEND_URL}/images/slash_red_256.png",
                          imgWidth = 64,
                          imgHeight = Some(64),
                          position := "relative",
@@ -363,7 +363,7 @@ object OngoingPage {
       }
     }
     div(
-      cls := "flex flex-col justify-center",
+      cls := "flex flex-col justify-center items-center",
       span(cls := "text-xl font-medium leading-tight text-center my-1", s"$color team groups"),
       div(
         cls := s"flex flex-wrap items-center justify-center",

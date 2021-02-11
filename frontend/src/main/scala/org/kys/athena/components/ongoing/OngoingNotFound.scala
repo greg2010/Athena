@@ -10,7 +10,7 @@ object OngoingNotFound {
   def render(p: OngoingRoute, refreshCb: () => Unit) = {
     div(
       cls := s"flex flex-col items-center p-4",
-      img(src := "/blitzcrank_logo.png"),
+      img(src := "/images/blitzcrank_logo.png"),
       span(
         cls := "text-xl mt-4", "Summoner ", b(s"${p.realm.toString}/${p.name}"), " is not currently in game."),
       SearchBar(p.name,

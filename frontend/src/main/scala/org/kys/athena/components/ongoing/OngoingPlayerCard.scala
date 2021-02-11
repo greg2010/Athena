@@ -90,7 +90,7 @@ object OngoingPlayerCard {
       rl match {
         case Some(l) => {
           val t   = l.tier.entryName.toLowerCase.capitalize
-          val url = s"${Config.FRONTEND_URL}/Emblem_${t}.png"
+          val url = s"${Config.FRONTEND_URL}/images/Emblem_${t}.png"
           List(
             ImgSized(url, 40, None),
             l.tier match {
@@ -103,7 +103,7 @@ object OngoingPlayerCard {
             l.miniSeries.map(renderMiniSeries).getOrElse(div()))
         }
         case None => {
-          val url = s"${Config.FRONTEND_URL}/Emblem_Unranked.png"
+          val url = s"${Config.FRONTEND_URL}/images/Emblem_Unranked.png"
           List(
             ImgSized(url, 46, None),
             span(cls := "text-sm leading-tight mt-1", "Unranked"))

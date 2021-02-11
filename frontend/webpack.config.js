@@ -8,11 +8,14 @@ const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin')
 
 const scalaOutputPath = path.resolve(__dirname, './target/scala-2.13');
+const scalaResourcesPath = path.resolve(__dirname, './src/main/resources')
 
 const devServerPort = 8080;
 
 const devServer = {
-  hot: true,
+  hot: false,
+  inline: false,
+  compress: true,
   disableHostCheck: true,
   clientLogLevel: 'none',
   host: process.env.HOST || 'localhost',
@@ -39,7 +42,7 @@ function common(variables, mode) {
       libraryTarget: 'var'
     },
     entry: [
-      path.resolve(__dirname, './src/main/resources/index.css')
+      path.resolve(__dirname, './src/main/resources/static/index.css')
     ],
     module: {
       rules: [{
@@ -131,12 +134,13 @@ function common(variables, mode) {
         chunkFilename: '[id].css'
       }),
       new CopyWebpackPlugin({
-        patterns: [{
-            from: './src/main/resources',
+        patterns: [
+          {
+            from: './src/main/resources/static',
             to: '.'
           },
           {
-            from: './src/main/resources/robots.txt',
+            from: './src/main/resources/static/robots.txt',
             to: '[name].[ext]'
           }
         ]
@@ -154,7 +158,6 @@ const dev = {
   output: {
     path: path.resolve(__dirname, 'build-dev')
   },
-  watch: true
 };
 
 const prod = {

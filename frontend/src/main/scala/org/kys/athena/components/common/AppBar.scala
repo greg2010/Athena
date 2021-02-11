@@ -20,7 +20,7 @@ object AppBar {
         div(
           cls := "flex flex-row h-full",
           a(cls := "mx-2", href := "https://github.com/greg2010/Athena", target := "_blank",
-            ImgSized(s"${Config.FRONTEND_URL}/gh_logo.png", 40, Some(40))),
+            ImgSized(s"${Config.FRONTEND_URL}/images/gh_logo.png", 40, Some(40))),
           child <-- showSearch.map {
             case true => SearchBar("", Platform.NA, cls := "border shadow-lg rounded-lg bg-white")
             case false => div()

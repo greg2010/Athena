@@ -23,7 +23,8 @@ const devServer = {
   port: devServerPort,
   historyApiFallback: {
     index: ''
-  }
+  },
+  stats: {warnings: false}
 };
 
 function common(variables, mode) {
@@ -42,7 +43,7 @@ function common(variables, mode) {
       libraryTarget: 'var'
     },
     entry: [
-      path.resolve(__dirname, './src/main/resources/static/index.css')
+      path.resolve(scalaResourcesPath, './index.css')
     ],
     module: {
       rules: [{
@@ -123,7 +124,7 @@ function common(variables, mode) {
     plugins: [
       new HtmlWebpackPlugin({
         filename: 'index.html',
-        template: './src/main/resources/index.html',
+        template: path.resolve(scalaResourcesPath, './index.html'),
         minify: 'auto',
         inject: 'head',
         config: variables
@@ -136,12 +137,8 @@ function common(variables, mode) {
       new CopyWebpackPlugin({
         patterns: [
           {
-            from: './src/main/resources/static',
+            from: path.resolve(scalaResourcesPath, './public'),
             to: '.'
-          },
-          {
-            from: './src/main/resources/static/robots.txt',
-            to: '[name].[ext]'
           }
         ]
       })
@@ -155,9 +152,6 @@ const dev = {
     path.resolve(__dirname, `${scalaOutputPath}/frontend-fastopt.js`)
   ],
   devtool: "eval-cheap-module-source-map",
-  output: {
-    path: path.resolve(__dirname, 'build-dev')
-  },
 };
 
 const prod = {

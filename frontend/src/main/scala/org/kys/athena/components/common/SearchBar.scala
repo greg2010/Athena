@@ -7,9 +7,57 @@ import org.kys.athena.riot.api.dto.common.Platform
 import org.kys.athena.routes.OngoingRoute
 import org.scalajs.dom
 import org.scalajs.dom.Event
+import io.circe.generic.auto._
+import io.circe.parser.decode
+import io.circe.syntax._
+import io.circe.{Decoder, Encoder}
 
 
 object SearchBar {
+  case class LocalSearchData(name:String, platform:Platform)
+  def saveToStorage(name:String, platform: Platform):Unit = {
+    val listFromStorage = readFromStorage
+    val currentUserSearch =  LocalSearchData(name, platform)
+    val listCompareFalse = !listFromStorage.contains(currentUserSearch)
+    val newList = if (listCompareFalse){
+      listFromStorage :+ currentUserSearch
+    } else {
+      listFromStorage.lastOption match {
+        case Some(last) =>
+          if(currentUserSearch == last){
+            listFromStorage
+          }
+          else{
+            val listFromStorageFiltered = listFromStorage.filterNot(search => search == currentUserSearch)
+            //move search to last pos
+
+            //step3
+            listFromStorageFiltered :+ currentUserSearch
+          }
+        case None => List(currentUserSearch)
+      }
+    }
+    val newListAsString = newList.asJson.noSpaces
+    dom.window.localStorage.setItem(key="localStorageCache", newListAsString)
+    scribe.warn(newListAsString)
+  }
+  def readFromStorage:List[LocalSearchData] = {
+    val rawCache = dom.window.localStorage.getItem("localStorageCache")
+    val decoded = decode[List[LocalSearchData]](rawCache)
+    decoded match {
+      case Left(_) => List()
+      case Right(res) => res
+    }
+  }
+  def removeFromStorage(localSearchData: LocalSearchData):Unit ={
+    val listFromStorage = readFromStorage
+    val userSearchDelete = localSearchData
+    val newList = listFromStorage.filterNot(search => search == userSearchDelete)
+    val newListAsString = newList.asJson.noSpaces
+    dom.window.localStorage.setItem(key="localStorageCache", newListAsSring)
+    scribe.warn(newListAsString)
+
+  }
   def apply(initialSummoner: String, initialPlatform: Platform, mods: Modifier[HtmlElement]*): HtmlElement = {
 
     val summoner    : Var[String]     = Var[String](initialSummoner)
@@ -18,7 +66,8 @@ object SearchBar {
       Observer[dom.Event](onNext = _ => {
         (platform.now(), summoner.now()) match {
           case (_, "") => ()
-          case (p, s) => App.pushState(OngoingRoute(p, s))
+          case (p, s) => saveToStorage(s,p)
+            App.pushState(OngoingRoute(p, s))
         }
       })
 

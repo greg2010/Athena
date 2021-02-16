@@ -20,7 +20,7 @@ case class CombinedDD(c: Champions, r: List[RuneTree], s: SummonerSpells) {
   def championUrl(champion: Option[ChampionEntry]): String = {
     champion.map { ch =>
       s"${Config.DDRAGON_BASE_URL}${Config.DDRAGON_VERSION}/img/champion/${ch.id}.png"
-    }.getOrElse(s"${Config.FRONTEND_URL}/placeholder_champion.png")
+    }.getOrElse(s"${Config.FRONTEND_URL}/images/placeholder_champion.png")
   }
 
   def summonerUrl(summonerSpellsEntry: SummonerSpellsEntry): String = {

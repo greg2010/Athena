@@ -3,9 +3,7 @@ package org.kys.athena.components
 import com.raquo.laminar.api.L._
 import org.kys.athena.riot.api.dto.common.Platform
 
-
 object LandingPage {
-
   def render: HtmlElement = {
     div(cls := "flex flex-col items-center container-md flex-grow justify-center",
         img(src := "/images/aleph256.png", width := "256px", height := "256px"),

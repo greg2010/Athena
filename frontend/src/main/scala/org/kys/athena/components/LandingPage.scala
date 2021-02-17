@@ -1,14 +1,18 @@
 package org.kys.athena.components
 
+import com.raquo.airstream.eventbus.EventBus
 import com.raquo.laminar.api.L._
 import org.kys.athena.components.common._
 import org.kys.athena.riot.api.dto.common.Platform
 import org.scalajs.dom.MouseEvent
 import scala.math._
-
+import org.scalajs.dom.{Event, FocusEvent}
 
 object LandingPage {
 
+  sealed trait EventFired
+  case object FocusIn extends EventFired
+  case object FocusOut extends EventFired
 
   def render(mouseES:EventStream[MouseEvent]): HtmlElement = {
     val referenceDiv = div(
@@ -31,8 +35,7 @@ object LandingPage {
 
       (x, y)
     }.toSignal((-5D,0D))
-
-
+    val focusBus = new EventBus[EventFired]
     div(cls := "flex flex-col items-center container-md flex-grow justify-center",
       //center of eye aleph256full.png (152,125)
 
@@ -72,8 +75,14 @@ object LandingPage {
           cls := "flex flex-col items-center justify-center " +
                  "border shadow-lg border-gray-500 rounded-lg bg-white w-11/12 lg:w-8/12 " +
                  "p-1 divide-y divide-gray-500",
+          onFocus.preventDefault.useCapture.mapTo(FocusIn) --> focusBus.writer,
+          onBlur.preventDefault.useCapture.mapTo(FocusOut) --> focusBus.writer,
           SearchBar("", Platform.NA, cls := "w-full pb-1"),
-          HistoryBar(Some("p-1"), cls := "flex w-full justify-center flex-wrap pt-1")))
+          HistoryBar(Some("p-1"), cls := "flex w-full justify-center flex-wrap pt-1",
+                     cls <--focusBus.events.delay(100).toSignal(FocusOut).map{
+                           case FocusIn => ""
+                           case FocusOut => "hidden"
+          })))
   }
 }
 

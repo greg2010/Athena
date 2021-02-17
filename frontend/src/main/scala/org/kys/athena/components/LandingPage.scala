@@ -1,6 +1,7 @@
 package org.kys.athena.components
 
 import com.raquo.laminar.api.L._
+import org.kys.athena.components.common._
 import org.kys.athena.riot.api.dto.common.Platform
 import org.scalajs.dom.MouseEvent
 import scala.math._
@@ -67,8 +68,12 @@ object LandingPage {
              lineHeight := "0.5",
              cls := "pt-2 pb-3", "Athena"),
         span(cls := "font-bold pb-4", "A solo queue companion"),
-        common.SearchBar("", Platform.NA,
-                         cls := "border shadow-lg border-gray-500 rounded-lg bg-white w-11/12 lg:w-8/12 h-12"))
+        div(
+          cls := "flex flex-col items-center justify-center " +
+                 "border shadow-lg border-gray-500 rounded-lg bg-white w-11/12 lg:w-8/12 " +
+                 "p-1 divide-y divide-gray-500",
+          SearchBar("", Platform.NA, cls := "w-full pb-1"),
+          HistoryBar(Some("p-1"), cls := "flex w-full justify-center flex-wrap pt-1")))
   }
 }
 

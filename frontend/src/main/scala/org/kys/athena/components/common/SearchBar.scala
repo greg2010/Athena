@@ -19,7 +19,7 @@ object SearchBar {
     val listFromStorage = readFromStorage
     val listCompareFalse = !listFromStorage.contains(currentUserSearch)
     val newList = if (listCompareFalse){
-      listFromStorage :+ currentUserSearch
+      listFromStorage.prepended(currentUserSearch)
     } else {
       listFromStorage.lastOption match {
         case Some(last) =>
@@ -28,10 +28,7 @@ object SearchBar {
           }
           else{
             val listFromStorageFiltered = listFromStorage.filterNot(search => search == currentUserSearch)
-            //move search to last pos
-
-            //step3
-            listFromStorageFiltered :+ currentUserSearch
+            listFromStorageFiltered.prepended(currentUserSearch)
           }
         case None => List(currentUserSearch)
       }

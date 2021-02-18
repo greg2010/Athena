@@ -3,8 +3,8 @@ package org.kys.athena.modules
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import org.kys.athena.http
 import org.kys.athena.http.models.common.RankedLeague
-import org.kys.athena.http.models.pregame.{PregameResponse, PregameSummoner}
-import org.kys.athena.http.models.premade.{PlayerGroup, PremadeResponse}
+import org.kys.athena.http.models.pregame.PregameSummoner
+import org.kys.athena.http.models.premade.PlayerGroup
 import org.kys.athena.riot.api.dto.common.Platform
 import zio._
 

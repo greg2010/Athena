@@ -19,12 +19,26 @@ steps:
       restore: true
       filename: cache.tar.gz # Use compression
 
+  - name: compile-scala
+    image: danieletorelli/sbt-alpine:15-slim
+    commands:
+      - sbt -Duser.home=. -Dsbt.global.base=.sbt -Dsbt.boot.directory=.sbt -Dsbt.ivy.home=.ivy2 ";compile"
+    depends_on:
+      - restore
+
   - name: build-scala
     image: danieletorelli/sbt-alpine:15-slim
     commands:
-      - sbt -Duser.home=. -Dsbt.global.base=.sbt -Dsbt.boot.directory=.sbt -Dsbt.ivy.home=.ivy2 ";compile; assembly; frontend/fullOptJS"
+      - sbt -Duser.home=. -Dsbt.global.base=.sbt -Dsbt.boot.directory=.sbt -Dsbt.ivy.home=.ivy2 ";assembly"
     depends_on:
-      - restore
+      - compile-scala
+
+  - name: compile-js
+    image: danieletorelli/sbt-alpine:15-slim
+    commands:
+      - sbt -Duser.home=. -Dsbt.global.base=.sbt -Dsbt.boot.directory=.sbt -Dsbt.ivy.home=.ivy2 ";frontend/fullOptJS"
+    depends_on:
+      - compile-scala
 
   - name: build-js
     image: node:current-alpine
@@ -33,56 +47,7 @@ steps:
       - yarn install
       - CI=false yarn run build
     depends_on:
-      - build-scala
-
-  - name: push-frontend
-    image: docker:dind
-    environment:
-      DOCKER_USER:
-        from_secret: ghcr_login
-      DOCKER_PASSWORD:
-        from_secret: ghcr_password
-    volumes:
-      - name: dockersock
-        path: /var/run/
-    commands:
-      - export SANITIZED_DRONE_COMMIT_BRANCH=$(echo $DRONE_COMMIT_BRANCH | sed 's#/#_#g')
-      - cd frontend
-      - docker build -t ghcr.io/greg2010/athena-frontend .
-      - docker tag ghcr.io/greg2010/athena-frontend ghcr.io/greg2010/athena-frontend:$SANITIZED_DRONE_COMMIT_BRANCH_${DRONE_COMMIT_SHA:0:7}
-      - docker tag ghcr.io/greg2010/athena-frontend ghcr.io/greg2010/athena-frontend:$SANITIZED_DRONE_COMMIT_BRANCH_latest
-      - docker tag ghcr.io/greg2010/athena-frontend ghcr.io/greg2010/athena-frontend:latest
-      - docker login ghcr.io -u $DOCKER_USER -p $DOCKER_PASSWORD
-      - docker push ghcr.io/greg2010/athena-frontend:${DRONE_COMMIT_BRANCH}_${DRONE_COMMIT_SHA:0:7}
-      - docker push ghcr.io/greg2010/athena-frontend:${DRONE_COMMIT_BRANCH}_latest
-      - docker push ghcr.io/greg2010/athena-frontend:latest
-    depends_on:
-      - build-js
-      - build-scala
-
-  - name: push-backend
-    image: docker:dind
-    environment:
-      DOCKER_USER:
-        from_secret: ghcr_login
-      DOCKER_PASSWORD:
-        from_secret: ghcr_password
-    volumes:
-      - name: dockersock
-        path: /var/run/
-    commands:
-      - export SANITIZED_DRONE_COMMIT_BRANCH=$(echo $DRONE_COMMIT_BRANCH | sed 's#/#_#g')
-      - cd backend
-      - docker build -t ghcr.io/greg2010/athena-backend .
-      - docker tag ghcr.io/greg2010/athena-backend ghcr.io/greg2010/athena-backend:$SANITIZED_DRONE_COMMIT_BRANCH_${DRONE_COMMIT_SHA:0:7}
-      - docker tag ghcr.io/greg2010/athena-backend ghcr.io/greg2010/athena-backend:$SANITIZED_DRONE_COMMIT_BRANCH_latest
-      - docker tag ghcr.io/greg2010/athena-backend ghcr.io/greg2010/athena-backend:latest
-      - docker login ghcr.io -u $DOCKER_USER -p $DOCKER_PASSWORD
-      - docker push ghcr.io/greg2010/athena-backend:${DRONE_COMMIT_BRANCH}_${DRONE_COMMIT_SHA:0:7}
-      - docker push ghcr.io/greg2010/athena-backend:${DRONE_COMMIT_BRANCH}_latest
-      - docker push ghcr.io/greg2010/athena-backend:latest
-    depends_on:
-      - build-scala
+      - compile-js
 
   - name: rebuild
     image: plugins/s3-cache
@@ -108,10 +73,61 @@ steps:
         - common/.js
         - common/.jvm
         - project/target
-      when:
-        event: push
+    when:
+      event: push
     depends_on:
       - build-js
+      - build-scala
+
+  - name: push-frontend
+    image: docker:dind
+    environment:
+      DOCKER_USER:
+        from_secret: ghcr_login
+      DOCKER_PASSWORD:
+        from_secret: ghcr_password
+    volumes:
+      - name: dockersock
+        path: /var/run/
+    commands:
+      - export SANITIZED_DRONE_COMMIT_BRANCH=$(echo ${DRONE_COMMIT_BRANCH} | sed 's#/#-#g')
+      - export COMMIT_SHA=${DRONE_COMMIT_SHA:0:7}
+      - cd frontend
+      - docker build -t ghcr.io/greg2010/athena-frontend .
+      - docker tag ghcr.io/greg2010/athena-frontend ghcr.io/greg2010/athena-frontend:${SANITIZED_DRONE_COMMIT_BRANCH}_$COMMIT_SHA
+      - docker tag ghcr.io/greg2010/athena-frontend ghcr.io/greg2010/athena-frontend:${SANITIZED_DRONE_COMMIT_BRANCH}_latest
+      - docker tag ghcr.io/greg2010/athena-frontend ghcr.io/greg2010/athena-frontend:latest
+      - docker login ghcr.io -u $DOCKER_USER -p $DOCKER_PASSWORD
+      - docker push ghcr.io/greg2010/athena-frontend:${SANITIZED_DRONE_COMMIT_BRANCH}_$COMMIT_SHA
+      - docker push ghcr.io/greg2010/athena-frontend:${SANITIZED_DRONE_COMMIT_BRANCH}_latest
+      - docker push ghcr.io/greg2010/athena-frontend:latest
+    depends_on:
+      - build-js
+      - build-scala
+
+  - name: push-backend
+    image: docker:dind
+    environment:
+      DOCKER_USER:
+        from_secret: ghcr_login
+      DOCKER_PASSWORD:
+        from_secret: ghcr_password
+    volumes:
+      - name: dockersock
+        path: /var/run/
+    commands:
+      - export SANITIZED_DRONE_COMMIT_BRANCH=$(echo ${DRONE_COMMIT_BRANCH} | sed 's#/#-#g')
+      - export COMMIT_SHA=${DRONE_COMMIT_SHA:0:7}
+      - cd backend
+      - docker build -t ghcr.io/greg2010/athena-backend .
+      - docker tag ghcr.io/greg2010/athena-backend ghcr.io/greg2010/athena-backend:${SANITIZED_DRONE_COMMIT_BRANCH}_$COMMIT_SHA
+      - docker tag ghcr.io/greg2010/athena-backend ghcr.io/greg2010/athena-backend:${SANITIZED_DRONE_COMMIT_BRANCH}_latest
+      - docker tag ghcr.io/greg2010/athena-backend ghcr.io/greg2010/athena-backend:latest
+      - docker login ghcr.io -u $DOCKER_USER -p $DOCKER_PASSWORD
+      - docker push ghcr.io/greg2010/athena-backend:${SANITIZED_DRONE_COMMIT_BRANCH}_$COMMIT_SHA
+      - docker push ghcr.io/greg2010/athena-backend:${SANITIZED_DRONE_COMMIT_BRANCH}_latest
+      - docker push ghcr.io/greg2010/athena-backend:latest
+    depends_on:
       - build-scala
 
   - name: flush
@@ -153,4 +169,4 @@ volumes:
       path: /var/run/
 ---
 kind: signature
-hmac: bd43253f201d8d407069ae105b1dd8c439547c50848f1961d0b4b21e0088e939
+hmac: 7266ba02e148d6921b48b1305b3d3ddfe5f4f22f0b6ded12370cbd824550d36f

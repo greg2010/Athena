@@ -139,13 +139,26 @@ steps:
         from_secret: discord_webhook_token
       message: >
         {{#success build.status}}
-          Build {{build.number}} for {{repo.name}} triggered by {{build.author}}@{{build.branch}}/{{build.commit}} succeeded. Build took {{since build.started}}.
+          Build {{repo.name}}#{{build.number}} succeeded! :white_check_mark:
+          Triggered by: {{commit.author}}@{{commit.branch}}/{{truncate commit.sha 7}}
+          Commit message: {{commit.message}}
+          Image tag: {{commit.branch}}_{{truncate commit.sha 7}}
+          Build logs: {{build.link}}
+          Build took {{since build.started}}.
         {{else}}
-          Build {{build.number}} for {{repo.name}} triggered by {{build.author}}@{{build.branch}}/{{build.commit}} failed. Build took {{since build.started}}.
+          Build {{repo.name}}#{{build.number}} failed. :red_square:
+          Triggered by: {{commit.author}}@{{commit.branch}}/{{truncate commit.sha 7}}
+          Commit message: {{commit.message}}
+          Build logs: {{build.link}}
+          Build took {{since build.started}}.
         {{/success}}
     depends_on:
       - push-frontend
       - push-backend
+    when:
+      status:
+        - failure
+        - success
 
 volumes:
   - name: dockersock
@@ -153,4 +166,4 @@ volumes:
       path: /var/run/
 ---
 kind: signature
-hmac: 495d359770d677784eb5d03f7eb3570e328c3fb1fa94f237d664d010188a0390
+hmac: a4b0cb0370ff4e9b12c57df1680246bf1b0b794049e1360e108c6a03a3a19670

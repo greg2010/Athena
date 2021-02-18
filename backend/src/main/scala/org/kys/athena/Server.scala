@@ -18,7 +18,6 @@ import zio.clock.Clock
 import zio.interop.catz._
 import zio._
 import zio.console.Console
-import sttp.client3.httpclient.zio.SttpClient
 
 import scala.concurrent.duration._
 
@@ -43,8 +42,8 @@ object Server extends App {
     val riotClient   = (config ++ zioClient ++ cache ++ rrl ++ Clock.live) >>> RiotApiModule.live
     val merakiClient = zioClient >>> MerakiApiClient.live
     val gc           = riotClient >>> GroupModule.live
-    val cgc          = (riotClient ++ merakiClient) >>> CurrentGameModule.live
-    val pgc          = riotClient >>> PregameModule.live
+    val cgc          = (riotClient ++ merakiClient ++ gc) >>> CurrentGameModule.live
+    val pgc          = (riotClient ++ gc) >>> PregameModule.live
 
     allocateHttpServer.provideCustomLayer(cgc ++ gc ++ pgc ++ config).exitCode
   }

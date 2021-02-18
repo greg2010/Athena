@@ -1,7 +1,9 @@
 package org.kys.athena.modules
 
+import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import org.kys.athena.http
 import org.kys.athena.http.models.current.{InGameSummoner, OngoingGameResponse, OngoingGameTeam, PositionEnum}
+import org.kys.athena.http.models.premade.PremadeResponse
 import org.kys.athena.meraki.api.MerakiApiClient
 import org.kys.athena.meraki.api.errors.MerakiApiError
 import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform, SummonerSpellsEnum}
@@ -9,17 +11,33 @@ import org.kys.athena.riot.api.dto.currentgameinfo.{BannedChampion, CurrentGameI
 import zio._
 import org.kys.athena.riot
 
+import java.util.UUID
 import scala.collection.MapView
+import scala.concurrent.duration.DurationInt
 
 
 trait CurrentGameModule {
   def getCurrentGame(platform: Platform, name: String)(implicit reqId: String): IO[Throwable, OngoingGameResponse]
+
+  def getGroupsForGame(platform: Platform,
+                       ongoingGameInfo: OngoingGameResponse,
+                       gamesQueryCount: Int = 5)
+                      (implicit reqId: String): IO[Throwable, PremadeResponse]
+
+  def getGroupsForGameAsync(platform: Platform,
+                            ongoingGameInfo: OngoingGameResponse,
+                            gamesQueryCount: Int = 5)
+                           (implicit reqId: String): IO[Throwable, UUID]
+
+  def getGroupsByUUID(uuid: UUID): IO[Throwable, PremadeResponse]
 }
 
 object CurrentGameModule {
 
   val live = ZLayer.fromServices[
-    RiotApiModule.Service, MerakiApiClient.Service, CurrentGameModule] { (riotApiClient, merakiApiClient) =>
+    RiotApiModule.Service, MerakiApiClient.Service, GroupModule, CurrentGameModule] { (riotApiClient,
+                                                                                       merakiApiClient,
+                                                                                       groupModule) =>
     new CurrentGameModule {
       case class ParticipantTuple(blue: List[CurrentGameParticipant], red: List[CurrentGameParticipant])
       case class BansTuple(blue: Option[Set[BannedChampion]], red: Option[Set[BannedChampion]])
@@ -81,16 +99,16 @@ object CurrentGameModule {
               }
 
               val processed = filtered
-                    .map { perm =>
-                      val score = perm.map {
-                        case (posn, sum) =>
-                          playRate.data.get(sum.championId.toInt).flatMap(_.get(posn)) match {
-                            case Some(p) => p.playRate
-                            case None => 0D
-                          }
-                      }.sum
-                      (perm.toMap.view.mapValues(_.summonerId), score)
-                    }
+                .map { perm =>
+                  val score = perm.map {
+                    case (posn, sum) =>
+                      playRate.data.get(sum.championId.toInt).flatMap(_.get(posn)) match {
+                        case Some(p) => p.playRate
+                        case None => 0D
+                      }
+                  }.sum
+                  (perm.toMap.view.mapValues(_.summonerId), score)
+                }
               val maxByRate = processed.foldRight((MapView[PositionEnum, String](), 0D)) { (cur, maxSoFar) =>
                 if (cur._2 > maxSoFar._2) cur
                 else maxSoFar
@@ -124,11 +142,80 @@ object CurrentGameModule {
                                     OngoingGameTeam(blueSummoners, bluePositions, bans.blue),
                                     OngoingGameTeam(redSummoners, redPositions, bans.red))
       }
+
+
+      val uuidCache: Cache[UUID, Promise[Throwable, PremadeResponse]] = Scaffeine()
+        .recordStats()
+        .expireAfterWrite(5.minutes)
+        .build[UUID, Promise[Throwable, PremadeResponse]]()
+
+      def getGroupsForGame(platform: Platform,
+                           ongoingGameInfo: OngoingGameResponse,
+                           gamesQueryCount: Int = 5)(implicit reqId: String): IO[Throwable, PremadeResponse] = {
+        for {
+          blueGroups <- groupModule.groupsForTeam(ongoingGameInfo.blueTeam.summoners.map(_.summonerId),
+                                                  gamesQueryCount,
+                                                  platform)
+          redGroups <- groupModule.groupsForTeam(ongoingGameInfo.redTeam.summoners.map(_.summonerId),
+                                                 gamesQueryCount,
+                                                 platform)
+        } yield PremadeResponse(blueGroups, redGroups)
+      }
+
+      def getGroupsForGameAsync(platform: Platform,
+                                ongoingGameInfo: OngoingGameResponse,
+                                gamesQueryCount: Int = 5)(implicit reqId: String): IO[Throwable, UUID] = {
+        val promise = Promise.make[Throwable, PremadeResponse]
+        for {
+          uuid <- Task.effect(UUID.randomUUID())
+          p <- promise
+          _ <- Task.effect(uuidCache.put(uuid, p))
+          _ <- p
+            .complete(getGroupsForGame(platform, ongoingGameInfo, gamesQueryCount))
+            .forkDaemon
+        } yield uuid
+      }
+
+      def getGroupsByUUID(uuid: UUID): IO[Throwable, PremadeResponse] = {
+        for {
+          entry <- IO.effect(uuidCache.getIfPresent(uuid))
+          res <- entry match {
+            case Some(v) => {
+              v.await.either.flatMap {
+                case Right(re) => IO.succeed(re)
+                case Left(ex) =>
+                  scribe.error(s"Get groups by UUID failed uuid=$uuid", ex)
+                  IO.fail(ex)
+              }
+            }
+            case None => IO.fail(http.errors.NotFoundError("UUID not found"))
+          }
+        } yield res
+      }
+
     }
   }
 
   def getCurrentGame(platform: Platform, name: String)
                     (implicit reqId: String): ZIO[Has[CurrentGameModule], Throwable, OngoingGameResponse] = {
     ZIO.accessM[Has[CurrentGameModule]](_.get.getCurrentGame(platform, name)(reqId))
+  }
+
+  def getGroupsForGame(platform: Platform,
+                       ongoingGameInfo: OngoingGameResponse,
+                       gamesQueryCount: Int = 5)
+                      (implicit reqId: String): ZIO[Has[CurrentGameModule], Throwable, PremadeResponse] = {
+    ZIO.accessM[Has[CurrentGameModule]](_.get.getGroupsForGame(platform, ongoingGameInfo, gamesQueryCount)(reqId))
+  }
+
+  def getGroupsForGameAsync(platform: Platform,
+                            ongoingGameInfo: OngoingGameResponse,
+                            gamesQueryCount: Int = 5)
+                           (implicit reqId: String): ZIO[Has[CurrentGameModule], Throwable, UUID] = {
+    ZIO.accessM[Has[CurrentGameModule]](_.get.getGroupsForGameAsync(platform, ongoingGameInfo, gamesQueryCount)(reqId))
+  }
+
+  def getGroupsByUUID(uuid: UUID): ZIO[Has[CurrentGameModule], Throwable, PremadeResponse] = {
+    ZIO.accessM[Has[CurrentGameModule]](_.get.getGroupsByUUID(uuid))
   }
 }

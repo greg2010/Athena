@@ -7,7 +7,7 @@ import sttp.tapir.codec.enumeratum._
 import io.circe.generic.auto._
 import org.kys.athena.http.errors.{BackendApiError, BadRequestError, InternalServerError, NotFoundError}
 import org.kys.athena.http.models.pregame.PregameResponse
-import org.kys.athena.http.models.premade.PremadeResponse
+import org.kys.athena.http.models.premade.{PlayerGroup, PremadeResponse}
 import org.kys.athena.riot.api.dto.league.{RankedQueueTypeEnum, TierEnum}
 import sttp.tapir.json.circe._
 import sttp.tapir.generic.auto._
@@ -42,7 +42,7 @@ trait Endpoints {
       .errorOut(defaultErrorCodes)
       .summary("Endpoint to get current game info for a player")
 
-  val groupsByName: Endpoint[(Platform, String, Option[String]), BackendApiError, PremadeResponse, Any] =
+  val currentGameGroupsByName: Endpoint[(Platform, String, Option[String]), BackendApiError, PremadeResponse, Any] =
     endpoint.get
       .in("current" / "by-summoner-name")
       .in(path[Platform]("platformId") / path[String]("summonerName"))
@@ -52,7 +52,7 @@ trait Endpoints {
       .errorOut(defaultErrorCodes)
       .summary("Endpoint to get premades in a game for a player")
 
-  val groupsByUUID: Endpoint[(UUID, Option[String]), BackendApiError, PremadeResponse, Any] =
+  val currentGameGroupsByUUID: Endpoint[(UUID, Option[String]), BackendApiError, PremadeResponse, Any] =
     endpoint.get
       .in("current" / "by-uuid")
       .in(path[UUID]("uuid"))
@@ -68,10 +68,31 @@ trait Endpoints {
     endpoint.get
       .in("pregame" / "by-summoner-name")
       .in(path[Platform]("platformId"))
-      .in(query[Set[String]]("summoners"))
+      .in(query[Set[String]]("summoner"))
       .in(query[Option[Boolean]]("fetchGroups"))
       .in(header[Option[String]]("X-Request-ID"))
       .out(jsonBody[PregameResponse])
       .errorOut(defaultErrorCodes)
       .summary("Endpoint to get pregame info for a set of players")
+
+  val pregameGroupsByName: Endpoint[(Platform, Set[String], Option[String]), BackendApiError, Set[PlayerGroup], Any] =
+    endpoint.get
+      .in("pregame" / "by-summoner-name")
+      .in(path[Platform]("platformId"))
+      .in("groups")
+      .in(query[Set[String]]("summoner"))
+      .in(header[Option[String]]("X-Request-ID"))
+      .out(jsonBody[Set[PlayerGroup]])
+      .errorOut(defaultErrorCodes)
+      .summary("Endpoint to get premades in a lobby of players")
+
+  val pregameGameGroupsByUUID: Endpoint[(UUID, Option[String]), BackendApiError, Set[PlayerGroup], Any] =
+    endpoint.get
+      .in("pregame" / "by-uuid")
+      .in(path[UUID]("uuid"))
+      .in("groups")
+      .in(header[Option[String]]("X-Request-ID"))
+      .out(jsonBody[Set[PlayerGroup]])
+      .errorOut(defaultErrorCodes)
+      .summary("Endpoint to get premades in a lobby by UUID")
 }

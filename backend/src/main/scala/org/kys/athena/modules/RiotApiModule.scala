@@ -1,7 +1,6 @@
 package org.kys.athena.modules
 
 import io.circe.parser.parse
-import org.kys.athena.data.SummonerMatchHistory
 import org.kys.athena.http.models.current.InGameSummoner
 import org.kys.athena.riot.api.dto.`match`.Match
 import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform}
@@ -48,11 +47,6 @@ object RiotApiModule {
                                  queues: Set[GameQueueTypeEnum] = Set(),
                                  platform: Platform)
                                 (implicit reqId: String): IO[RiotApiError, List[Match]]
-
-    def matchHistoryByInGameSummonerSet(inGameSummonerSet: Set[InGameSummoner],
-                                        gamesQueryCount: Int, queues: Set[GameQueueTypeEnum] = Set(),
-                                        platform: Platform)
-                                       (implicit reqId: String): IO[RiotApiError, Set[SummonerMatchHistory]]
 
     def inGameSummonerByParticipant(participant: CurrentGameParticipant,
                                     platform: Platform)
@@ -205,19 +199,6 @@ object RiotApiModule {
                   }
                 }
             }
-          }
-
-          // Returns hydrated match history for each summoner (last `gamesQueryCount` games)
-          def matchHistoryByInGameSummonerSet(inGameSummonerSet: Set[InGameSummoner],
-                                              gamesQueryCount: Int,
-                                              queues: Set[GameQueueTypeEnum] = Set(),
-                                              platform: Platform)(implicit reqId: String)
-          : IO[RiotApiError, Set[SummonerMatchHistory]] = {
-            ZIO.foreachPar(inGameSummonerSet.toList) { inGameSummoner =>
-              matchHistoryBySummonerId(inGameSummoner.summonerId, gamesQueryCount, queues, platform).map { history =>
-                SummonerMatchHistory(inGameSummoner, history)
-              }
-            }.map(_.toSet)
           }
 
           // Groups `Summoner`, `League`, and `CurrentGameParticipant`

@@ -6,34 +6,30 @@ import org.kys.athena.http.models.current.OngoingGameResponse
 import org.kys.athena.http.models.premade.{PlayerGroup, PremadeResponse}
 import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform}
 import org.kys.athena.http
-import zio.macros.accessible
 import zio._
 
 import java.util.UUID
 import scala.concurrent.duration.DurationInt
 
 
-@accessible
+trait GroupModule {
+  def getGroupsForGame(platform: Platform,
+                       ongoingGameInfo: OngoingGameResponse,
+                       gamesQueryCount: Int = 5)
+                      (implicit reqId: String): IO[Throwable, PremadeResponse]
+
+  def getGroupsForGameAsync(platform: Platform,
+                            ongoingGameInfo: OngoingGameResponse,
+                            gamesQueryCount: Int = 5)
+                           (implicit reqId: String): IO[Throwable, UUID]
+
+  def getGroupsByUUID(uuid: UUID): IO[Throwable, PremadeResponse]
+}
+
 object GroupModule {
-  type GroupController = Has[GroupModule.Service]
 
-  trait Service {
-    def getGroupsForGame(platform: Platform,
-                         ongoingGameInfo: OngoingGameResponse,
-                         gamesQueryCount: Int = 5)
-                        (implicit reqId: String): IO[Throwable, PremadeResponse]
-
-    def getGroupsForGameAsync(platform: Platform,
-                              ongoingGameInfo: OngoingGameResponse,
-                              gamesQueryCount: Int = 5)
-                             (implicit reqId: String): IO[Throwable, UUID]
-
-    def getGroupsByUUID(uuid: UUID): IO[Throwable, PremadeResponse]
-  }
-
-  val live = ZLayer.fromService[RiotApiModule.Service, GroupModule.Service] { riotApiClient =>
-
-    new Service {
+  val live = ZLayer.fromService[RiotApiModule.Service, GroupModule] { riotApiClient =>
+    new GroupModule {
       case class TeamTupleWithHistory(blueTeam: Set[SummonerMatchHistory], redTeam: Set[SummonerMatchHistory])
 
       val uuidCache: Cache[UUID, Promise[Throwable, PremadeResponse]] = Scaffeine()
@@ -144,5 +140,23 @@ object GroupModule {
         } yield res
       }
     }
+  }
+
+  def getGroupsForGame(platform: Platform,
+                       ongoingGameInfo: OngoingGameResponse,
+                       gamesQueryCount: Int = 5)
+                      (implicit reqId: String): ZIO[Has[GroupModule], Throwable, PremadeResponse] = {
+    ZIO.accessM[Has[GroupModule]](_.get.getGroupsForGame(platform, ongoingGameInfo, gamesQueryCount)(reqId))
+  }
+
+  def getGroupsForGameAsync(platform: Platform,
+                            ongoingGameInfo: OngoingGameResponse,
+                            gamesQueryCount: Int = 5)
+                           (implicit reqId: String): ZIO[Has[GroupModule], Throwable, UUID] = {
+    ZIO.accessM[Has[GroupModule]](_.get.getGroupsForGameAsync(platform, ongoingGameInfo, gamesQueryCount)(reqId))
+  }
+
+  def getGroupsByUUID(uuid: UUID): ZIO[Has[GroupModule], Throwable, PremadeResponse] = {
+    ZIO.accessM[Has[GroupModule]](_.get.getGroupsByUUID(uuid))
   }
 }

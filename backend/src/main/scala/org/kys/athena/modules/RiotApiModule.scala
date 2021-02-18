@@ -24,6 +24,8 @@ import zio.duration._
 import scala.reflect.ClassTag
 
 
+// Using the macro here because there are a lot of methods and therefore a lot of boilerplate.
+// The end result of the macro is the same as in other modules.
 @accessible
 object RiotApiModule {
   type RiotApiClient = Has[RiotApiModule.Service]
@@ -58,7 +60,7 @@ object RiotApiModule {
   }
 
   val live = {
-    ZLayer.fromServices[ConfigModule.Service, SttpClient.Service, CacheModule.Service, RateLimiter,
+    ZLayer.fromServices[ConfigModule, SttpClient.Service, CacheModule, RateLimiter,
       Clock.Service, Service] {
       (config, backend, cacheController, regionalRateLimiter, clock) =>
         new Service {

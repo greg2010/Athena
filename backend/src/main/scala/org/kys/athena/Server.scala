@@ -1,6 +1,9 @@
 package org.kys.athena
 
-import org.kys.athena.modules.{CacheModule, ConfigModule, CurrentGameModule, GroupModule, LoggerModule, RiotApiModule}
+import org.kys.athena.modules.{
+  CacheModule, ConfigModule, CurrentGameModule, GroupModule, LoggerModule,
+  PregameModule, RiotApiModule
+}
 import org.kys.athena.http.routes.LogicEndpoints
 import org.kys.athena.meraki.api.MerakiApiClient
 import sttp.client3.httpclient.zio.HttpClientZioBackend
@@ -9,13 +12,13 @@ import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.CORS
-import org.kys.athena.modules.ConfigModule.ConfigModule
 import org.kys.athena.http.middleware.ApacheLogging
 import org.kys.athena.modules.ratelimiter.RateLimiter
 import zio.clock.Clock
 import zio.interop.catz._
 import zio._
 import zio.console.Console
+import sttp.client3.httpclient.zio.SttpClient
 
 import scala.concurrent.duration._
 
@@ -41,15 +44,16 @@ object Server extends App {
     val merakiClient = zioClient >>> MerakiApiClient.live
     val gc           = riotClient >>> GroupModule.live
     val cgc          = (riotClient ++ merakiClient) >>> CurrentGameModule.live
+    val pgc          = riotClient >>> PregameModule.live
 
-    allocateHttpServer.provideCustomLayer(cgc ++ gc ++ config).exitCode
+    allocateHttpServer.provideCustomLayer(cgc ++ gc ++ pgc ++ config).exitCode
   }
 
-  def allocateHttpServer: ZIO[AppRuntime with ConfigModule, Throwable, Unit] = {
-    ZIO.runtime[AppRuntime with ConfigModule]
+  def allocateHttpServer: ZIO[AppRuntime with Has[ConfigModule], Throwable, Unit] = {
+    ZIO.runtime[AppRuntime with Has[ConfigModule]]
       .flatMap { implicit runtime =>
 
-        val config = runtime.environment.get[ConfigModule.Service].loaded
+        val config = runtime.environment.get[ConfigModule].loaded
 
         val routes: HttpRoutes[AppTask] = Router(config.http.prefix -> LogicEndpoints.publicRoutes,
                                                  "/" -> LogicEndpoints.internalRoutes)

@@ -7,23 +7,20 @@ import org.kys.athena.meraki.api.errors.MerakiApiError
 import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform, SummonerSpellsEnum}
 import org.kys.athena.riot.api.dto.currentgameinfo.{BannedChampion, CurrentGameInfo, CurrentGameParticipant}
 import zio._
-import zio.macros.accessible
 import org.kys.athena.riot
 
 import scala.collection.MapView
 
 
-@accessible
+trait CurrentGameModule {
+  def getCurrentGame(platform: Platform, name: String)(implicit reqId: String): IO[Throwable, OngoingGameResponse]
+}
+
 object CurrentGameModule {
 
-  type CurrentGameController = Has[CurrentGameModule.Service]
-  trait Service {
-    def getCurrentGame(platform: Platform, name: String)(implicit reqId: String): IO[Throwable, OngoingGameResponse]
-  }
-
-  val live = ZLayer.fromServices[RiotApiModule.Service, MerakiApiClient.Service,
-    CurrentGameModule.Service] { (riotApiClient, merakiApiClient) =>
-    new Service {
+  val live = ZLayer.fromServices[
+    RiotApiModule.Service, MerakiApiClient.Service, CurrentGameModule] { (riotApiClient, merakiApiClient) =>
+    new CurrentGameModule {
       case class ParticipantTuple(blue: List[CurrentGameParticipant], red: List[CurrentGameParticipant])
       case class BansTuple(blue: Option[Set[BannedChampion]], red: Option[Set[BannedChampion]])
 
@@ -105,7 +102,6 @@ object CurrentGameModule {
         }
       }
 
-
       def getCurrentGame(platform: Platform, name: String)
                         (implicit reqId: String): IO[Throwable, OngoingGameResponse] = {
         for {
@@ -129,6 +125,10 @@ object CurrentGameModule {
                                     OngoingGameTeam(redSummoners, redPositions, bans.red))
       }
     }
-    }
+  }
 
+  def getCurrentGame(platform: Platform, name: String)
+                    (implicit reqId: String): ZIO[Has[CurrentGameModule], Throwable, OngoingGameResponse] = {
+    ZIO.accessM[Has[CurrentGameModule]](_.get.getCurrentGame(platform, name)(reqId))
+  }
 }

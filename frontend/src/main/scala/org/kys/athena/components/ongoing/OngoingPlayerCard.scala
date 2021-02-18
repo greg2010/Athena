@@ -4,9 +4,10 @@ import com.raquo.laminar.api.L._
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import org.kys.athena.http.backend.BackendDataHelpers
 import org.kys.athena.http.dd.CombinedDD
-import org.kys.athena.http.models.current.{InGameSummoner, RankedLeague}
+import org.kys.athena.http.models.current.InGameSummoner
 import org.kys.athena.components.common
 import org.kys.athena.components.common.{ChampionIcon, ImgSized, OpggLink, UggLink}
+import org.kys.athena.http.models.common.RankedLeague
 import org.kys.athena.riot.api.dto.common.{Platform, SummonerSpellsEnum}
 import org.kys.athena.riot.api.dto.ddragon.runes.Rune
 import org.kys.athena.riot.api.dto.league.{MiniSeries, RankedQueueTypeEnum, TierEnum}

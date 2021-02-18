@@ -6,6 +6,7 @@ import sttp.tapir._
 import sttp.tapir.codec.enumeratum._
 import io.circe.generic.auto._
 import org.kys.athena.http.errors.{BackendApiError, BadRequestError, InternalServerError, NotFoundError}
+import org.kys.athena.http.models.pregame.PregameResponse
 import org.kys.athena.http.models.premade.PremadeResponse
 import org.kys.athena.riot.api.dto.league.{RankedQueueTypeEnum, TierEnum}
 import sttp.tapir.json.circe._
@@ -60,4 +61,17 @@ trait Endpoints {
       .out(jsonBody[PremadeResponse])
       .errorOut(defaultErrorCodes)
       .summary("Endpoint to get premades in a game for a player by UUID")
+
+  val pregameByName: Endpoint[
+    (Platform, Set[String], Option[Boolean], Option[String]),
+    BackendApiError, PregameResponse, Any] =
+    endpoint.get
+      .in("pregame" / "by-summoner-name")
+      .in(path[Platform]("platformId"))
+      .in(query[Set[String]]("summoners"))
+      .in(query[Option[Boolean]]("fetchGroups"))
+      .in(header[Option[String]]("X-Request-ID"))
+      .out(jsonBody[PregameResponse])
+      .errorOut(defaultErrorCodes)
+      .summary("Endpoint to get pregame info for a set of players")
 }

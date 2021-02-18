@@ -76,7 +76,7 @@ lazy val dependencies = new {
   val laminarVersion   = "0.11.0"
   val airstreamVersion = "0.11.1"
 
-  val zioVersion     = "1.0.4"
+  val zioVersion     = "1.0.4-2"
   val zioCatsVersion = "2.2.0.1"
 
   val tapirVersion = "0.17.9"

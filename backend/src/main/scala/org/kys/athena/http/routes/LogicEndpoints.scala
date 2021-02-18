@@ -1,8 +1,7 @@
 package org.kys.athena.http.routes
 
-import org.kys.athena.modules.{CurrentGameModule, GroupModule}
-import org.kys.athena.modules.CurrentGameModule.CurrentGameController
-import org.kys.athena.modules.GroupModule.GroupController
+import org.kys.athena.http.models.pregame.PregameResponse
+import org.kys.athena.modules.{CurrentGameModule, GroupModule, PregameModule}
 import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
 import sttp.tapir.ztapir._
 import zio._
@@ -15,7 +14,7 @@ import java.util.UUID
 object LogicEndpoints extends Endpoints {
   // TODO: do something about this mess
 
-  type Env = CurrentGameController with GroupController
+  type Env = Has[CurrentGameModule] with Has[GroupModule] with Has[PregameModule]
   val currentGameByNameImpl = this.currentGameByName.zServerLogic { case (platform, name, fetchGroups, requestId) =>
     val fetchGroupsDefault = fetchGroups.getOrElse(false)
     val decodedName        = URLDecoder.decode(name, "UTF-8")
@@ -48,13 +47,21 @@ object LogicEndpoints extends Endpoints {
     } yield gg).resurrect.flatMapError(ErrorHandler.defaultErrorHandler)
   }
 
+  val pregameByNameImpl = this.pregameByName.zServerLogic { case (platform, names, fetchGroups, requestId) =>
+    implicit val getReqId: String = requestId.fold(UUID.randomUUID().toString)(identity)
+    (for {
+      pg <- PregameModule.getPregameLobby(platform, names)
+    } yield PregameResponse(pg, None)).resurrect.flatMapError(ErrorHandler.defaultErrorHandler)
+  }
+
   val healthzImpl = this.healthz.zServerLogic { _ =>
     UIO.succeed("Ok")
   }
 
   val publicRoutes = ZHttp4sServerInterpreter.from(List(currentGameByNameImpl.widen[Env],
                                                         groupsByNameImpl.widen[Env],
-                                                        groupsByUUIDImpl.widen[Env])).toRoutes
+                                                        groupsByUUIDImpl.widen[Env],
+                                                        pregameByNameImpl.widen[Env])).toRoutes
 
   val internalRoutes = ZHttp4sServerInterpreter.from(healthzImpl.widen[Env]).toRoutes
 }

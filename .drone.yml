@@ -94,12 +94,12 @@ steps:
       - export COMMIT_SHA=${DRONE_COMMIT_SHA:0:7}
       - cd frontend
       - docker build -t ghcr.io/greg2010/athena-frontend .
-      - docker tag ghcr.io/greg2010/athena-frontend ghcr.io/greg2010/athena-frontend:${SANITIZED_DRONE_COMMIT_BRANCH}_$COMMIT_SHA
-      - docker tag ghcr.io/greg2010/athena-frontend ghcr.io/greg2010/athena-frontend:${SANITIZED_DRONE_COMMIT_BRANCH}_latest
+      - docker tag ghcr.io/greg2010/athena-frontend ghcr.io/greg2010/athena-frontend:$SANITIZED_DRONE_COMMIT_BRANCH\_$COMMIT_SHA
+      - docker tag ghcr.io/greg2010/athena-frontend ghcr.io/greg2010/athena-frontend:$SANITIZED_DRONE_COMMIT_BRANCH\_latest
       - docker tag ghcr.io/greg2010/athena-frontend ghcr.io/greg2010/athena-frontend:latest
       - docker login ghcr.io -u $DOCKER_USER -p $DOCKER_PASSWORD
-      - docker push ghcr.io/greg2010/athena-frontend:${SANITIZED_DRONE_COMMIT_BRANCH}_$COMMIT_SHA
-      - docker push ghcr.io/greg2010/athena-frontend:${SANITIZED_DRONE_COMMIT_BRANCH}_latest
+      - docker push ghcr.io/greg2010/athena-frontend:$SANITIZED_DRONE_COMMIT_BRANCH\_$COMMIT_SHA
+      - docker push ghcr.io/greg2010/athena-frontend:$SANITIZED_DRONE_COMMIT_BRANCH\_latest
       - docker push ghcr.io/greg2010/athena-frontend:latest
     depends_on:
       - build-js
@@ -120,12 +120,12 @@ steps:
       - export COMMIT_SHA=${DRONE_COMMIT_SHA:0:7}
       - cd backend
       - docker build -t ghcr.io/greg2010/athena-backend .
-      - docker tag ghcr.io/greg2010/athena-backend ghcr.io/greg2010/athena-backend:${SANITIZED_DRONE_COMMIT_BRANCH}_$COMMIT_SHA
-      - docker tag ghcr.io/greg2010/athena-backend ghcr.io/greg2010/athena-backend:${SANITIZED_DRONE_COMMIT_BRANCH}_latest
+      - docker tag ghcr.io/greg2010/athena-backend ghcr.io/greg2010/athena-backend:$SANITIZED_DRONE_COMMIT_BRANCH\_$COMMIT_SHA
+      - docker tag ghcr.io/greg2010/athena-backend ghcr.io/greg2010/athena-backend:$SANITIZED_DRONE_COMMIT_BRANCH\_latest
       - docker tag ghcr.io/greg2010/athena-backend ghcr.io/greg2010/athena-backend:latest
       - docker login ghcr.io -u $DOCKER_USER -p $DOCKER_PASSWORD
-      - docker push ghcr.io/greg2010/athena-backend:${SANITIZED_DRONE_COMMIT_BRANCH}_$COMMIT_SHA
-      - docker push ghcr.io/greg2010/athena-backend:${SANITIZED_DRONE_COMMIT_BRANCH}_latest
+      - docker push ghcr.io/greg2010/athena-backend:$SANITIZED_DRONE_COMMIT_BRANCH\_$COMMIT_SHA
+      - docker push ghcr.io/greg2010/athena-backend:$SANITIZED_DRONE_COMMIT_BRANCH\_latest
       - docker push ghcr.io/greg2010/athena-backend:latest
     depends_on:
       - build-scala
@@ -169,4 +169,4 @@ volumes:
       path: /var/run/
 ---
 kind: signature
-hmac: 7266ba02e148d6921b48b1305b3d3ddfe5f4f22f0b6ded12370cbd824550d36f
+hmac: 9f4481c569b4ce38bfbb0f9d5f910a27623df6932e6aa9693cca2a32a19aca32

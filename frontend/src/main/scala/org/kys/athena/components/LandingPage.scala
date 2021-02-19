@@ -9,6 +9,7 @@ import org.scalajs.dom.MouseEvent
 import scala.math._
 import org.kys.athena.util.SearchHistoryManager
 import org.kys.athena.components.common.FocusCapturer._
+import org.kys.athena.util.assets.AssetLoader
 
 object LandingPage {
   def render(mouseES:EventStream[MouseEvent]): HtmlElement = {
@@ -35,8 +36,6 @@ object LandingPage {
     val focusBus = new EventBus[EventFired]
     div(cls := "flex flex-col items-center container-md flex-grow justify-center",
       //center of eye aleph256full.png (152,125)
-
-
         div(
           width := "256px",
           height := "256px",
@@ -44,9 +43,8 @@ object LandingPage {
           div(
             position := "absolute",
             height := "256px",
-            div(img(src := "/images/aleph256full.png", width := "256px", height := "256px"),
+            div(img(src := AssetLoader.require("/images/aleph256full.png"), width := "256px", height := "256px"),
                 zIndex := 1)),
-
             div(
               position := "relative",
               // draw eye at coordinates

@@ -8,6 +8,7 @@ import org.kys.athena.datastructures.Config
 import org.kys.athena.App
 import org.kys.athena.routes.OngoingRoute
 import org.kys.athena.components.common.FocusCapturer._
+import org.kys.athena.util.assets.AssetLoader
 
 
 object AppBar {
@@ -37,7 +38,7 @@ object AppBar {
         div(
           cls := "flex flex-row h-full",
           a(cls := "mx-2", href := "https://github.com/greg2010/Athena", target := "_blank",
-            ImgSized(s"${Config.FRONTEND_URL}/images/gh_logo.png", 40, Some(40))),
+            ImgSized(AssetLoader.require("/images/gh_logo.png"), 40, Some(40))),
           child <-- showSignal.map {
             case true =>
             FocusCapturer(

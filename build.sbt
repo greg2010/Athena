@@ -10,7 +10,7 @@ lazy val global = project
   .in(file("."))
   .settings(settings)
   .disablePlugins(AssemblyPlugin)
-  .aggregate(common.jvm, common.js, backend, frontend)
+  .aggregate(common.jvm, common.js, backend, frontend, macroSub)
 
 lazy val common = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
@@ -31,10 +31,22 @@ lazy val frontend = project
   .settings(name := "frontend",
             settings,
             libraryDependencies ++= dependencies.js.value,
-            scalaJSUseMainModuleInitializer := true)
+            scalaJSUseMainModuleInitializer := true,
+            // include the macro classes and resources in the main js
+            Compile / packageBin / mappings ++= (macroSub / Compile / packageBin / mappings).value,
+            // include the macro sources in the main source js
+            Compile / packageSrc / mappings ++= (macroSub / Compile / packageSrc / mappings).value)
   .disablePlugins(AssemblyPlugin)
   .enablePlugins(ScalaJSPlugin)
   .dependsOn(common.js)
+  .dependsOn(macroSub % "compile-internal, test-internal")
+
+lazy val macroSub = (project in file("macro"))
+  .settings(name := "macro",
+            commonSettings,
+            libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value)
+  .disablePlugins(AssemblyPlugin)
+  .enablePlugins(ScalaJSPlugin)
 
 // Settings
 lazy val compilerOptions = Seq("-unchecked", "-feature", "-deprecation", "-Wunused:imports", "-Ymacro-annotations",

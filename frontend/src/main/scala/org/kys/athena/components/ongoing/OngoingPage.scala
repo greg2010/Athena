@@ -17,6 +17,7 @@ import org.kys.athena.riot.api.dto.currentgameinfo.BannedChampion
 import org.kys.athena.util.CSSUtil._
 import org.kys.athena.datastructures.{DataState, Failed, Infallible, Loading, Ready}
 import org.kys.athena.datastructures.Config
+import org.kys.athena.util.assets.AssetLoader
 import org.scalajs.dom.html
 import zio._
 
@@ -312,7 +313,7 @@ object OngoingPage {
                   zIndex := 1,
                   new CStyle("filter", "filter") := "grayscale(50%)",
                   cls := "rounded-lg"),
-                ImgSized(s"${Config.FRONTEND_URL}/images/slash_red_256.png",
+                ImgSized(AssetLoader.require("/images/slash_red_256.png"),
                          imgWidth = 64,
                          imgHeight = Some(64),
                          position := "relative",

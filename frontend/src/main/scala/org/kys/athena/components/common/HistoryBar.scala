@@ -13,6 +13,7 @@ object HistoryBar {
   def saveToStorage(currentUserSearch:LocalSearchData):Unit = {
     val listFromStorage = readFromStorage
     val listCompareFalse = !listFromStorage.contains(currentUserSearch)
+    val maxUserSearchesSaved = 10
     val newList = if (listCompareFalse){
       listFromStorage.prepended(currentUserSearch)
     } else {
@@ -27,7 +28,12 @@ object HistoryBar {
         case None => List(currentUserSearch)
       }
     }
-    val newListAsString = newList.asJson.noSpaces
+    val newListEdited = if (newList.length > maxUserSearchesSaved) {
+      newList.dropRight(1)
+    } else{
+      newList
+    }
+    val newListAsString = newListEdited.asJson.noSpaces
     dom.window.localStorage.setItem(key="localStorageCache", newListAsString)
     scribe.warn(newListAsString)
   }

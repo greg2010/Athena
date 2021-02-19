@@ -78,7 +78,7 @@ object LandingPage {
           onFocus.preventDefault.useCapture.mapTo(FocusIn) --> focusBus.writer,
           onBlur.preventDefault.useCapture.mapTo(FocusOut) --> focusBus.writer,
           SearchBar("", Platform.NA, cls := "w-full pb-1"),
-          HistoryBar(Some("p-1"), cls := "flex w-full justify-center flex-wrap pt-1",
+          HistoryBar(Some("p-1"), cls := "flex w-full justify-center flex-wrap pt-1 font-semibold font-sans",
                      cls <--focusBus.events.delay(100).toSignal(FocusOut).map{
                            case FocusIn => ""
                            case FocusOut => "hidden"

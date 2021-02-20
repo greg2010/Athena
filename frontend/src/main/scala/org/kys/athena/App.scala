@@ -1,5 +1,6 @@
 package org.kys.athena
 
+import com.raquo.airstream.eventbus.EventBus
 import com.raquo.laminar.api.L._
 import com.raquo.waypoint._
 import io.circe.parser._
@@ -11,6 +12,7 @@ import org.kys.athena.components.LandingPage
 import org.kys.athena.components.common.{AppBar, Footer}
 import org.kys.athena.components.ongoing.OngoingPage
 import org.scalajs.dom
+import org.scalajs.dom.MouseEvent
 import urldsl.errors.DummyError
 import urldsl.vocabulary.{FromString, Printer}
 
@@ -50,18 +52,17 @@ object App {
 
   private val hideSearchBar = Var(false)
 
-
   private val splitter: SplitRender[PageRoute, HtmlElement] =
     SplitRender[PageRoute, HtmlElement](router.$currentPage)
       .collectStatic(LandingRoute) {
-        LandingPage.render
+        LandingPage.render(windowEvents.onMouseMove)
       }.collectStatic(RouteNotFound) {
-      LandingPage.render
+      LandingPage.render(windowEvents.onMouseMove)
     }.collect[OngoingRoute] { page =>
       OngoingPage.render(page, hideSearchBar.writer)
     }
 
-  def render(): HtmlElement = {
+    def render(): HtmlElement = {
     div(cls := "root h-screen flex flex-col items-center",
         div(cls := "h-full w-full fixed",
             backgroundColor := CSSUtil.paletteBackground,

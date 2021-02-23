@@ -11,17 +11,23 @@ object AssetLoader {
 
   def requireImpl(c: blackbox.Context)(path: c.Expr[String]): c.Expr[String] = {
     import c.universe._
-    path match {
-      case Expr(Literal(_)) => {
-        reify {
-          JSImporter.require[String](s"../../src/main/resources" + path.splice)
-        }
+    def eval[B](tree: Tree): B = c.eval[B](c.Expr[B](c.untypecheck(tree.duplicate)))
+    try {
+      val pathStr = eval[String](path.tree)
+      println("Evaled to " + pathStr)
+      val expr = c.Expr[String](Literal(Constant(pathStr)))
+      reify {
+        JSImporter.require[String](s"../../src/main/resources" + expr.splice)
       }
-      case _ => {
-        throw new IllegalArgumentException("Cannot call require with non-literal values.\n" +
-                                           "This will produce an invalid JS require that will likely break " +
-                                           "things.")
-      }
+    } catch {
+      case e: Throwable =>
+        c.abort(c.enclosingPosition,
+                s"""
+                   |Exception during require macro expansion.
+                   |This method cannot be called with values not known at compile-time.
+                   |This will produce an invalid JS require that will likely break things.
+                   |Caused by: $e
+                   |""".stripMargin)
     }
     /*
     def eval[B](tree: Tree): B = c.eval[B](c.Expr[B](c.untypecheck(tree.duplicate)))

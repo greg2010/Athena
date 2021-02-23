@@ -50,18 +50,17 @@ object App {
 
   private val hideSearchBar = Var(false)
 
-
   private val splitter: SplitRender[PageRoute, HtmlElement] =
     SplitRender[PageRoute, HtmlElement](router.$currentPage)
       .collectStatic(LandingRoute) {
-        LandingPage.render
+        LandingPage.render(windowEvents.onMouseMove)
       }.collectStatic(RouteNotFound) {
-      LandingPage.render
+      LandingPage.render(windowEvents.onMouseMove)
     }.collect[OngoingRoute] { page =>
       OngoingPage.render(page, hideSearchBar.writer)
     }
 
-  def render(): HtmlElement = {
+    def render(): HtmlElement = {
     div(cls := "root h-screen flex flex-col items-center",
         div(cls := "h-full w-full fixed",
             backgroundColor := CSSUtil.paletteBackground,

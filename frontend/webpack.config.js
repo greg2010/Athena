@@ -20,7 +20,7 @@ const devServer = {
   clientLogLevel: 'none',
   host: process.env.HOST || 'localhost',
   public: process.env.HOST || 'localhost',
-  port: devServerPort,
+  port: process.env.PORT || devServerPort,
   historyApiFallback: {
     index: ''
   },

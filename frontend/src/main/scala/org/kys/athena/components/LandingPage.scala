@@ -15,24 +15,20 @@ object LandingPage {
       top := "44.5%",
       left := "56%",
       width := "0px",
-      height := "0px",
-      )
+      height := "0px")
 
-    val eyecoords = mouseES.map{ev=>
+    val eyeCoords = mouseES.map { ev =>
       val eyeRef = referenceDiv.ref.getBoundingClientRect()
-      val d = sqrt(pow(ev.pageX-eyeRef.left, 2) + pow(ev.pageY-eyeRef.top, 2))
       // calc theta from mouse coordinates
-      val th = atan2(ev.pageY-eyeRef.top, ev.pageX-eyeRef.left)
-      // determine distance % mouse is from center and then multiply by polar distance coord "r" (tan-1 (y/x) multiplied by max allowed circle draw
-      val r = sqrt(pow(1, 2) + pow(5, 2))
-      //val maxd = //determined from user screen?
-      //val maxr = //determined from aleph pic
+      val th     = atan2(ev.pageY - eyeRef.top, ev.pageX - eyeRef.left)
+      // determine distance % mouse is from center and then multiply by polar distance coord "r"
+      // (tan-1 (y/x) multiplied by max allowed circle draw
+      val r      = sqrt(pow(1, 2) + pow(5, 2))
       // convert back to cartesian
-      //val x = (maxr * (d / maxd) * cos(th))
-      //val y = (maxr * (d / maxd) * sin(th))
-      val x = r * cos(th)
-      val y = r * sin(th)
-      (x,y)
+      val x      = r * cos(th)
+      val y      = r * sin(th)
+
+      (x, y)
     }.toSignal((-5D,0D))
 
 
@@ -53,8 +49,8 @@ object LandingPage {
             div(
               position := "relative",
               // draw eye at coordinates
-              top <-- eyecoords.map(coords=>s"${coords._2 + 44.5}%"),
-              left <-- eyecoords.map(coords=>s"${coords._1 + 56}%"),
+              top <-- eyeCoords.map(coords => s"${coords._2 + 44.5}%"),
+              left <-- eyeCoords.map(coords => s"${coords._1 + 56}%"),
               zIndex := 2,
               cls := "rounded-full flex items-center justify-center",
               width := "20px",

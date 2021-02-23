@@ -1,6 +1,5 @@
 package org.kys.athena
 
-import com.raquo.airstream.eventbus.EventBus
 import com.raquo.laminar.api.L._
 import com.raquo.waypoint._
 import io.circe.parser._
@@ -12,7 +11,6 @@ import org.kys.athena.components.LandingPage
 import org.kys.athena.components.common.{AppBar, Footer}
 import org.kys.athena.components.ongoing.OngoingPage
 import org.scalajs.dom
-import org.scalajs.dom.MouseEvent
 import urldsl.errors.DummyError
 import urldsl.vocabulary.{FromString, Printer}
 

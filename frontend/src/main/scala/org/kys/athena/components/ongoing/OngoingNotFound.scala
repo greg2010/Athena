@@ -1,21 +1,38 @@
 package org.kys.athena.components.ongoing
 
+import com.raquo.airstream.eventbus.EventBus
 import org.kys.athena.routes.OngoingRoute
 import com.raquo.laminar.api.L._
-import org.kys.athena.components.common.SearchBar
+import org.kys.athena.components.LandingPage.{EventFired, FocusIn, FocusOut}
+import org.kys.athena.components.common.{HistoryBar, SearchBar}
 import org.scalajs.dom
 
 
 object OngoingNotFound {
+  sealed trait EventFired
+  case object FocusIn extends EventFired
+  case object FocusOut extends EventFired
+
   def render(p: OngoingRoute, refreshCb: () => Unit) = {
+    val focusBus = new EventBus[EventFired]
     div(
       cls := s"flex flex-col items-center p-4",
       img(src := "/images/blitzcrank_logo.png"),
       span(
         cls := "text-xl mt-4", "Summoner ", b(s"${p.realm.toString}/${p.name}"), " is not currently in game."),
-      SearchBar(p.name,
+      div(
+        cls := "rounded-lg bg-white border border-gray-500 w-5/6 my-4 h-10" +
+        "p-1 divide-y divide-gray-500",
+        onFocus.preventDefault.useCapture.mapTo(FocusIn) --> focusBus.writer,
+        onBlur.preventDefault.useCapture.mapTo(FocusOut) --> focusBus.writer,
+        SearchBar(p.name,
                 p.realm,
-                cls := "rounded-lg bg-white border border-gray-500 w-5/6 my-4 h-10",
-                onSubmit.preventDefault --> Observer[dom.Event](onNext = _ => refreshCb())))
+                cls := "",
+                onSubmit.preventDefault --> Observer[dom.Event](onNext = _ => refreshCb())),
+        HistoryBar(Some("p-1"), cls := "flex w-full justify-center flex-wrap pt-1 font-semibold font-sans",
+               cls <--focusBus.events.delay(100).toSignal(FocusOut).map{
+                 case FocusIn => ""
+                 case FocusOut => "hidden"
+               })))
   }
 }

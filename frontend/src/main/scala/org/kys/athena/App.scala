@@ -10,29 +10,41 @@ import org.kys.athena.util.CSSUtil
 import org.kys.athena.components.LandingPage
 import org.kys.athena.components.common.{AppBar, Footer}
 import org.kys.athena.components.ongoing.OngoingPage
+import org.kys.athena.components.pregame.PregamePage
 import org.scalajs.dom
 import urldsl.errors.DummyError
-import urldsl.vocabulary.{FromString, Printer}
+import urldsl.vocabulary.{FromString, Printer, UrlMatching}
 
 
 object App {
+  implicit val fs = new FromString[Platform, DummyError] {
+    override def fromString(str: String): Either[DummyError, Platform] = {
+      Platform.withNameEither(str).left.map(_ => DummyError.dummyError)
+    }
+  }
+  implicit val pr = new Printer[Platform] {
+    override def print(t: Platform): String = t.entryName
+  }
+
+  implicit val ls = new FromString[List[String], DummyError] {
+    override def fromString(str: String): Either[DummyError, List[String]] = Right(str.split(',').toList)
+  }
+
+  implicit val sl = new Printer[List[String]] {
+    override def print(t: List[String]) = t.mkString(",")
+  }
 
   private val routes: List[Route[_ <: PageRoute, _]] = List(
     Route.static(LandingRoute, root / endOfSegments),
+    Route.withQuery[PregameRoute, Platform, List[String]](
+      encode = p => UrlMatching(p.realm, p.names),
+      decode = a => PregameRoute(a.path, a.params),
+      pattern = (root / segment[Platform] / "pregame" / endOfSegments) ?
+                (param[List[String]]("summoners"))),
     Route[OngoingRoute, (Platform, String)](
       encode = p => (p.realm, p.name),
       decode = a => OngoingRoute(a._1, a._2),
-      pattern = {
-        implicit val fs = new FromString[Platform, DummyError] {
-          override def fromString(str: String): Either[DummyError, Platform] = {
-            Platform.withNameEither(str).left.map(_ => DummyError.dummyError)
-          }
-        }
-        implicit val pr = new Printer[Platform] {
-          override def print(t: Platform): String = t.entryName
-        }
-        root / segment[Platform] / segment[String] / endOfSegments
-      })
+      pattern = root / segment[Platform] / segment[String] / endOfSegments)
     )
 
   private val router = new Router[PageRoute](
@@ -58,6 +70,8 @@ object App {
       LandingPage.render(windowEvents.onMouseMove)
     }.collect[OngoingRoute] { page =>
       OngoingPage.render(page, hideSearchBar.writer)
+    }.collect[PregameRoute] { page =>
+      PregamePage.render(page)
     }
 
 

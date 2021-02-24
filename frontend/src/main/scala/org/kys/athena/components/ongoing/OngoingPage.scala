@@ -3,7 +3,7 @@ package org.kys.athena.components.ongoing
 import com.raquo.domtypes.generic.keys.{Style => CStyle}
 import com.raquo.laminar.api.L._
 import com.raquo.laminar.nodes.ReactiveHtmlElement
-import org.kys.athena.http.Client._
+import org.kys.athena.http.BackendClient._
 import org.kys.athena.http.backend.BackendDataHelpers
 import org.kys.athena.http.dd.CombinedDD
 import org.kys.athena.http.errors.{BackendApiError, InternalServerError, NotFoundError}
@@ -11,6 +11,7 @@ import org.kys.athena.http.models.current._
 import org.kys.athena.http.models.premade.{PlayerGroup, PremadeResponse}
 import org.kys.athena.components.common
 import org.kys.athena.components.common.{ChampionIcon, ImgSized, OpggLink, UggLink}
+import org.kys.athena.http.DDClient
 import org.kys.athena.routes.OngoingRoute
 import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform}
 import org.kys.athena.riot.api.dto.currentgameinfo.BannedChampion
@@ -35,7 +36,9 @@ object OngoingPage {
   def fetchAndWriteDDragon(ddObs: Observer[DataState[CombinedDD]]): IO[BackendApiError, Unit] = {
     for {
       dd <- {
-        ZIO.tupledPar(fetchCachedDDragonChampion(), fetchCachedDDragonRunes(), fetchCachedDDragonSummoners())
+        ZIO.tupledPar(DDClient.fetchCachedDDragonChampion(),
+                      DDClient.fetchCachedDDragonRunes(),
+                      DDClient.fetchCachedDDragonSummoners())
           .either.map {
           case Left(ex) => Failed(ex)
           case Right((c, r, s)) => Ready(CombinedDD(c, r, s))

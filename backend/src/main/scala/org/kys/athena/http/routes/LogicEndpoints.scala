@@ -11,25 +11,26 @@ import java.net.URLDecoder
 import java.util.UUID
 
 
-object LogicEndpoints extends Endpoints {
+object LogicEndpoints {
   // TODO: do something about this mess
 
   type Env = Has[CurrentGameModule] with Has[PregameModule]
-  val currentGameByNameImpl = this.currentGameByName.zServerLogic { case (platform, name, fetchGroups, requestId) =>
-    val fetchGroupsDefault = fetchGroups.getOrElse(false)
-    val decodedName        = URLDecoder.decode(name, "UTF-8")
-    implicit val getReqId: String = requestId.fold(UUID.randomUUID().toString)(identity)
+  val currentGameByNameImpl = Endpoints.currentGameByName
+    .zServerLogic { case (platform, name, fetchGroups, requestId) =>
+      val fetchGroupsDefault = fetchGroups.getOrElse(false)
+      val decodedName        = URLDecoder.decode(name, "UTF-8")
+      implicit val getReqId: String = requestId.fold(UUID.randomUUID().toString)(identity)
 
-    (for {
-      game <- CurrentGameModule.getCurrentGame(platform, decodedName)
-      uuidAdded <-
-        if (fetchGroupsDefault)
-          CurrentGameModule.getGroupsForGameAsync(platform, game).map(u => game.copy(groupUuid = Some(u)))
-        else IO.succeed(game)
+      (for {
+        game <- CurrentGameModule.getCurrentGame(platform, decodedName)
+        uuidAdded <-
+          if (fetchGroupsDefault)
+            CurrentGameModule.getGroupsForGameAsync(platform, game).map(u => game.copy(groupUuid = Some(u)))
+          else IO.succeed(game)
     } yield uuidAdded).resurrect.flatMapError(ErrorHandler.defaultErrorHandler)
   }
 
-  val currentGameGroupsByNameImpl = this.currentGameGroupsByName.zServerLogic { case (platform, name, requestId) =>
+  val currentGameGroupsByNameImpl = Endpoints.currentGameGroupsByName.zServerLogic { case (platform, name, requestId) =>
     val decodedName = URLDecoder.decode(name, "UTF-8")
     implicit val getReqId: String = requestId.fold(UUID.randomUUID().toString)(identity)
 
@@ -39,7 +40,7 @@ object LogicEndpoints extends Endpoints {
     } yield groups).resurrect.flatMapError(ErrorHandler.defaultErrorHandler)
   }
 
-  val currentGameGroupsByUUIDImpl = this.currentGameGroupsByUUID.zServerLogic { case (uuid, requestId) =>
+  val currentGameGroupsByUUIDImpl = Endpoints.currentGameGroupsByUUID.zServerLogic { case (uuid, requestId) =>
     implicit val getReqId: String = requestId.fold(UUID.randomUUID().toString)(identity)
 
     (for {
@@ -47,14 +48,14 @@ object LogicEndpoints extends Endpoints {
     } yield gg).resurrect.flatMapError(ErrorHandler.defaultErrorHandler)
   }
 
-  val pregameByNameImpl = this.pregameByName.zServerLogic { case (platform, names, fetchGroups, requestId) =>
+  val pregameByNameImpl = Endpoints.pregameByName.zServerLogic { case (platform, names, fetchGroups, requestId) =>
     implicit val getReqId: String = requestId.fold(UUID.randomUUID().toString)(identity)
     (for {
       pg <- PregameModule.getPregameLobby(platform, names)
     } yield PregameResponse(pg, None)).resurrect.flatMapError(ErrorHandler.defaultErrorHandler)
   }
 
-  val pregameGroupsByNameImpl = this.pregameGroupsByName.zServerLogic { case (platform, names, requestId) =>
+  val pregameGroupsByNameImpl = Endpoints.pregameGroupsByName.zServerLogic { case (platform, names, requestId) =>
     implicit val getReqId: String = requestId.fold(UUID.randomUUID().toString)(identity)
     (for {
       pg <- PregameModule.getPregameLobby(platform, names)
@@ -62,7 +63,7 @@ object LogicEndpoints extends Endpoints {
     } yield groups).resurrect.flatMapError(ErrorHandler.defaultErrorHandler)
   }
 
-  val pregameGroupsByUUIDImpl = this.pregameGameGroupsByUUID.zServerLogic { case (uuid, requestId) =>
+  val pregameGroupsByUUIDImpl = Endpoints.pregameGameGroupsByUUID.zServerLogic { case (uuid, requestId) =>
     implicit val getReqId: String = requestId.fold(UUID.randomUUID().toString)(identity)
 
     (for {
@@ -70,7 +71,7 @@ object LogicEndpoints extends Endpoints {
     } yield gg).resurrect.flatMapError(ErrorHandler.defaultErrorHandler)
   }
 
-  val healthzImpl = this.healthz.zServerLogic { _ =>
+  val healthzImpl = Endpoints.healthz.zServerLogic { _ =>
     UIO.succeed("Ok")
   }
 

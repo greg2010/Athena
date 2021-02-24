@@ -129,6 +129,7 @@ lazy val dependencies = new {
   val js = Def.setting(common.value ++ Seq(
     "com.raquo" %%% "laminar" % laminarVersion,
     "com.raquo" %%% "airstream" % airstreamVersion,
-    "com.raquo" %%% "waypoint" % "0.2.0"
+    "com.raquo" %%% "waypoint" % "0.2.0",
+    "com.softwaremill.sttp.tapir" %%% "tapir-sttp-client" % tapirVersion
     ))
 }

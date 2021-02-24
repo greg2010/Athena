@@ -15,7 +15,7 @@ import sttp.model.StatusCode
 
 import java.util.UUID
 
-trait Endpoints {
+object Endpoints {
   private implicit val schemaForPlatform: Schema[Platform]                  = Schema.string
   private implicit val schemaForGQTE    : Schema[GameQueueTypeEnum]         = Schema.string
   private implicit val schemaForPE      : Schema[PositionEnum]              = Schema.string

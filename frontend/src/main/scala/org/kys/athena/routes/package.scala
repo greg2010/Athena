@@ -23,5 +23,9 @@ package object routes {
     override val title: String = s"Athena - $realm/$name"
   }
 
+  final case class PregameRoute(realm: Platform, names: List[String]) extends PageRoute {
+    override val title: String = "Athena - Pregame Lobby"
+  }
+
   implicit val codecPage = deriveCodec[PageRoute]
 }

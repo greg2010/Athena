@@ -14,7 +14,6 @@ object AssetLoader {
     def eval[B](tree: Tree): B = c.eval[B](c.Expr[B](c.untypecheck(tree.duplicate)))
     try {
       val pathStr = eval[String](path.tree)
-      println("Evaled to " + pathStr)
       val expr = c.Expr[String](Literal(Constant(pathStr)))
       reify {
         JSImporter.require[String](s"../../src/main/resources" + expr.splice)

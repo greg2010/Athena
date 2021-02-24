@@ -1,7 +1,7 @@
 [![Build-status](https://drone.greg2010.me/api/badges/greg2010/Athena/status.svg)](https://drone.greg2010.me/greg2010/Athena/)
 [![GitHub license](https://img.shields.io/github/license/greg2010/Athena.svg)](https://github.com/greg2010/Athena/blob/master/LICENSE)
 [![Discord](https://img.shields.io/discord/813694839450763304.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/VMTW7MfnRN)
-[![Website lol.krabsin.space](https://img.shields.io/website-up-down-green-red/https/lol.krabsin.space.svg)][discord-invite-link]
+[![Website lol.krabsin.space](https://img.shields.io/website-up-down-green-red/https/lol.krabsin.space.svg)](https://lol.krabsin.space)
 
 <div align="center">
 <h1>Athena</h1>

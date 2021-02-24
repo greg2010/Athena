@@ -1,12 +1,17 @@
-# Athena
-
 [![Build-status](https://drone.greg2010.me/api/badges/greg2010/Athena/status.svg)](https://drone.greg2010.me/greg2010/Athena/)
 [![GitHub license](https://img.shields.io/github/license/greg2010/Athena.svg)](https://github.com/greg2010/Athena/blob/master/LICENSE)
 [![Discord](https://img.shields.io/discord/813694839450763304.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/VMTW7MfnRN)
 [![Website lol.krabsin.space](https://img.shields.io/website-up-down-green-red/https/lol.krabsin.space.svg)][discord-invite-link]
 
-[product-screenshot-cropped]: images/screenshot-cropped.png
-[![Athena Screen Shot][product-screenshot-cropped]](https://lol.krabsin.space)
+<div align="center">
+<h1>Athena</h1>
+<a href="https://lol.krabsin.space">
+  <img align="middle" src="images/screenshot-framed.png" alt="Athena Screenshot" width="600px">
+</a>
+<a href="https://lol.krabsin.space">
+  <img align="middle" src="images/screenshot-mobile-framed.png" alt="Athena Screenshot Mobile" width="200px">
+</a>
+</div>
 
 Athena is an open-source companion webapp for League of Legends. Think op.gg, Mobalytics, or Blitz, but free,
 open-source and community-driven. It is licensed under AGPL-3.0 and is designed to be self-hosted. In addition, the

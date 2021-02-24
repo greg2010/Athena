@@ -71,8 +71,8 @@ code. Please refer to the following files:
 
 ## Support
 
-If you found a bug, or have an idea how Athena can be improved, please open a Github issue. For any questions about the
-app, the process of hosting the service, and other, join our [discord][discord-invite-link].
+If you have found a bug, or have an idea how Athena can be improved, please open a Github issue. For any questions regarding the
+app, the process of hosting the service, or other, join our [discord][discord-invite-link].
 
 ***Note: please do not use issues in this repository for support questions. Talk to us on our Discord instead.***
 

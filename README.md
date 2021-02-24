@@ -128,6 +128,9 @@ See [.env](https://github.com/greg2010/Athena/blob/master/frontend/.env) for ref
 At this point we are not doing versioned releases. Use the commit tagged images for stable deployments instead. Master
 branch images can be assumed stable and suitable for public releases.
 
+## Disclaimer
+Athena isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.
+
 ## License
 
 [AGPL-3.0](https://choosealicense.com/licenses/agpl-3.0/)

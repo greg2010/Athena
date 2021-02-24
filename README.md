@@ -15,13 +15,20 @@
 
 Athena is an open-source companion webapp for League of Legends. Think op.gg, Mobalytics, or Blitz, but free,
 open-source and community-driven. It is licensed under AGPL-3.0 and is designed to be self-hosted. In addition, the
-hosted version at [lol.krabsin.space](https://lol.krabsin.space) is available.
+hosted version is available at [lol.krabsin.space](https://lol.krabsin.space).
 
 Athena is written in modern, purely functional Scala and ScalaJS.
+
+### Features
+- Search for an ongoing game by the summoner name of any of the participants
+- Level, rank, winrate information for all players in the game
+- Summary information about the participating teams in the game
+- Information about premade groups on each team
 
 ### Notable libraries
 
 - We use [ZIO](https://github.com/zio/zio) as our effect library of choice.
+- [Http4s](https://github.com/http4s/http4s) is used to serve the service's REST API.
 - [Laminar](https://github.com/raquo/Laminar), a minimal FRP framework is used on the frontend.
 - Frontend makes use of [imgproxy](https://github.com/imgproxy/imgproxy) to resize remote assets on the fly.
 - [Webpack](https://github.com/webpack/webpack) is used for asset packaging and minification.
@@ -61,7 +68,7 @@ The application is fully stateless, with an in-memory cache for efficient API us
 
 ### Environment variables
 
-The full reference of all available environment variables, as well as the default values are available in the source
+The full reference of all available environment variables, as well as the default values is available in the source
 code. Please refer to the following files:
 
 - Backend:
@@ -74,7 +81,7 @@ code. Please refer to the following files:
 If you have found a bug, or have an idea how Athena can be improved, please open a Github issue. For any questions regarding the
 app, the process of hosting the service, or other, join our [discord][discord-invite-link].
 
-***Note: please do not use issues in this repository for support questions. Talk to us on our Discord instead.***
+***Note: please do not use issues in this repository for support questions. Talk to us on discord instead.***
 
 ## Contributing
 
@@ -127,6 +134,9 @@ See [.env](https://github.com/greg2010/Athena/blob/master/frontend/.env) for ref
 
 At this point we are not doing versioned releases. Use the commit tagged images for stable deployments instead. Master
 branch images can be assumed stable and suitable for public releases.
+
+## Roadmap
+% TODO
 
 ## Disclaimer
 Athena isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.

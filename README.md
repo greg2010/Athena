@@ -3,7 +3,7 @@
 [![Build-status](https://drone.greg2010.me/api/badges/greg2010/Athena/status.svg)](https://drone.greg2010.me/greg2010/Athena/)
 [![GitHub license](https://img.shields.io/github/license/greg2010/Athena.svg)](https://github.com/greg2010/Athena/blob/master/LICENSE)
 [![Discord](https://img.shields.io/discord/813694839450763304.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/VMTW7MfnRN)
-[![Website lol.krabsin.space](https://img.shields.io/website-up-down-green-red/https/lol.krabsin.space.svg)](https://lol.krabsin.space)
+[![Website lol.krabsin.space](https://img.shields.io/website-up-down-green-red/https/lol.krabsin.space.svg)][discord-invite-link]
 
 [product-screenshot-cropped]: images/screenshot-cropped.png
 [![Athena Screen Shot][product-screenshot-cropped]](https://lol.krabsin.space)
@@ -64,10 +64,17 @@ code. Please refer to the following files:
 
 - Frontend: [.env](https://github.com/greg2010/Athena/blob/master/frontend/.env)
 
+## Support
+
+If you found a bug, or have an idea how Athena can be improved, please open a Github issue. For any questions about the
+app, the process of hosting the service, and other, join our [discord][discord-invite-link].
+
+***Note: please do not use issues in this repository for support questions. Talk to us on our Discord instead.***
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change. Come
-chat with us on [discord](https://discord.gg/VMTW7MfnRN) if you have any questions, ideas or concerns.
+chat with us on [discord][discord-invite-link] if you have any questions, ideas or concerns.
 
 ### Setting up the development environment
 
@@ -119,3 +126,6 @@ branch images can be assumed stable and suitable for public releases.
 ## License
 
 [AGPL-3.0](https://choosealicense.com/licenses/agpl-3.0/)
+
+
+[discord-invite-link]: https://discord.gg/VMTW7MfnRN

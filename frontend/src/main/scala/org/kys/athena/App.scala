@@ -9,28 +9,31 @@ import org.kys.athena.riot.api.dto.common.Platform
 import org.kys.athena.util.CSSUtil
 import org.kys.athena.components.LandingPage
 import org.kys.athena.components.common.{AppBar, Footer}
+import org.kys.athena.components.notfound.NotFoundPage
 import org.kys.athena.components.ongoing.OngoingPage
 import org.kys.athena.components.pregame.PregamePage
 import org.scalajs.dom
+import org.scalajs.dom.document
 import urldsl.errors.DummyError
 import urldsl.vocabulary.{FromString, Printer, UrlMatching}
 
 
 object App {
-  implicit val fs = new FromString[Platform, DummyError] {
+  private implicit val platformDecoder: FromString[Platform, DummyError] = new FromString[Platform, DummyError] {
     override def fromString(str: String): Either[DummyError, Platform] = {
       Platform.withNameEither(str).left.map(_ => DummyError.dummyError)
     }
   }
-  implicit val pr = new Printer[Platform] {
+
+  private implicit val platformPrinter: Printer[Platform] = new Printer[Platform] {
     override def print(t: Platform): String = t.entryName
   }
 
-  implicit val ls = new FromString[List[String], DummyError] {
+  private implicit val listDecoder: FromString[List[String], DummyError] = new FromString[List[String], DummyError] {
     override def fromString(str: String): Either[DummyError, List[String]] = Right(str.split(',').toList)
   }
 
-  implicit val sl = new Printer[List[String]] {
+  private implicit val listPrinter: Printer[List[String]] = new Printer[List[String]] {
     override def print(t: List[String]) = t.mkString(",")
   }
 
@@ -44,8 +47,12 @@ object App {
     Route[OngoingRoute, (Platform, String)](
       encode = p => (p.realm, p.name),
       decode = a => OngoingRoute(a._1, a._2),
-      pattern = root / segment[Platform] / segment[String] / endOfSegments)
-    )
+      pattern = root / segment[Platform] / segment[String] / endOfSegments),
+    // This must be last (catch-all to prevent the router from crashing)
+    Route[RouteNotFound, List[String]](
+      encode = p => p.restOfSegments,
+      decode = a => RouteNotFound(a),
+      pattern = root / remainingSegments))
 
   private val router = new Router[PageRoute](
     initialUrl = dom.document.location.href,
@@ -53,25 +60,29 @@ object App {
     routes = routes,
     owner = unsafeWindowOwner, // this router will live as long as the window
     $popStateEvent = windowEvents.onPopState,
-    getPageTitle = _.title, // mock page title (displayed in the browser tab next to favicon)
+    getPageTitle = _.title, // Currently ignored by most browsers (per MDN api spec)
     serializePage = page => page.asJson.noSpaces, // serialize page data for storage in History API log
     deserializePage = pageStr => {
-      decode[PageRoute](pageStr).fold(e => ErrorRoute(e.getMessage), identity)
-    } // deserialize the above
-    )
+      decode[PageRoute](pageStr).fold(e => RouteNotFound(List("error")), identity)
+    })
+
+  // Currently title in pushState is ignored by most (all?) browsers. To fix, dispatch a custom event
+  // to update the title on route events
+  router.$currentPage.foreach { page =>
+    document.title = page.title
+  }(unsafeWindowOwner)
 
   private val hideSearchBar = Var(false)
 
   private val splitter: SplitRender[PageRoute, HtmlElement] =
-    SplitRender[PageRoute, HtmlElement](router.$currentPage)
-      .collectStatic(LandingRoute) {
-        LandingPage.render(windowEvents.onMouseMove)
-      }.collectStatic(RouteNotFound) {
-      LandingPage.render(windowEvents.onMouseMove)
+    SplitRender[PageRoute, HtmlElement](router.$currentPage).collectStatic(LandingRoute) {
+      LandingPage.render
     }.collect[OngoingRoute] { page =>
       OngoingPage.render(page, hideSearchBar.writer)
     }.collect[PregameRoute] { page =>
       PregamePage.render(page)
+    }.collect[RouteNotFound] { page =>
+      NotFoundPage.render(page.restOfSegments)
     }
 
 

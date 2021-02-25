@@ -11,16 +11,17 @@ package object routes {
   }
 
   final case object LandingRoute extends PageRoute {
-    override val title = "Athena"
+    override val title = "Athena - Landing Page"
   }
-  final case object RouteNotFound extends PageRoute {
+  final case class RouteNotFound(restOfSegments: List[String]) extends PageRoute {
     override val title: String = "Athena - Page not Found"
   }
+
   final case class ErrorRoute(msg: String) extends PageRoute {
     override val title: String = "Athena - Error"
   }
   final case class OngoingRoute(realm: Platform, name: String) extends PageRoute {
-    override val title: String = s"Athena - $realm/$name"
+    override val title: String = s"Athena - Current game of $realm/$name"
   }
 
   final case class PregameRoute(realm: Platform, names: List[String]) extends PageRoute {

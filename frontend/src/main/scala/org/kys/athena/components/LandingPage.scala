@@ -6,6 +6,7 @@ import org.kys.athena.components.common._
 import org.kys.athena.riot.api.dto.common.Platform
 import org.scalajs.dom.MouseEvent
 import scala.math._
+import org.kys.athena.util.CSSUtil.paletteContainer
 import org.scalajs.dom.{Event, FocusEvent}
 
 object LandingPage {
@@ -78,10 +79,13 @@ object LandingPage {
           onFocus.preventDefault.useCapture.mapTo(FocusIn) --> focusBus.writer,
           onBlur.preventDefault.useCapture.mapTo(FocusOut) --> focusBus.writer,
           SearchBar("", Platform.NA, cls := "w-full pb-1"),
-          HistoryBar(Some("p-1"), cls := "flex w-full justify-center flex-wrap pt-1 font-semibold font-sans",
-                     cls <--focusBus.events.delay(100).toSignal(FocusOut).map{
-                           case FocusIn => ""
-                           case FocusOut => "hidden"
+          div(
+            cls := "w-full",
+            HistoryBar(Some("p-1 font-semibold font-sans "),
+                       cls := "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center pt-1"),
+            cls <--focusBus.events.delay(100).toSignal(FocusOut).map{
+              case FocusIn => ""
+              case FocusOut => "hidden"
           })))
   }
 }

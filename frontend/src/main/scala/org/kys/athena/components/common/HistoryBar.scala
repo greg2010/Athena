@@ -59,8 +59,8 @@ object HistoryBar {
   def apply(dropdownElemCls: Option[String], mods: Modifier[HtmlElement]*): HtmlElement = {
     div(
       readFromStorage.map { lsd =>
-        Link(OngoingRoute(lsd.platform, lsd.name),
-          span(cls := dropdownElemCls.fold("")(identity), s"${lsd.platform}/${lsd.name}"))
+        div(Link(OngoingRoute(lsd.platform, lsd.name),
+          span(cls := dropdownElemCls.fold("")(identity), s"${lsd.platform}/${lsd.name}")))
       }, mods)
   }
 }

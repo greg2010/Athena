@@ -6,7 +6,7 @@ import org.kys.athena.http.models.pregame.PregameResponse
 import org.kys.athena.http.models.premade.{PlayerGroup, PremadeResponse}
 import org.kys.athena.http.routes.Endpoints
 import org.kys.athena.riot.api.dto.common.Platform
-import org.kys.athena.util.Config
+import org.kys.athena.datastructures.Config
 import sttp.client3._
 import sttp.model.Uri
 import sttp.tapir.{DecodeResult, Endpoint}

@@ -37,6 +37,8 @@ object AppBar {
         },
         div(
           cls := "flex flex-row h-full",
+          a(cls := "mx-2", href := Config.DISCORD_INVITE_URL, target := "_blank",
+            img(src := AssetLoader.require("/images/discord_logo.png"), width := "40px")),
           a(cls := "mx-2", href := "https://github.com/greg2010/Athena", target := "_blank",
             ImgSized(AssetLoader.require("/images/gh_logo.png"), 40, Some(40))),
           child <-- showSignal.map {
@@ -60,7 +62,6 @@ object AppBar {
                  case FocusOut => "none"
                }))
             case false => div()
-          })
-        )
+          }))
   }
 }

@@ -17,4 +17,5 @@ object Config extends js.Object {
   val USE_FAKE_DATA       : String = js.native
   val ANALYTICS_SCRIPT_URL: String = js.native
   val ANALYTICS_WEBSITE_ID: String = js.native
+  val DISCORD_INVITE_URL  : String = js.native
 }

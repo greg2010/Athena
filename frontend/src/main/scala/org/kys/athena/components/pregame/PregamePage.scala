@@ -10,7 +10,7 @@ import org.kys.athena.http.models.premade.PlayerGroup
 import org.kys.athena.riot.api.dto.common.Platform
 import org.kys.athena.routes.PregameRoute
 import org.kys.athena.util.CSSUtil.{paletteContainer, paperCls}
-import org.kys.athena.util.{DataState, Failed, Loading, Ready}
+import org.kys.athena.datastructures.{DataState, Failed, Loading, Ready}
 import zio.{IO, Runtime, UIO, ZIO}
 
 

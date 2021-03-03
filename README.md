@@ -136,7 +136,10 @@ At this point we are not doing versioned releases. Use the commit tagged images 
 branch images can be assumed stable and suitable for public releases.
 
 ## Roadmap
-% TODO
+- Client-side search history and suggest - **in progress**
+- Basic information pre-game lookup - **in progress**
+- Dark theme - **planned**
+- Desktop app companion - **planned**
 
 ## Disclaimer
 Athena isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.

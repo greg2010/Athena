@@ -8,12 +8,13 @@ import org.kys.athena.routes._
 import org.kys.athena.riot.api.dto.common.Platform
 import org.kys.athena.util.CSSUtil
 import org.kys.athena.components.LandingPage
-import org.kys.athena.components.common.HistoryBar.LocalSearchData
-import org.kys.athena.components.common.{AppBar, Footer, HistoryBar}
+import org.kys.athena.components.common.{AppBar, Footer}
 import org.kys.athena.components.ongoing.OngoingPage
 import org.scalajs.dom
 import urldsl.errors.DummyError
 import urldsl.vocabulary.{FromString, Printer}
+import org.kys.athena.util.SearchHistoryManager
+import org.kys.athena.util.SearchHistoryManager.HistorySummoner
 
 
 object App {
@@ -64,7 +65,7 @@ object App {
   // Add subscription for the history module. If page opened is `OngoingRoute`, save to history cache
   val globalRouterSubscription: Subscription = router.$currentPage.foreach {
     case o: OngoingRoute =>
-      HistoryBar.saveToStorage(LocalSearchData(o.name, o.realm))
+      SearchHistoryManager.saveSearch(HistorySummoner(o.name, o.realm))
     case _ => ()
   }(unsafeWindowOwner)
 

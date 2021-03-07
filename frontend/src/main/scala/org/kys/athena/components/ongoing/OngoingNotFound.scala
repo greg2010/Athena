@@ -3,8 +3,7 @@ package org.kys.athena.components.ongoing
 import com.raquo.airstream.eventbus.EventBus
 import org.kys.athena.routes.OngoingRoute
 import com.raquo.laminar.api.L._
-import org.kys.athena.components.LandingPage.{EventFired, FocusIn, FocusOut}
-import org.kys.athena.components.common.{HistoryBar, SearchBar}
+import org.kys.athena.components.common.{HistoryMenu, SearchBar}
 import org.scalajs.dom
 
 
@@ -29,7 +28,7 @@ object OngoingNotFound {
                 p.realm,
                 cls := "",
                 onSubmit.preventDefault --> Observer[dom.Event](onNext = _ => refreshCb())),
-        HistoryBar(Some("p-1"), cls := "flex w-full justify-center flex-wrap pt-1 font-semibold font-sans",
+        HistoryMenu(Some("p-1"), cls := "flex w-full justify-center flex-wrap pt-1 font-semibold font-sans",
                cls <--focusBus.events.delay(100).toSignal(FocusOut).map{
                  case FocusIn => ""
                  case FocusOut => "hidden"

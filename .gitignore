@@ -109,7 +109,13 @@ project/plugins/project/
 *.log
 *.metals
 *.bsp
+*.bloop
+*.idea
+
 # End of https://www.gitignore.io/api/sbt,scala,intellij
+
+project/metals.sbt
+project/project
 
 .sbt/
 .ivy2/
@@ -117,3 +123,12 @@ project/plugins/project/
 frontend/build-dev
 frontend/.config
 frontend/.npm
+
+### VScode ###
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace

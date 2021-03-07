@@ -3,11 +3,10 @@ package org.kys.athena.components
 import com.raquo.airstream.eventbus.EventBus
 import com.raquo.laminar.api.L._
 import org.kys.athena.components.common._
+import org.kys.athena.components.common.HistoryMenu
 import org.kys.athena.riot.api.dto.common.Platform
 import org.scalajs.dom.MouseEvent
 import scala.math._
-import org.kys.athena.util.CSSUtil.paletteContainer
-import org.scalajs.dom.{Event, FocusEvent}
 
 object LandingPage {
 
@@ -81,9 +80,10 @@ object LandingPage {
           SearchBar("", Platform.NA, cls := "w-full pb-1"),
           div(
             cls := "w-full",
-            HistoryBar(Some("p-1 font-semibold font-sans "),
-                       cls := "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center pt-1"),
-            cls <--focusBus.events.delay(100).toSignal(FocusOut).map{
+            HistoryMenu(Some("p-1 font-sans "),
+                       cls := "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center pt-1 " +
+                              "divide-y divide-gray-300"),
+            cls <--focusBus.events.delay(100).toSignal(FocusOut).map {
               case FocusIn => ""
               case FocusOut => "hidden"
           })))

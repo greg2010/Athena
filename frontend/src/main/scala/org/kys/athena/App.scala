@@ -14,7 +14,6 @@ import org.scalajs.dom
 import urldsl.errors.DummyError
 import urldsl.vocabulary.{FromString, Printer}
 import org.kys.athena.util.SearchHistoryManager
-import org.kys.athena.util.SearchHistoryManager.HistorySummoner
 
 
 object App {
@@ -65,7 +64,7 @@ object App {
   // Add subscription for the history module. If page opened is `OngoingRoute`, save to history cache
   val globalRouterSubscription: Subscription = router.$currentPage.foreach {
     case o: OngoingRoute =>
-      SearchHistoryManager.saveSearch(HistorySummoner(o.name, o.realm))
+      SearchHistoryManager.saveSearch(o.name, o.realm)
     case _ => ()
   }(unsafeWindowOwner)
 

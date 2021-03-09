@@ -80,13 +80,15 @@ object LandingPage {
           SearchBar("", Platform.NA, cls := "w-full pb-1"),
           div(
             cls := "w-full",
-            HistoryMenu(Some("p-1 font-sans "),
-                       cls := "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center pt-1 " +
-                              "divide-y divide-gray-300"),
-            cls <--focusBus.events.delay(100).toSignal(FocusOut).map {
-              case FocusIn => ""
-              case FocusOut => "hidden"
-          })))
+            HistoryMenu(Some("p-1 font-sans"),
+                       cls := "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 justify-center pt-1 gap-1"),
+            cls <-- focusBus.events.delay(100).toSignal(FocusOut)
+                            .combineWith(SearchHistoryManager.historySignal.map(_.length)).map {
+              case (FocusOut, _) => "hidden"
+              case (_, 0) => "hidden"
+              case _ => ""
+           }
+          )))
   }
 }
 

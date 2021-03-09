@@ -28,7 +28,9 @@ object OngoingNotFound {
                 p.realm,
                 cls := "",
                 onSubmit.preventDefault --> Observer[dom.Event](onNext = _ => refreshCb())),
-        HistoryMenu(Some("p-1"), cls := "flex w-full justify-center flex-wrap pt-1 font-semibold font-sans",
+        HistoryMenu(
+               Some("font-sans p-1"),
+               cls := "grid grid-cols-1 lg:grid-cols-2 justify-center pt-1 gap-1",
                cls <--focusBus.events.delay(100).toSignal(FocusOut).map{
                  case FocusIn => ""
                  case FocusOut => "hidden"

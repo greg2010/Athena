@@ -6,7 +6,7 @@ import org.kys.athena.riot.api.dto.common.Platform
 import io.circe.generic.auto._
 
 object SearchHistoryManager {
-  case class HistorySummoner(name: String, platform: Platform)
+  case class HistorySummoner(name: String, platform: Platform, isStarred: Boolean, savedAt: Long)
 
   private val lsKey = "searchCache"
   // Needs to be divisible by 4
@@ -36,23 +36,43 @@ object SearchHistoryManager {
 
   // Public interface
 
-  def saveSearch(currentUserSearch: HistorySummoner): Unit = {
+  def saveSearch(name: String, platform: Platform): Unit = {
     val current = historyVar.now()
     
-    val newCacheData = if (current.contains(currentUserSearch)) {
-      // Current search is already present, moving up
-      current.filterNot(_ == currentUserSearch).prepended(currentUserSearch)
-    } else {
-      current.prepended(currentUserSearch)
+    val toSave = current.find(p => p.name == name && p.platform == platform) match {
+      case Some(v) => v.copy(savedAt = System.currentTimeMillis())
+      case None => HistorySummoner(name, platform, isStarred = false, System.currentTimeMillis())
     }
 
-    historyVar.writer.onNext(newCacheData.take(maxUserSearchesSaved))
+    val newCacheData = current.filterNot(p => p.name == name && p.platform == platform).prepended(toSave)
+
+    historyVar.set(newCacheData.take(maxUserSearchesSaved))
   }
 
-  def removeSearch(localSearchData: HistorySummoner): Unit = {
+  def star(name: String, platform: Platform): Unit = {
     val current = historyVar.now()
-    historyVar.writer.onNext(current.filterNot(_ == localSearchData))
+    historyVar.set(
+      current.map {
+        case hs: HistorySummoner if hs.name == name && hs.platform == platform => hs.copy(isStarred = true)
+        case o => o
+      }
+    )
   }
 
-  val historySignal = historyVar.signal
+  def unstar(name: String, platform: Platform): Unit = {
+    val current = historyVar.now()
+    historyVar.set(
+      current.map {
+        case hs: HistorySummoner if hs.name == name && hs.platform == platform => hs.copy(isStarred = false)
+        case o => o
+      }
+    )
+  }
+
+  def removeSearch(name: String, platform: Platform): Unit = {
+    val current = historyVar.now()
+    historyVar.set(current.filterNot(p => p.name == name && p.platform == platform))
+  }
+
+  val historySignal: Signal[List[HistorySummoner]] = historyVar.signal
 }

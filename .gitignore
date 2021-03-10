@@ -123,6 +123,7 @@ project/project
 frontend/build-dev
 frontend/.config
 frontend/.npm
+**/.env.local
 
 ### VScode ###
 

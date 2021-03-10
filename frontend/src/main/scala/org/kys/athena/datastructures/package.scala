@@ -3,7 +3,7 @@ package org.kys.athena
 import org.kys.athena.http.errors.BackendApiError
 
 
-package object util {
+package object datastructures {
 
   sealed trait DataState[+T] { self =>
     def fold[T2](onLoading: => T2, onFailed: => T2, onReady: T => T2): T2 = {

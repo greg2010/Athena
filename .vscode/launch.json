@@ -5,12 +5,26 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "firefox",
+            "request": "launch",
+            "reAttach": true,
+            "name": "Launch localhost",
+            "url": "http://localhost:8080",
+            "webRoot": "${workspaceFolder}",
+            "pathMappings": [
+                {
+                    "url": "webpack://app/file:${workspaceRoot}",
+                    "path": "${workspaceRoot}"
+                }
+            ]
+        },
+        {
             "type": "scala",
             "name": "Debug org.kys.athena.Server",
             "request": "launch",
             "mainClass": "org.kys.athena.Server",
-            "buildTarget": "Server",
-            "args": []
+            "args": [],
+            "envFile": "${workspaceFolder}/backend/.env.local"
         }
     ]
 }

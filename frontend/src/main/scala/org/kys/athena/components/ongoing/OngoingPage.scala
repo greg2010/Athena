@@ -15,11 +15,13 @@ import org.kys.athena.routes.OngoingRoute
 import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform}
 import org.kys.athena.riot.api.dto.currentgameinfo.BannedChampion
 import org.kys.athena.util.CSSUtil._
-import org.kys.athena.util.{Config, DataState, Failed, Infallible, Loading, Ready, Time}
+import org.kys.athena.datastructures.{DataState, Failed, Infallible, Loading, Ready}
+import org.kys.athena.datastructures.Config
 import org.scalajs.dom.html
 import zio._
 
 import scala.concurrent.duration.DurationInt
+import org.kys.athena.util.Time
 
 
 object OngoingPage {

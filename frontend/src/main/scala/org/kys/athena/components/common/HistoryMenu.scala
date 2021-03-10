@@ -6,12 +6,9 @@ import org.kys.athena.util.SearchHistoryManager
 
 object HistoryMenu {
   def apply(dropdownElemCls: Option[String], mods: Modifier[HtmlElement]*): HtmlElement = {
-    implicit val ordering: Ordering[SearchHistoryManager.HistorySummoner] =
-      Ordering.by[SearchHistoryManager.HistorySummoner, Boolean](!_.isStarred).orElseBy(_.savedAt * -1)
-
     div(
       children <-- SearchHistoryManager.historySignal.map { l =>
-        l.sorted.map { lsd =>
+        l.map { lsd =>
           div(
             cls := "flex items-center justify-between",
             cls := dropdownElemCls.fold("")(identity),

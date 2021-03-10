@@ -54,9 +54,10 @@ object CacheManager {
       })
     }
 
-    Try(window.localStorage.getItem(key)).toEither.left.map(UnknownError) match {
+    Try(Option(window.localStorage.getItem(key))).toEither.left.map(UnknownError) match {
       case Left(_) => Right(None)
-      case Right(v) => decodeStr(v)
+      case Right(None) => Right(None)
+      case Right(Some(v)) => decodeStr(v)
     }
   }
 }

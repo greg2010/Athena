@@ -7,13 +7,10 @@ import org.kys.athena.components.common.HistoryMenu
 import org.kys.athena.riot.api.dto.common.Platform
 import org.scalajs.dom.MouseEvent
 import scala.math._
+import org.kys.athena.util.SearchHistoryManager
+import org.kys.athena.components.common.FocusCapturer._
 
 object LandingPage {
-
-  sealed trait EventFired
-  case object FocusIn extends EventFired
-  case object FocusOut extends EventFired
-
   def render(mouseES:EventStream[MouseEvent]): HtmlElement = {
     val referenceDiv = div(
       position := "relative",
@@ -71,12 +68,11 @@ object LandingPage {
              lineHeight := "0.5",
              cls := "pt-2 pb-3", "Athena"),
         span(cls := "font-bold pb-4", "A solo queue companion"),
-        div(
+        FocusCapturer(
+          focusBus.writer,
           cls := "flex flex-col items-center justify-center " +
                  "border shadow-lg border-gray-500 rounded-lg bg-white w-11/12 lg:w-8/12 " +
                  "p-1 divide-y divide-gray-500",
-          onFocus.preventDefault.useCapture.mapTo(FocusIn) --> focusBus.writer,
-          onBlur.preventDefault.useCapture.mapTo(FocusOut) --> focusBus.writer,
           SearchBar("", Platform.NA, cls := "w-full pb-1"),
           div(
             cls := "w-full",

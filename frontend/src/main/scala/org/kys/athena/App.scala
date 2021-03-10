@@ -13,7 +13,6 @@ import org.kys.athena.components.ongoing.OngoingPage
 import org.scalajs.dom
 import urldsl.errors.DummyError
 import urldsl.vocabulary.{FromString, Printer}
-import org.kys.athena.util.SearchHistoryManager
 
 
 object App {

@@ -5,12 +5,11 @@ import org.kys.athena.routes.OngoingRoute
 import com.raquo.laminar.api.L._
 import org.kys.athena.components.common.{HistoryMenu, SearchBar}
 import org.scalajs.dom
+import org.kys.athena.components.common.FocusCapturer._
+import org.kys.athena.components.common.FocusCapturer
 
 
 object OngoingNotFound {
-  sealed trait EventFired
-  case object FocusIn extends EventFired
-  case object FocusOut extends EventFired
 
   def render(p: OngoingRoute, refreshCb: () => Unit) = {
     val focusBus = new EventBus[EventFired]
@@ -19,11 +18,10 @@ object OngoingNotFound {
       img(src := "/images/blitzcrank_logo.png"),
       span(
         cls := "text-xl mt-4", "Summoner ", b(s"${p.realm.toString}/${p.name}"), " is not currently in game."),
-      div(
+      FocusCapturer(
+        focusBus.writer,
         cls := "rounded-lg bg-white border border-gray-500 w-5/6 my-4 h-10" +
         "p-1 divide-y divide-gray-500",
-        onFocus.preventDefault.useCapture.mapTo(FocusIn) --> focusBus.writer,
-        onBlur.preventDefault.useCapture.mapTo(FocusOut) --> focusBus.writer,
         SearchBar(p.name,
                 p.realm,
                 cls := "",

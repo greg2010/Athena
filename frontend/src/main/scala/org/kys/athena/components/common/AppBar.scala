@@ -7,16 +7,13 @@ import org.kys.athena.util.CSSUtil
 import org.kys.athena.datastructures.Config
 import org.kys.athena.App
 import org.kys.athena.routes.OngoingRoute
+import org.kys.athena.components.common.FocusCapturer._
 
 
 object AppBar {
-  sealed trait EventFired
-  case object FocusIn extends EventFired
-  case object FocusOut extends EventFired
-
   def apply(hideSearchBar: Signal[Boolean]): HtmlElement = {
     val focusBus = new EventBus[EventFired]
-    val focusSignal = focusBus.events.delay(100).toSignal(FocusOut)
+    val focusSignal = focusBus.events.delay(100).toSignal(FocusCapturer.FocusOut)
 
     val showSignal = App.routerSignal.combineWith(hideSearchBar.signal).map {
       case (LandingRoute, _) => false
@@ -43,13 +40,12 @@ object AppBar {
             ImgSized(s"${Config.FRONTEND_URL}/images/gh_logo.png", 40, Some(40))),
           child <-- showSignal.map {
             case true =>
-            div(
+            FocusCapturer(
+              focusBus.writer,
               SearchBar(
                 "",
                 Platform.NA,
                 cls := "border shadow-lg rounded-lg bg-white",
-                onFocus.preventDefault.useCapture.mapTo(FocusIn) --> focusBus.writer,
-                onBlur.preventDefault.useCapture.mapTo(FocusOut) --> focusBus.writer,
                 cls <-- focusSignal.map {
                  case FocusIn => "rounded-b-none"
                  case FocusOut => ""

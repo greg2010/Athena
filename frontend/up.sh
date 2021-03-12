@@ -6,9 +6,9 @@
 # Prepare traps to kill the processes when parent exits
 trap 'kill %1; kill %2' SIGINT
 # Start sbt watch with home in workdir
-(cd ../ && sbt ~frontend/fastOptJS) | sed -e 's/^/[sbt] /' &
+(cd ../ && sbt ~frontend/fastOptJS --color=always) | sed -e 's/^/[sbt] /' &
 # Start webpack watch
-yarn install && yarn run start | sed -e 's/^/[webpack] /' &
+yarn install && FORCE_COLOR=true yarn run start | sed -e 's/^/[webpack] /' &
 # Create .env.local if it doesn't exist
 touch .env.local
 # Watch .env.local, run on file change

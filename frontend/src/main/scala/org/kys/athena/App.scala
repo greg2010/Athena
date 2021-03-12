@@ -60,19 +60,13 @@ object App {
       OngoingPage.render(page, hideSearchBar.writer)
     }
 
-    def render(): HtmlElement = {
+
+  def render(): HtmlElement = {
     div(cls := "root h-screen flex flex-col items-center",
         div(cls := "h-full w-full fixed",
             backgroundColor := CSSUtil.paletteBackground,
             zIndex := "-10"),
-        AppBar(router.$currentPage.combineWith(hideSearchBar.signal).map {
-          case (LandingRoute, _) => false
-          case (_: OngoingRoute, sig) => !sig
-          case _ => true
-        }, router.$currentPage.map {
-          case LandingRoute => false
-          case _ => true
-        }),
+        AppBar(hideSearchBar.signal),
         div(cls := "container justify-center items-center flex flex-grow", child <-- splitter.$view),
         Footer())
   }
@@ -88,4 +82,6 @@ object App {
   def relativeUrlForPage(page: PageRoute): String = {
     router.relativeUrlForPage(page)
   }
+
+  val routerSignal = router.$currentPage
 }

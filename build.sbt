@@ -24,7 +24,7 @@ lazy val backend = project
             settings,
             assemblySettings,
             libraryDependencies ++= dependencies.jvm.value,
-            javaOptions in Compile ++= Seq("-J-Xss8M"))
+            javaOptions in Compile ++= Seq("-Xss8M"))
   .dependsOn(common.jvm)
 
 lazy val frontend = project

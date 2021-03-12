@@ -7,41 +7,57 @@ import io.circe.syntax._
 import io.circe.{Decoder, Encoder}
 import org.kys.athena.util.errors.{CacheError, CastError, UnknownError}
 import org.scalajs.dom.window
-import zio.{IO, UIO}
+import zio.IO
 
 import scala.concurrent.duration._
 import scala.scalajs.js.Date
+import scala.util.Try
 
 
 object CacheManager {
   private case class Codec[T](data: T, expiresAt: Option[Double])
 
   def get[T](key: String)(implicit d: Decoder[T]): IO[CacheError, Option[T]] = {
-    val attemptFetch = IO.effect(window.localStorage.getItem(key)).bimap(UnknownError, Option(_))
-
-    def decodeStr(str: String): IO[CacheError, Option[T]] = {
-      decode[Codec[T]](str) match {
-        case Right(Codec(data, None)) => UIO.some(data)
-        case Right(Codec(data, Some(expiresAt))) if expiresAt > Date.now() => UIO.some(data)
-        case Right(Codec(_, Some(_))) => {
-          UIO.effectTotal(window.localStorage.removeItem(key)).as(None)
-        }
-        case Left(v) => {
-          IO.fail(CastError(s"Failed to decode cache with message=${v.getMessage}"))
-        }
-      }
-    }
-
-    attemptFetch.flatMap {
-      case Some(s) => decodeStr(s)
-      case None => IO.none
-    }
+    IO.fromEither(getSync(key))
   }
 
   def set[T](key: String, data: T, cacheFor: Duration = Duration.Inf)(implicit e: Encoder[T]): IO[CacheError, Unit] = {
+    IO.fromEither(setSync(key, data, cacheFor))
+  }
+
+  def remove[T](key: String): IO[UnknownError, Unit] = {
+    IO.fromEither(removeSync(key))
+  }
+
+  def setSync[T](key: String, data: T, cacheFor: Duration = Duration.Inf)
+                (implicit e: Encoder[T]): Either[CacheError, Unit] = {
     val d           = if (cacheFor == Duration.Inf) None else Some(Date.now() + cacheFor.toMillis)
     val encodedData = Codec(data, d).asJson.noSpaces
+    Try(window.localStorage.setItem(key, encodedData)).toEither.left.map(UnknownError)
+  }
 
-    IO.effect(window.localStorage.setItem(key, encodedData)).mapError(UnknownError)
+  def removeSync[T](key: String): Either[UnknownError, Unit] = {
+    Try(window.localStorage.removeItem(key)).toEither.left.map(UnknownError)
+  }
+
+  def getSync[T](key: String)
+                (implicit d: Decoder[T]): Either[CacheError, Option[T]] = {
+
+    def decodeStr(str: String): Either[CacheError, Option[T]] = {
+
+      decode[Codec[T]](str).fold(err => Left(CastError(s"Failed to decode cache with message=${err.getMessage}")), {
+        case Codec(data, None) => Right(Some(data))
+        case Codec(data, Some(expiresAt)) if expiresAt > Date.now() => Right(Some(data))
+        case Codec(_, Some(_)) =>
+          window.localStorage.removeItem(key)
+          Right(None)
+      })
+    }
+
+    Try(Option(window.localStorage.getItem(key))).toEither.left.map(UnknownError) match {
+      case Left(_) => Right(None)
+      case Right(None) => Right(None)
+      case Right(Some(v)) => decodeStr(v)
+    }
   }
 }

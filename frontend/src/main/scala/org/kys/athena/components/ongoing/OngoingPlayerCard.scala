@@ -10,7 +10,8 @@ import org.kys.athena.components.common.{ChampionIcon, ImgSized, OpggLink, UggLi
 import org.kys.athena.riot.api.dto.common.{Platform, SummonerSpellsEnum}
 import org.kys.athena.riot.api.dto.ddragon.runes.Rune
 import org.kys.athena.riot.api.dto.league.{MiniSeries, RankedQueueTypeEnum, TierEnum}
-import org.kys.athena.util.{Config, Infallible, Loading, Ready}
+import org.kys.athena.datastructures.{Infallible, Loading, Ready}
+import org.kys.athena.datastructures.Config
 import org.scalajs.dom.html
 
 object OngoingPlayerCard {

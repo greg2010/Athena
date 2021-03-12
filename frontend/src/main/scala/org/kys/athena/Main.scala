@@ -1,7 +1,7 @@
 package org.kys.athena
 
 import com.raquo.laminar.api.L._
-import org.kys.athena.util.Config
+import org.kys.athena.datastructures.Config
 import org.scalajs.dom.document
 
 

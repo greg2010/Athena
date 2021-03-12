@@ -1,4 +1,4 @@
-package org.kys.athena.util
+package org.kys.athena.datastructures
 
 
 import scala.scalajs.js

@@ -10,7 +10,8 @@ import org.kys.athena.riot.api.dto.common.Platform
 import org.kys.athena.riot.api.dto.ddragon.champions.Champions
 import org.kys.athena.riot.api.dto.ddragon.runes.RuneTree
 import org.kys.athena.riot.api.dto.ddragon.summonerspells.SummonerSpells
-import org.kys.athena.util.{CacheManager, Config}
+import org.kys.athena.util.CacheManager
+import org.kys.athena.datastructures.Config
 import sttp.client3._
 import sttp.client3.circe._
 import sttp.model.StatusCode

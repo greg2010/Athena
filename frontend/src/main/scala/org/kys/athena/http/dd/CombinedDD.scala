@@ -3,7 +3,7 @@ package org.kys.athena.http.dd
 import org.kys.athena.riot.api.dto.ddragon.champions.{ChampionEntry, Champions}
 import org.kys.athena.riot.api.dto.ddragon.runes.{Rune, RuneTree, RunesEntry}
 import org.kys.athena.riot.api.dto.ddragon.summonerspells.{SummonerSpells, SummonerSpellsEntry}
-import org.kys.athena.util.Config
+import org.kys.athena.datastructures.Config
 
 
 case class CombinedDD(c: Champions, r: List[RuneTree], s: SummonerSpells) {

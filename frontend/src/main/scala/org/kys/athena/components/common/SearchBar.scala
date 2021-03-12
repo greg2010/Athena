@@ -11,7 +11,6 @@ import org.scalajs.dom.Event
 
 object SearchBar {
   def apply(initialSummoner: String, initialPlatform: Platform, mods: Modifier[HtmlElement]*): HtmlElement = {
-
     val summoner    : Var[String]     = Var[String](initialSummoner)
     val platform    : Var[Platform]   = Var[Platform](initialPlatform)
     val formObserver: Observer[Event] =

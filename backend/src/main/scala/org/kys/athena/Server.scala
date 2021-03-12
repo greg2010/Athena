@@ -51,7 +51,6 @@ object Server extends App {
   def allocateHttpServer: ZIO[AppRuntime with Has[ConfigModule], Throwable, Unit] = {
     ZIO.runtime[AppRuntime with Has[ConfigModule]]
       .flatMap { implicit runtime =>
-
         val config = runtime.environment.get[ConfigModule].loaded
 
         val routes: HttpRoutes[AppTask] = Router(config.http.prefix -> LogicEndpoints.publicRoutes,

@@ -109,14 +109,17 @@ project/plugins/project/
 *.log
 *.metals
 *.bsp
+<<<<<<< Updated upstream
 *.bloop
 *.idea
 
+.vscode
 # End of https://www.gitignore.io/api/sbt,scala,intellij
 
 project/metals.sbt
 project/project
 
+*.idea
 .sbt/
 .ivy2/
 .cache/

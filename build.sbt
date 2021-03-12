@@ -8,7 +8,7 @@ scalaVersion in ThisBuild := "2.13.4"
 // Projects
 lazy val global = project
   .in(file("."))
-  .settings(settings)
+  .settings(settings, bloopGenerate in Test := None)
   .disablePlugins(AssemblyPlugin)
   .aggregate(common.jvm, common.js, backend, frontend, macroSub)
 
@@ -17,6 +17,9 @@ lazy val common = crossProject(JSPlatform, JVMPlatform)
   .settings(name := "common",
             settings,
             libraryDependencies ++= dependencies.common.value)
+  .jsSettings(
+    bloopGenerate in Test := None
+  )
   .disablePlugins(AssemblyPlugin)
 
 lazy val backend = project
@@ -27,6 +30,7 @@ lazy val backend = project
             javaOptions in Compile ++= Seq("-Xss8M"))
   .dependsOn(common.jvm)
 
+
 lazy val frontend = project
   .settings(name := "frontend",
             settings,
@@ -35,16 +39,18 @@ lazy val frontend = project
             // include the macro classes and resources in the main js
             Compile / packageBin / mappings ++= (macroSub / Compile / packageBin / mappings).value,
             // include the macro sources in the main source js
-            Compile / packageSrc / mappings ++= (macroSub / Compile / packageSrc / mappings).value)
+            Compile / packageSrc / mappings ++= (macroSub / Compile / packageSrc / mappings).value,
+            bloopGenerate in Test := None)
   .disablePlugins(AssemblyPlugin)
   .enablePlugins(ScalaJSPlugin)
   .dependsOn(common.js)
-  .dependsOn(macroSub % "compile-internal, test-internal")
+  .dependsOn(macroSub)
 
 lazy val macroSub = (project in file("macro"))
   .settings(name := "macro",
             commonSettings,
-            libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value)
+            libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+            bloopGenerate in Test := None)
   .disablePlugins(AssemblyPlugin)
   .enablePlugins(ScalaJSPlugin)
 
@@ -55,7 +61,10 @@ lazy val compilerOptions = Seq("-unchecked", "-feature", "-deprecation", "-Wunus
 lazy val commonSettings = Seq(scalacOptions ++= compilerOptions, resolvers += "jitpack" at "https://jitpack.io")
 
 lazy val wartremoverSettings = Seq(wartremoverWarnings in(Compile, compile) ++= Warts.unsafe.filterNot { w =>
-  w == Wart.Any || w == Wart.Nothing || w == Wart.DefaultArguments || w == Wart.StringPlusAny ||
+  w == Wart.Any ||
+  w == Wart.Nothing ||
+  w == Wart.DefaultArguments ||
+  w == Wart.StringPlusAny ||
   w == Wart.NonUnitStatements
 })
 

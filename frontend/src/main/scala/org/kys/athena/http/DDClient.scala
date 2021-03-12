@@ -3,10 +3,7 @@ package org.kys.athena.http
 import io.circe.generic.auto._
 import io.circe.{Decoder, Encoder}
 import org.kys.athena.http.errors._
-import org.kys.athena.http.models.current.OngoingGameResponse
-import org.kys.athena.http.models.premade.PremadeResponse
 import org.kys.athena.riot.api.RequestError
-import org.kys.athena.riot.api.dto.common.Platform
 import org.kys.athena.riot.api.dto.ddragon.champions.Champions
 import org.kys.athena.riot.api.dto.ddragon.runes.RuneTree
 import org.kys.athena.riot.api.dto.ddragon.summonerspells.SummonerSpells
@@ -16,12 +13,9 @@ import sttp.client3._
 import sttp.client3.circe._
 import sttp.model.StatusCode
 import zio.{IO, UIO}
-
-import java.util.UUID
 import scala.concurrent.duration.Duration
 
-
-object Client {
+object DDClient {
   private def liftErrors[T](r: Response[Either[RequestError, T]]): IO[BackendApiError, T] = {
     r.body match {
       case Left(HttpError(_, statusCode)) => {
@@ -77,39 +71,6 @@ object Client {
           }
         } yield resp
     }
-  }
-
-  private val debug = Config.USE_FAKE_DATA match {
-    case "true" => true
-    case _ => false
-  }
-
-  def fetchOngoingGameByName(realm: Platform, name: String): IO[BackendApiError, OngoingGameResponse] = {
-    val url = if (!debug)
-                uri"${Config.BACKEND_API_URL}/current/by-summoner-name/${realm.entryName}/$name?fetchGroups=true"
-              else uri"http://localhost:8080/sampleongoing.json"
-    val q   = basicRequest
-      .get(url)
-      .response(asJson[OngoingGameResponse])
-    fetchAndLift(q)
-  }
-
-  def fetchGroupsByUUID(uuid: UUID): IO[BackendApiError, PremadeResponse] = {
-    val url = if (!debug)
-                uri"${Config.BACKEND_API_URL}/current/by-uuid/${uuid}/groups"
-              else uri"http://localhost:8080/samplepremades.json"
-    val q   = basicRequest.get(url)
-      .response(asJson[PremadeResponse])
-    fetchAndLift(q)
-  }
-
-  def fetchGroupsByName(realm: Platform, name: String): IO[BackendApiError, PremadeResponse] = {
-    val url = if (!debug)
-                uri"${Config.BACKEND_API_URL}/current/by-summoner-name/${realm.entryName}/$name/groups"
-              else uri"http://localhost:8080/samplepremades.json"
-    val q   = basicRequest.get(url)
-      .response(asJson[PremadeResponse])
-    fetchAndLift(q)
   }
 
   def fetchCachedDDragonChampion(): IO[BackendApiError, Champions] = {

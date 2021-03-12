@@ -1,7 +1,6 @@
 package org.kys.athena.modules
 
 import io.circe.parser.parse
-import org.kys.athena.data.SummonerMatchHistory
 import org.kys.athena.http.models.current.InGameSummoner
 import org.kys.athena.riot.api.dto.`match`.Match
 import org.kys.athena.riot.api.dto.common.{GameQueueTypeEnum, Platform}
@@ -24,6 +23,8 @@ import zio.duration._
 import scala.reflect.ClassTag
 
 
+// Using the macro here because there are a lot of methods and therefore a lot of boilerplate.
+// The end result of the macro is the same as in other modules.
 @accessible
 object RiotApiModule {
   type RiotApiClient = Has[RiotApiModule.Service]
@@ -47,18 +48,13 @@ object RiotApiModule {
                                  platform: Platform)
                                 (implicit reqId: String): IO[RiotApiError, List[Match]]
 
-    def matchHistoryByInGameSummonerSet(inGameSummonerSet: Set[InGameSummoner],
-                                        gamesQueryCount: Int, queues: Set[GameQueueTypeEnum] = Set(),
-                                        platform: Platform)
-                                       (implicit reqId: String): IO[RiotApiError, Set[SummonerMatchHistory]]
-
     def inGameSummonerByParticipant(participant: CurrentGameParticipant,
                                     platform: Platform)
                                    (implicit reqId: String): IO[RiotApiError, InGameSummoner]
   }
 
   val live = {
-    ZLayer.fromServices[ConfigModule.Service, SttpClient.Service, CacheModule.Service, RateLimiter,
+    ZLayer.fromServices[ConfigModule, SttpClient.Service, CacheModule, RateLimiter,
       Clock.Service, Service] {
       (config, backend, cacheController, regionalRateLimiter, clock) =>
         new Service {
@@ -203,19 +199,6 @@ object RiotApiModule {
                   }
                 }
             }
-          }
-
-          // Returns hydrated match history for each summoner (last `gamesQueryCount` games)
-          def matchHistoryByInGameSummonerSet(inGameSummonerSet: Set[InGameSummoner],
-                                              gamesQueryCount: Int,
-                                              queues: Set[GameQueueTypeEnum] = Set(),
-                                              platform: Platform)(implicit reqId: String)
-          : IO[RiotApiError, Set[SummonerMatchHistory]] = {
-            ZIO.foreachPar(inGameSummonerSet.toList) { inGameSummoner =>
-              matchHistoryBySummonerId(inGameSummoner.summonerId, gamesQueryCount, queues, platform).map { history =>
-                SummonerMatchHistory(inGameSummoner, history)
-              }
-            }.map(_.toSet)
           }
 
           // Groups `Summoner`, `League`, and `CurrentGameParticipant`

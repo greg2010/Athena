@@ -8,15 +8,18 @@ scalaVersion in ThisBuild := "2.13.4"
 // Projects
 lazy val global = project
   .in(file("."))
-  .settings(settings)
+  .settings(settings, bloopGenerate in Test := None)
   .disablePlugins(AssemblyPlugin)
-  .aggregate(common.jvm, common.js, backend, frontend)
+  .aggregate(common.jvm, common.js, backend, frontend, macroSub)
 
 lazy val common = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .settings(name := "common",
             settings,
             libraryDependencies ++= dependencies.common.value)
+  .jsSettings(
+    bloopGenerate in Test := None
+  )
   .disablePlugins(AssemblyPlugin)
 
 lazy val backend = project
@@ -27,14 +30,29 @@ lazy val backend = project
             javaOptions in Compile ++= Seq("-Xss8M"))
   .dependsOn(common.jvm)
 
+
 lazy val frontend = project
   .settings(name := "frontend",
             settings,
             libraryDependencies ++= dependencies.js.value,
-            scalaJSUseMainModuleInitializer := true)
+            scalaJSUseMainModuleInitializer := true,
+            // include the macro classes and resources in the main js
+            Compile / packageBin / mappings ++= (macroSub / Compile / packageBin / mappings).value,
+            // include the macro sources in the main source js
+            Compile / packageSrc / mappings ++= (macroSub / Compile / packageSrc / mappings).value,
+            bloopGenerate in Test := None)
   .disablePlugins(AssemblyPlugin)
   .enablePlugins(ScalaJSPlugin)
   .dependsOn(common.js)
+  .dependsOn(macroSub)
+
+lazy val macroSub = (project in file("macro"))
+  .settings(name := "macro",
+            commonSettings,
+            libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+            bloopGenerate in Test := None)
+  .disablePlugins(AssemblyPlugin)
+  .enablePlugins(ScalaJSPlugin)
 
 // Settings
 lazy val compilerOptions = Seq("-unchecked", "-feature", "-deprecation", "-Wunused:imports", "-Ymacro-annotations",
@@ -43,7 +61,10 @@ lazy val compilerOptions = Seq("-unchecked", "-feature", "-deprecation", "-Wunus
 lazy val commonSettings = Seq(scalacOptions ++= compilerOptions, resolvers += "jitpack" at "https://jitpack.io")
 
 lazy val wartremoverSettings = Seq(wartremoverWarnings in(Compile, compile) ++= Warts.unsafe.filterNot { w =>
-  w == Wart.Any || w == Wart.Nothing || w == Wart.DefaultArguments || w == Wart.StringPlusAny ||
+  w == Wart.Any ||
+  w == Wart.Nothing ||
+  w == Wart.DefaultArguments ||
+  w == Wart.StringPlusAny ||
   w == Wart.NonUnitStatements
 })
 
@@ -76,7 +97,7 @@ lazy val dependencies = new {
   val laminarVersion   = "0.11.0"
   val airstreamVersion = "0.11.1"
 
-  val zioVersion     = "1.0.4"
+  val zioVersion     = "1.0.4-2"
   val zioCatsVersion = "2.2.0.1"
 
   val tapirVersion = "0.17.9"
@@ -117,6 +138,7 @@ lazy val dependencies = new {
   val js = Def.setting(common.value ++ Seq(
     "com.raquo" %%% "laminar" % laminarVersion,
     "com.raquo" %%% "airstream" % airstreamVersion,
-    "com.raquo" %%% "waypoint" % "0.2.0"
+    "com.raquo" %%% "waypoint" % "0.2.0",
+    "com.softwaremill.sttp.tapir" %%% "tapir-sttp-client" % tapirVersion
     ))
 }

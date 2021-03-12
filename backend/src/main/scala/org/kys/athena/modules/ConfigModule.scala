@@ -2,24 +2,23 @@ package org.kys.athena.modules
 
 import org.kys.athena.config.Config
 import pureconfig.ConfigSource
-import zio.macros.accessible
 import pureconfig.generic.auto._
-import zio.{Has, Task}
+import zio.{Has, Task, ZIO, ZLayer}
 
 
-@accessible
+trait ConfigModule {
+  val loaded: Config
+}
+
 object ConfigModule {
-  type ConfigModule = Has[Service]
 
-  trait Service {
-    val loaded: Config
-  }
-
-  val live = {
+  val live: ZLayer[Any, Throwable, Has[ConfigModule]] = {
     Task.effect(ConfigSource.default.loadOrThrow[Config]).map(c => {
-      new Service {
+      new ConfigModule {
         override val loaded: Config = c
       }
     }).toLayer
   }
+
+  def loaded: ZIO[Has[ConfigModule], Nothing, Config] = ZIO.access[Has[ConfigModule]](_.get.loaded)
 }

@@ -1,4 +1,4 @@
-package org.kys.athena.http.models.current
+package org.kys.athena.http.models.common
 
 import org.kys.athena.riot.api.dto.league.{League, MiniSeries, RankedQueueTypeEnum, TierEnum}
 

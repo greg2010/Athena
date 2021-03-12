@@ -4,7 +4,8 @@ package org.kys.athena.components.common
 import com.raquo.laminar.api.L._
 import org.kys.athena.App
 import org.kys.athena.riot.api.dto.common.Platform
-import org.kys.athena.routes.OngoingRoute
+import org.kys.athena.routes.{OngoingRoute, PregameRoute}
+import org.kys.athena.util.assets.AssetLoader
 import org.scalajs.dom
 import org.scalajs.dom.Event
 
@@ -17,7 +18,14 @@ object SearchBar {
       Observer[dom.Event](onNext = _ => {
         (platform.now(), summoner.now()) match {
           case (_, "") => ()
-          case (p, s) => App.pushState(OngoingRoute(p, s))
+          case (p, s) => {
+            val sums = s.split(',').toList
+            if (sums.length > 1) {
+              App.pushState(PregameRoute(p, sums))
+            } else {
+              App.pushState(OngoingRoute(p, s))
+            }
+          }
         }
       })
 
@@ -33,7 +41,9 @@ object SearchBar {
                                 Some(s"border shadow-lg border-gray-500 p-1 rounded-sm bg-white"),
                                 Some("focus:outline-none text-md"),
                                 cls := s"px-1 focus:outline-none appearance-none"),
-         button(`type` := "submit", img(src := "/icons/search.svg", width := "24px", height := "auto")),
+         button(`type` := "submit", img(src := AssetLoader.require("/icons/search.svg"),
+                                        width := "24px",
+                                        height := "auto")),
          onSubmit.preventDefault --> formObserver,
          mods)
   }

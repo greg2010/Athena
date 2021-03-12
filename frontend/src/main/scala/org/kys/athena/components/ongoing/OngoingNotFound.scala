@@ -4,6 +4,7 @@ import com.raquo.airstream.eventbus.EventBus
 import org.kys.athena.routes.OngoingRoute
 import com.raquo.laminar.api.L._
 import org.kys.athena.components.common.{HistoryMenu, SearchBar}
+import org.kys.athena.util.assets.AssetLoader
 import org.scalajs.dom
 import org.kys.athena.components.common.FocusCapturer._
 import org.kys.athena.components.common.FocusCapturer
@@ -15,7 +16,7 @@ object OngoingNotFound {
     val focusBus = new EventBus[EventFired]
     div(
       cls := s"flex flex-col items-center p-4",
-      img(src := "/images/blitzcrank_logo.png"),
+      img(src := AssetLoader.require("/images/blitzcrank_logo.png")),
       span(
         cls := "text-xl mt-4", "Summoner ", b(s"${p.realm.toString}/${p.name}"), " is not currently in game."),
       FocusCapturer(

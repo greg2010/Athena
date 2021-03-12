@@ -8,6 +8,7 @@ import org.kys.athena.datastructures.Config
 import org.kys.athena.App
 import org.kys.athena.routes.OngoingRoute
 import org.kys.athena.components.common.FocusCapturer._
+import org.kys.athena.util.assets.AssetLoader
 
 
 object AppBar {
@@ -36,8 +37,10 @@ object AppBar {
         },
         div(
           cls := "flex flex-row h-full",
+          a(cls := "mx-2", href := Config.DISCORD_INVITE_URL, target := "_blank",
+            img(src := AssetLoader.require("/images/discord_logo.png"), width := "40px")),
           a(cls := "mx-2", href := "https://github.com/greg2010/Athena", target := "_blank",
-            ImgSized(s"${Config.FRONTEND_URL}/images/gh_logo.png", 40, Some(40))),
+            ImgSized(AssetLoader.require("/images/gh_logo.png"), 40, Some(40))),
           child <-- showSignal.map {
             case true =>
             FocusCapturer(
@@ -59,7 +62,6 @@ object AppBar {
                  case FocusOut => "none"
                }))
             case false => div()
-          })
-        )
+          }))
   }
 }

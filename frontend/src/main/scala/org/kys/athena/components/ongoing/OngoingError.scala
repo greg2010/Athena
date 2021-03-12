@@ -2,6 +2,7 @@ package org.kys.athena.components.ongoing
 
 import com.raquo.laminar.api.L._
 import org.kys.athena.routes.OngoingRoute
+import org.kys.athena.util.assets.AssetLoader
 import org.scalajs.dom
 
 
@@ -10,7 +11,7 @@ object OngoingError {
     div(
       cls := s"flex flex-col items-center p-4",
       img(
-        src := "/images/amumu_error.png"
+        src := AssetLoader.require("/images/amumu_error.png")
         ),
       span(
         cls := "text-xl mt-4",

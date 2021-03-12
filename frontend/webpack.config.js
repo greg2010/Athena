@@ -7,8 +7,8 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin')
 
-const scalaOutputPath = path.resolve(__dirname, './target/scala-2.13');
-const scalaResourcesPath = path.resolve(__dirname, './src/main/resources')
+const scalaOutputPath = path.resolve(__dirname, 'target/scala-2.13');
+const scalaResourcesPath = path.resolve(__dirname, 'src/main/resources')
 
 const devServerPort = 8080;
 
@@ -24,7 +24,7 @@ const devServer = {
   historyApiFallback: {
     index: ''
   },
-  stats: {warnings: false}
+  //stats: {warnings: false}
 };
 
 function common(variables, mode) {
@@ -38,7 +38,7 @@ function common(variables, mode) {
     },
     output: {
       publicPath: '/',
-      filename: '[name].[hash].js',
+      filename: '[name].[fullhash].js',
       library: 'app',
       libraryTarget: 'var'
     },
@@ -46,7 +46,7 @@ function common(variables, mode) {
       path.resolve(scalaResourcesPath, './index.css')
     ],
     module: {
-      rules: [{
+      rules: [/*{
           test: /\.js$/,
           use: [{
             loader: "scalajs-friendly-source-map-loader",
@@ -54,14 +54,14 @@ function common(variables, mode) {
               name: '[name].[contenthash:8].[ext]',
               skipFileURLWarnings: true, // or false, default is true
               bundleHttp: true, // or false, default is true,
-              cachePath: ".scala-js-sources", // cache dir name, exclude in .gitignore
+              cachePath: path.resolve(__dirname, ".scala-js-sources"), // cache dir name, exclude in .gitignore
               noisyCache: false, // whether http cache changes are output
               useCache: true, // false => remove any http cache processing
             }
           }],
           enforce: "pre",
           include: [scalaOutputPath],
-        },
+        },*/
         {
           test: /\.js$/,
           use: ["source-map-loader"],
@@ -111,13 +111,7 @@ function common(variables, mode) {
         },
         {
           test: /\.(woff(2)?|ttf|eot|svg|png|jpg|ico|txt|json)(\?v=\d+\.\d+\.\d+)?$/,
-          use: [{
-            loader: 'file-loader',
-            options: {
-              name: '[name].[ext]',
-              outputPath: './'
-            }
-          }]
+          type: 'asset'
         }
       ]
     },
@@ -131,7 +125,7 @@ function common(variables, mode) {
       }),
 
       new ExtractCssChunks({
-        filename: '[name].[hash].css',
+        filename: '[name].[fullhash].css',
         chunkFilename: '[id].css'
       }),
       new CopyWebpackPlugin({

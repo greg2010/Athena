@@ -4,17 +4,32 @@ import com.raquo.laminar.api.L._
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import org.kys.athena.http.backend.BackendDataHelpers
 import org.kys.athena.http.dd.CombinedDD
-import org.kys.athena.http.models.current.{InGameSummoner, RankedLeague}
+import org.kys.athena.http.models.current.InGameSummoner
 import org.kys.athena.components.common
 import org.kys.athena.components.common.{ChampionIcon, ImgSized, OpggLink, UggLink}
+import org.kys.athena.http.models.common.RankedLeague
 import org.kys.athena.riot.api.dto.common.{Platform, SummonerSpellsEnum}
 import org.kys.athena.riot.api.dto.ddragon.runes.Rune
 import org.kys.athena.riot.api.dto.league.{MiniSeries, RankedQueueTypeEnum, TierEnum}
 import org.kys.athena.datastructures.{Infallible, Loading, Ready}
 import org.kys.athena.datastructures.Config
+import org.kys.athena.util.assets.AssetLoader
 import org.scalajs.dom.html
 
+
 object OngoingPlayerCard {
+
+  // Ugly, but enables webpack's asset importer plugin thus giving more safety.
+  // Cannot be replaced by a loop as the paths **must** be compile-time literals to be inlined properly.
+  private val rankedAssets: Map[TierEnum, String] = Map(
+    (TierEnum.Iron, AssetLoader.require("/images/Emblem_Iron.png")),
+    (TierEnum.Bronze, AssetLoader.require("/images/Emblem_Bronze.png")),
+    (TierEnum.Silver, AssetLoader.require("/images/Emblem_Silver.png")),
+    (TierEnum.Gold, AssetLoader.require("/images/Emblem_Gold.png")),
+    (TierEnum.Platinum, AssetLoader.require("/images/Emblem_Platinum.png")),
+    (TierEnum.Diamond, AssetLoader.require("/images/Emblem_Diamond.png")),
+    (TierEnum.Grandmaster, AssetLoader.require("/images/Emblem_Grandmaster.png")),
+    (TierEnum.Challenger, AssetLoader.require("/images/Emblem_Challenger.png")))
 
   private def renderSummonerSpell(ss: SummonerSpellsEnum)(implicit dd: CombinedDD) = {
     val url = dd.summonerUrlById(ss.value).getOrElse("")
@@ -90,21 +105,23 @@ object OngoingPlayerCard {
       cls := "flex flex-col items-center justify-center mr-1", width := "86px",
       rl match {
         case Some(l) => {
-          val t   = l.tier.entryName.toLowerCase.capitalize
-          val url = s"${Config.FRONTEND_URL}/images/Emblem_${t}.png"
+          val url = rankedAssets.getOrElse(l.tier, AssetLoader.require("/images/Emblem_Unranked.png"))
           List(
             ImgSized(url, 40, None),
             l.tier match {
               case t if t.in(TierEnum.Master, TierEnum.Grandmaster, TierEnum.Challenger) => {
                 span(cls := "text-xs leading-tight mt-1", s"${t}")
               }
-              case _ => span(cls := "text-xs leading-tight mt-1", s"${t} ${l.rank}")
+              case _ => {
+                span(cls := "text-xs leading-tight mt-1",
+                     s"${l.tier.entryName.toLowerCase.capitalize} ${l.rank}")
+              }
             },
             span(cls := "text-xs leading-tight", s"${l.leaguePoints} LP"),
             l.miniSeries.map(renderMiniSeries).getOrElse(div()))
         }
         case None => {
-          val url = s"${Config.FRONTEND_URL}/images/Emblem_Unranked.png"
+          val url = AssetLoader.require("/images/Emblem_Unranked.png")
           List(
             ImgSized(url, 46, None),
             span(cls := "text-sm leading-tight mt-1", "Unranked"))

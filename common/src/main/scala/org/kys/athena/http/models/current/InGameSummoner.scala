@@ -1,5 +1,6 @@
 package org.kys.athena.http.models.current
 
+import org.kys.athena.http.models.common.RankedLeague
 import org.kys.athena.http.models.current
 import org.kys.athena.riot.api.dto.currentgameinfo.CurrentGameParticipant
 import org.kys.athena.riot.api.dto.league.League

@@ -1,6 +1,6 @@
 package org.kys.athena.http.backend
 
-import org.kys.athena.http.models.current.RankedLeague
+import org.kys.athena.http.models.common.RankedLeague
 import org.kys.athena.riot.api.dto.league.RankedQueueTypeEnum
 
 

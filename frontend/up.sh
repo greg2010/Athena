@@ -9,6 +9,8 @@ trap 'kill %1; kill %2' SIGINT
 (cd ../ && sbt ~frontend/fastOptJS --color=always) | sed -e 's/^/[sbt] /' &
 # Start webpack watch
 yarn install && FORCE_COLOR=true yarn run start | sed -e 's/^/[webpack] /' &
+# Create .env.local if it doesn't exist
+touch .env.local
 # Watch .env.local, run on file change
 ./env.sh &&
   inotifywait -q -m -e close_write .env.local .env |

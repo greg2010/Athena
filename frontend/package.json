@@ -16,7 +16,7 @@
     "jest": "^26.4.2",
     "jsdom": "^16.4.0",
     "lodash": "^4.17.20",
-    "node-sass": "^5.0.0",
+    "node-sass": "^7.0.0",
     "postcss": "^8.1.9",
     "postcss-import": "^14.0.0",
     "postcss-loader": "^5.0.0",

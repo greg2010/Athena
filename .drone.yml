@@ -20,21 +20,21 @@ steps:
       filename: cache.tar.gz # Use compression
 
   - name: compile-scala
-    image: danieletorelli/sbt-alpine:15-slim
+    image: eed3si9n/sbt:jdk11-alpine
     commands:
       - sbt -Duser.home=. -Dsbt.global.base=.sbt -Dsbt.boot.directory=.sbt -Dsbt.ivy.home=.ivy2 ";compile"
     depends_on:
       - restore
 
   - name: build-scala
-    image: danieletorelli/sbt-alpine:15-slim
+    image: eed3si9n/sbt:jdk11-alpine
     commands:
       - sbt -Duser.home=. -Dsbt.global.base=.sbt -Dsbt.boot.directory=.sbt -Dsbt.ivy.home=.ivy2 ";assembly"
     depends_on:
       - compile-scala
 
   - name: compile-js
-    image: danieletorelli/sbt-alpine:15-slim
+    image: eed3si9n/sbt:jdk11-alpine
     commands:
       - sbt -Duser.home=. -Dsbt.global.base=.sbt -Dsbt.boot.directory=.sbt -Dsbt.ivy.home=.ivy2 ";frontend/fullOptJS"
     depends_on:
@@ -169,4 +169,4 @@ volumes:
       path: /var/run/
 ---
 kind: signature
-hmac: 9f4481c569b4ce38bfbb0f9d5f910a27623df6932e6aa9693cca2a32a19aca32
+hmac: d1ddde0c3539a41742e208da35ca174991354c3385ea025f7458f708504213b5
